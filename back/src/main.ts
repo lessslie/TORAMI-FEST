@@ -13,7 +13,12 @@ async function bootstrap() {
 
   // Enable CORS for frontend
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://torami-fest.vercel.app',
+      /\.vercel\.app$/,
+    ],
     credentials: true,
   });
 
