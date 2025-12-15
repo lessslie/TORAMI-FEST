@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  avatar    String?
+  entryAuthorized Boolean @default(false)
+  ticketType String?
+  age       Int?
+  phone     String?
+  stamps    Stamp[]
+  stands    StandApplication[]
+  cosplays  CosplayRegistration[]
+  giveaways GiveawayParticipant[]
+  gallery   GalleryItem[]
+  notifications Notification[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  date        DateTime
+  time        String
+  location    String
+  description String
+  isPast      Boolean  @default(false)
+  tags        String[]
+  isFeatured  Boolean  @default(false)
+  rainCheck   Boolean  @default(false)
+  images      String[]
+  highlights  String[]
+  transport   Json?
+  isFree      Boolean  @default(true)
+  ticketPrice Decimal? @db.Decimal(10, 2)
+  ticketLink  String?
+  gallery     GalleryItem[]
+  stands      StandApplication[] @relation("EventStands")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StandApplication {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  brandName   String
+  type        String
+  contactName String
+  email       String
+  phone       String
+  socials     String
+  description String
+  needs       String
+  images      String[]
+  status      StandStatus @default(PENDIENTE)
+  event       Event?   @relation("EventStands", fields: [eventId], references: [id])
+  eventId     String?
+  messages    Json[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CosplayRegistration {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id])
+  userId         String
+  participantName String
+  nickname       String
+  whatsapp       String
+  characterName  String
+  seriesName     String
+  category       String
+  referenceImage String?
+  audioLink      String?
+  status         CosplayStatus @default(INSCRIPTO)
+  messages       Json[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Sponsor {
+  id       String  @id @default(uuid())
+  name     String
+  logoUrl  String
+  category String
+  link     String
+  active   Boolean @default(true)
+}
+
+model Giveaway {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  prize       String
+  startDate   DateTime
+  endDate     DateTime
+  status      GiveawayStatus @default(ACTIVO)
+  winner      String?
+  participantIds GiveawayParticipant[]
+  images      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GiveawayParticipant {
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  giveaway Giveaway @relation(fields: [giveawayId], references: [id])
+  giveawayId String
+
+  @@id([userId, giveawayId])
+}
+
+model GalleryItem {
+  id          String  @id @default(uuid())
+  event       Event?  @relation(fields: [eventId], references: [id])
+  eventId     String?
+  user        User?   @relation(fields: [userId], references: [id])
+  userId      String?
+  url         String
+  description String
+  approved    Boolean @default(false)
+  status      GalleryStatus @default(PENDING)
+  feedback    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        String @id @default(uuid())
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+  title     String
+  message   String
+  type      String
+  read      Boolean @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+model Stamp {
+  id     String @id @default(uuid())
+  code   String @unique
+  type   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  createdAt DateTime @default(now())
+}
+
+model AppConfig {
+  id           Int    @id @default(1)
+  donationsEnabled Boolean @default(true)
+  paymentLink  String?
+  aliasCbu     String?
+  qrImage      String?
+  heroTitle    String?
+  heroSubtitle String?
+  heroDateText String?
+  homeGalleryImages String[]
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+  EMPRENDEDOR
+  GUEST
+}
+
+enum StandStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum CosplayStatus {
+  INSCRIPTO
+  CONFIRMADO
+  RECHAZADO
+}
+
+enum GiveawayStatus {
+  ACTIVO
+  FINALIZADO
+}
+
+enum GalleryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

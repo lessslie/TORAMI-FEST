@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --torami-red: #D70000;
+  --torami-dark: #1a1a1a;
+  --torami-light: #f5f5f5;
+  --torami-accent: #E0B0FF;
+  --torami-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --torami-shadow-hover: 6px 6px 0px 0px #D70000;
+}
+
+@font-face {
+  font-family: "Billion Dreams";
+  src: url("https://fonts.cdnfonts.com/s/40599/BillionDreams_PERSONAL.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+body {
+  background-color: #ffffff;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+.font-script {
+  font-family: "Billion Dreams", "Brush Script MT", cursive;
+  letter-spacing: 0.4px;
+}
+
+.bg-halftone {
+  background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::selection {
+  background: var(--torami-red);
+  color: #fff;
+}
+
+/* Admin tabs visibility hardening */
+.admin-tabs-mobile {
+  display: block;
+}
+.admin-tabs-desktop {
+  display: none;
+}
+@media (min-width: 768px) {
+  .admin-tabs-mobile {
+    display: none;
+  }
+  .admin-tabs-desktop {
+    display: flex;
+  }
+}
+/* Hardening nav breakpoints in case Tailwind purge misses classes */
+.nav-desktop {
+  display: none;
+}
+@media (min-width: 768px) {
+  .nav-desktop {
+    display: flex;
+  }
+  .nav-mobile-toggle {
+    display: none;
+  }
+}

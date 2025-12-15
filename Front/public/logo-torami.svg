@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fondo circular blanco -->
+  <circle cx="256" cy="256" r="240" fill="#ffffff" stroke="#000000" stroke-width="8"/>
+
+  <!-- Círculo rojo interior -->
+  <circle cx="256" cy="256" r="200" fill="#D70000"/>
+
+  <!-- Letra T estilizada en blanco -->
+  <g fill="#ffffff" stroke="#000000" stroke-width="4">
+    <!-- Barra horizontal de la T -->
+    <rect x="156" y="156" width="200" height="40" rx="10"/>
+    <!-- Barra vertical de la T -->
+    <rect x="236" y="156" width="40" height="200" rx="10"/>
+  </g>
+
+  <!-- Detalles manga/anime style -->
+  <g fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round">
+    <!-- Líneas de velocidad/energía -->
+    <path d="M 380 150 L 420 130" opacity="0.8"/>
+    <path d="M 390 180 L 440 170" opacity="0.8"/>
+    <path d="M 385 210 L 435 210" opacity="0.8"/>
+  </g>
+
+  <!-- Brillo/destello -->
+  <circle cx="320" cy="200" r="15" fill="#ffffff" opacity="0.6"/>
+  <circle cx="330" cy="190" r="8" fill="#ffffff" opacity="0.8"/>
+</svg>

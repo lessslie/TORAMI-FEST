@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <title>Torami Fest</title>
+    <meta name="description" content="Evento de anime, gaming y cultura pop" />
+    <meta name="theme-color" content="#D70000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/torami_fest_logo_circle.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/torami_fest_logo_circle.png" />
+    <link rel="mask-icon" href="/torami_fest_logo_circle.png" color="#D70000" />
+    <link rel="preload" href="/fonts/BillionDreams.ttf" as="font" type="font/ttf" crossorigin>
+
+    <!-- Tailwind CDN fallback (ensures styles if built CSS fails to load in some environments) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              torami: {
+                red: '#D70000',
+                dark: '#1a1a1a',
+                light: '#f5f5f5',
+                accent: '#E0B0FF',
+              },
+            },
+            fontFamily: {
+              display: ['"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+              body: ['"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+              script: ['"Billion Dreams"', '"Brush Script MT"', 'cursive'],
+            },
+            boxShadow: {
+              manga: '4px 4px 0px 0px rgba(0,0,0,1)',
+              'manga-hover': '6px 6px 0px 0px #D70000',
+            },
+            animation: {
+              'bounce-slow': 'bounce 2.2s infinite',
+            },
+          },
+        },
+      };
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "recharts": "https://esm.sh/recharts@^3.5.1",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-white text-gray-900 font-body antialiased selection:bg-torami-red selection:text-white">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

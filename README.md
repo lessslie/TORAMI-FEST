@@ -342,38 +342,6 @@ npm run preview        # Preview production build
 - Railway PostgreSQL
 - Neon.tech
 
----
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
-
----
-
-## 📝 Notas
-
-### ⚠️ Pendientes (Opcionales)
-- [ ] Implementar envío de emails (password recovery)
-- [ ] WebSockets para notificaciones en tiempo real
-- [ ] Tests unitarios e integración
-- [ ] CI/CD pipeline
-- [ ] Configurar Cloudinary para uploads
-- [ ] Reemplazar mock data en todos los componentes
-
-### ✅ Completado
-- [x] Backend con 14 módulos completos
-- [x] Frontend con todas las páginas
-- [x] API client completo
-- [x] CORS habilitado
-- [x] JWT authentication
-- [x] Swagger documentation
-- [x] PWA configuration
-- [x] Database schema completo
-- [x] Integración frontend-backend
 
 ---
 

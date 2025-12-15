@@ -1,0 +1,562 @@
+{
+  "info": {
+    "name": "TORAMI-FEST API",
+    "description": "Colección completa de endpoints para TORAMI-FEST",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"juan@example.com\",\n  \"password\": \"Password123!\",\n  \"age\": 25,\n  \"phone\": \"+54911234567\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez Actualizado\",\n  \"phone\": \"+54911111111\",\n  \"age\": 26\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events?upcoming=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                {
+                  "key": "upcoming",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Event (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Torami Fest 2025\",\n  \"date\": \"2025-03-15T10:00:00Z\",\n  \"time\": \"10:00 AM\",\n  \"location\": \"Centro Cultural, Buenos Aires\",\n  \"description\": \"El mejor evento de anime y gaming del año\",\n  \"isPast\": false,\n  \"tags\": [\"anime\", \"gaming\", \"cosplay\"],\n  \"isFeatured\": true,\n  \"rainCheck\": false,\n  \"images\": [\"https://example.com/image1.jpg\"],\n  \"highlights\": [\"Concurso de cosplay\", \"Torneos de gaming\"],\n  \"transport\": {\n    \"bus\": [\"60\", \"152\"],\n    \"subway\": [\"Línea D\"],\n    \"train\": [\"Mitre\"]\n  },\n  \"isFree\": false,\n  \"ticketPrice\": 5000,\n  \"ticketLink\": \"https://tickets.example.com/torami-fest-2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stands",
+      "item": [
+        {
+          "name": "Submit Stand Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandName\": \"Mi Emprendimiento\",\n  \"type\": \"Comida\",\n  \"contactName\": \"Juan Pérez\",\n  \"email\": \"juan@example.com\",\n  \"phone\": \"+54911234567\",\n  \"socials\": \"@miemprendimiento\",\n  \"description\": \"Venta de comida japonesa\",\n  \"needs\": \"Mesa y 2 sillas\",\n  \"images\": [\"https://example.com/stand.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stands",
+              "host": ["{{baseUrl}}"],
+              "path": ["stands"]
+            }
+          }
+        },
+        {
+          "name": "Get All Stands (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stands",
+              "host": ["{{baseUrl}}"],
+              "path": ["stands"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gallery",
+      "item": [
+        {
+          "name": "Get All Photos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/gallery?approved=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["gallery"],
+              "query": [
+                {
+                  "key": "approved",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/photo.jpg\",\n  \"description\": \"Mi foto del evento\",\n  \"eventId\": \"event-id-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/gallery",
+              "host": ["{{baseUrl}}"],
+              "path": ["gallery"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Giveaways",
+      "item": [
+        {
+          "name": "Get All Giveaways",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/giveaways",
+              "host": ["{{baseUrl}}"],
+              "path": ["giveaways"]
+            }
+          }
+        },
+        {
+          "name": "Join Giveaway",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/giveaways/:id/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["giveaways", ":id", "join"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Giveaway (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sorteo Figura Anime\",\n  \"description\": \"Sorteamos una figura exclusiva\",\n  \"prize\": \"Figura de colección\",\n  \"startDate\": \"2025-01-01T00:00:00Z\",\n  \"endDate\": \"2025-01-31T23:59:59Z\",\n  \"images\": [\"https://example.com/prize.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/giveaways",
+              "host": ["{{baseUrl}}"],
+              "path": ["giveaways"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stamps",
+      "item": [
+        {
+          "name": "Validate QR Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"TORAMI-MAIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stamps/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["stamps", "validate"]
+            }
+          }
+        },
+        {
+          "name": "Get My Stamps",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stamps/user/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["stamps", "user", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/:id/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", ":id", "read"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "Get Dashboard Stats (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stats/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["stats", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get My Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stats/user/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["stats", "user", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Config",
+      "item": [
+        {
+          "name": "Get App Config",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["config"]
+            }
+          }
+        },
+        {
+          "name": "Update Config (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"donationsEnabled\": true,\n  \"heroTitle\": \"Torami Fest 2025\",\n  \"heroSubtitle\": \"El mejor evento de anime\",\n  \"heroDateText\": \"15 de Marzo, 2025\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/config",
+              "host": ["{{baseUrl}}"],
+              "path": ["config"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sponsors",
+      "item": [
+        {
+          "name": "Get All Sponsors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sponsors?activeOnly=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["sponsors"],
+              "query": [
+                {
+                  "key": "activeOnly",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
