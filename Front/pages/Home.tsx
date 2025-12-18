@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Gift, Instagram, ArrowRight, Gamepad2, Cat, Sparkles, Zap, Heart } from 'lucide-react';
+import { Calendar, MapPin, Gift, Instagram, ArrowRight, Gamepad2, Cat, Sparkles, Zap, Heart, Ticket } from 'lucide-react';
 import { MangaCard, Button, SectionTitle, Badge, Countdown } from '../components/UI';
 import { getUpcomingEvents, getActiveSponsors, getConfig } from '../services/data';
 import { Event, Sponsor, AppConfig } from '../types';
@@ -9,7 +9,7 @@ export const Home = () => {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [config, setAppConfig] = useState<AppConfig | null>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
+  const [isGalleryPaused, setIsGalleryPaused] = useState(false);
 
   useEffect(() => {
     getUpcomingEvents().then(data => setUpcomingEvents(data));
@@ -17,28 +17,9 @@ export const Home = () => {
     getConfig().then(setAppConfig);
   }, []);
 
-  // Auto-scroll mini gallery
-  useEffect(() => {
-    const track = galleryRef.current;
-    if (!track || !config?.homeGalleryImages?.length) return;
-
-    const gap = 16; // px (gap-4)
-    const step = () => {
-      if (!track) return;
-      const firstCard = track.querySelector<HTMLElement>('[data-gallery-card]');
-      const cardWidth = firstCard ? firstCard.offsetWidth : 240;
-      const next = track.scrollLeft + cardWidth + gap;
-      const maxScroll = track.scrollWidth - track.clientWidth;
-      if (next >= maxScroll) {
-        track.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        track.scrollTo({ left: next, behavior: 'smooth' });
-      }
-    };
-
-    const interval = setInterval(step, 3200);
-    return () => clearInterval(interval);
-  }, [config?.homeGalleryImages]);
+  const galleryImages = config?.homeGalleryImages || [];
+  // Duplicar las imágenes para loop infinito
+  const marqueeImages = galleryImages.length > 0 ? [...galleryImages, ...galleryImages] : [];
 
   const nextEvent = upcomingEvents[0];
   const otherEvents = upcomingEvents.slice(1, 4); 
@@ -125,23 +106,24 @@ export const Home = () => {
 
       {/* Mini Gallery Carousel */}
       <div className="border-b-2 border-black bg-gray-900/5 py-6 relative overflow-hidden">
-        <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white via-white/60 to-transparent pointer-events-none"></div>
-        <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white via-white/60 to-transparent pointer-events-none"></div>
-        <div className="max-w-7xl mx-auto px-4">
-          <div
-            ref={galleryRef}
-            className="flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-          >
-            {config?.homeGalleryImages?.slice(0, 6).map((img, i) => (
+        <div className="absolute inset-y-0 left-0 w-16 md:w-24 bg-gradient-to-r from-white via-white/60 to-transparent pointer-events-none z-10"></div>
+        <div className="absolute inset-y-0 right-0 w-16 md:w-24 bg-gradient-to-l from-white via-white/60 to-transparent pointer-events-none z-10"></div>
+        <div
+          className="gallery-marquee-container"
+          onMouseEnter={() => setIsGalleryPaused(true)}
+          onMouseLeave={() => setIsGalleryPaused(false)}
+        >
+          <div className={`gallery-marquee ${isGalleryPaused ? 'paused' : ''}`}>
+            {marqueeImages.map((img, i) => (
               <div
                 key={i}
                 data-gallery-card
-                className="relative min-w-[220px] md:min-w-[260px] h-44 md:h-56 snap-start rounded-xl overflow-hidden border-2 border-black shadow-manga bg-black group transition-transform duration-300 hover:-translate-y-1"
+                className="gallery-card relative min-w-[200px] sm:min-w-[240px] md:min-w-[280px] h-[250px] sm:h-[280px] md:h-[300px] rounded-xl overflow-hidden border-2 border-black shadow-manga bg-black group transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.05] flex-shrink-0"
               >
                 <img
                   src={img}
                   alt="Gallery"
-                  className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 group-hover:saturate-125 transition-all duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover bg-black filter grayscale group-hover:grayscale-0 group-hover:saturate-125 transition-all duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
               </div>
@@ -188,6 +170,14 @@ export const Home = () => {
                         <div className="flex items-center gap-2">
                           <MapPin size={16} className="text-torami-red" />
                           <span className="truncate">{event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Ticket size={16} className="text-torami-red" />
+                          {event.isFree ? (
+                            <span className="font-bold text-green-600">GRATIS</span>
+                          ) : (
+                            <span className="font-bold">${event.ticketPrice?.toLocaleString('es-AR')}</span>
+                          )}
                         </div>
                      </div>
                   </MangaCard>

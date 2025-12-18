@@ -247,7 +247,10 @@ export const Admin = () => {
   const [rejectionReason, setRejectionReason] = useState('');
 
   const refreshData = () => {
-    getStats().then(setStats);
+    getStats().then((data) => {
+      console.log('📊 Stats from backend:', data);
+      setStats(data);
+    });
     getStandApplications().then((data) => {
         setStands(data);
         if (chatStand) {
@@ -262,7 +265,10 @@ export const Admin = () => {
             if(updatedCos) setChatCosplay(updatedCos);
         }
     });
-    getEvents().then(setEvents);
+    getEvents().then((data) => {
+      console.log('📅 Events from backend:', data);
+      setEvents(data);
+    });
     getSponsors().then(setSponsors);
     getGiveaways().then(setGiveaways);
     getGallery().then(setGallery);
@@ -385,20 +391,53 @@ export const Admin = () => {
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingEvent) {
-        const eventDate = new Date(`${editingEvent.date}T${editingEvent.time?.split(' - ')[0] || '00:00'}`);
+        // Convertir fecha DD/MM/YYYY a YYYY-MM-DD
+        let dateFormatted = '';
+        if (editingEvent.date) {
+            const dateParts = editingEvent.date.split('/');
+            if (dateParts.length === 3) {
+                const [day, month, year] = dateParts;
+                dateFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            } else {
+                dateFormatted = editingEvent.date; // Si ya está en formato ISO
+            }
+        }
+
+        const eventDate = new Date(`${dateFormatted}T${editingEvent.time?.split(' - ')[0] || '00:00'}`);
         const isPast = eventDate < new Date();
 
-        const eventToSave = { 
-            ...editingEvent, 
+        // Convertir fecha a formato ISO-8601 completo (sin conversión de zona horaria)
+        const dateISO = dateFormatted
+          ? `${dateFormatted}T12:00:00.000Z` // Usar mediodía UTC para evitar problemas de zona horaria
+          : new Date().toISOString();
+
+        // Eliminar campos que el backend no acepta al actualizar
+        const { id, createdAt, updatedAt, highlights, transport, ...eventData } = editingEvent as any;
+
+        const eventToSave = {
+            ...eventData,
+            date: dateISO,
             tags: typeof editingEvent.tags === 'string' ? (editingEvent.tags as string).split(',').map(t => t.trim()) : editingEvent.tags || [],
             isPast: isPast,
             // Images are handled in state directly
-            images: editingEvent.images || [] 
-        } as Event;
-        
-        await saveEvent(eventToSave);
-        setEditingEvent(null);
-        refreshData();
+            images: editingEvent.images || []
+        };
+
+        try {
+            // Enviar datos con ID (el servicio se encarga de manejarlo correctamente)
+            if (editingEvent.id) {
+                await saveEvent({ ...eventToSave, id: editingEvent.id });
+            } else {
+                await saveEvent(eventToSave);
+            }
+
+            setEditingEvent(null);
+            refreshData();
+        } catch (error: any) {
+            console.error('Error al guardar evento:', error);
+            const errorMsg = error?.message || JSON.stringify(error) || 'Error desconocido';
+            alert(`Error al guardar evento:\n${errorMsg}`);
+        }
     }
   };
   const handleDeleteEvent = async (id: string) => {
@@ -568,19 +607,19 @@ export const Admin = () => {
         <div className="space-y-8 animate-in fade-in">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
              <MangaCard className="text-center">
-                <div className="text-3xl font-display text-torami-red">{stats.users}</div>
+                <div className="text-3xl font-display text-torami-red">{stats.users?.total || 0}</div>
                 <div className="text-xs uppercase text-gray-500 font-bold">Usuarios</div>
              </MangaCard>
              <MangaCard className="text-center bg-yellow-50">
-                <div className="text-3xl font-display">{stats.standsPending}</div>
+                <div className="text-3xl font-display">{stats.stands?.pending || 0}</div>
                 <div className="text-xs uppercase text-gray-500 font-bold">Stands Pendientes</div>
              </MangaCard>
              <MangaCard className="text-center">
-                <div className="text-3xl font-display">{stats.eventsTotal}</div>
+                <div className="text-3xl font-display">{stats.events?.total || 0}</div>
                 <div className="text-xs uppercase text-gray-500 font-bold">Eventos</div>
              </MangaCard>
              <MangaCard className="text-center">
-                <div className="text-3xl font-display">{stats.activeGiveaways}</div>
+                <div className="text-3xl font-display">{stats.giveaways?.active || 0}</div>
                 <div className="text-xs uppercase text-gray-500 font-bold">Sorteos Activos</div>
              </MangaCard>
            </div>
@@ -600,7 +639,7 @@ export const Admin = () => {
         <div className="animate-in fade-in">
             <div className="flex justify-between mb-4">
                 <h3 className="font-display text-2xl">Listado de Eventos</h3>
-                <Button onClick={() => setEditingEvent({ title: '', date: '', time: '', location: '', description: '', tags: [], isFeatured: false, rainCheck: false, images: [] })}>
+                <Button onClick={() => setEditingEvent({ title: '', date: '', time: '', location: '', description: '', tags: [], isFeatured: false, rainCheck: false, images: [], isFree: true, ticketPrice: undefined, ticketLink: undefined })}>
                     <Plus size={18} className="mr-2 inline" /> Nuevo Evento
                 </Button>
             </div>
@@ -616,13 +655,21 @@ export const Admin = () => {
                                     {ev.isPast && <Badge color="purple">Pasado</Badge>}
                                 </div>
                                 <div className="text-sm text-gray-600 flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1">
-                                    <span><Calendar size={14} className="inline"/> {ev.date}</span>
+                                    <span><Calendar size={14} className="inline"/> {new Date(ev.date).toLocaleDateString('es-AR')}</span>
                                     <span>{ev.location}</span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <Button variant="secondary" className="px-3 py-2" onClick={() => setEditingEvent(ev)}><Edit size={16}/></Button>
+                            <Button variant="secondary" className="px-3 py-2" onClick={() => {
+                                // Convertir fecha ISO a DD/MM/YYYY para edición (usar UTC para evitar cambios de zona horaria)
+                                const dateISO = new Date(ev.date);
+                                const day = dateISO.getUTCDate().toString().padStart(2, '0');
+                                const month = (dateISO.getUTCMonth() + 1).toString().padStart(2, '0');
+                                const year = dateISO.getUTCFullYear();
+                                const dateFormatted = `${day}/${month}/${year}`;
+                                setEditingEvent({...ev, date: dateFormatted});
+                            }}><Edit size={16}/></Button>
                             <Button variant="outline" className="px-3 py-2 text-red-600 border-red-600 hover:bg-red-600" onClick={() => handleDeleteEvent(ev.id)}><Trash2 size={16}/></Button>
                         </div>
                     </MangaCard>
@@ -1281,8 +1328,8 @@ export const Admin = () => {
                   />
 
                   <div className="grid grid-cols-2 gap-4">
-                      <Input label="Fecha (YYYY-MM-DD)" type="date" value={editingEvent.date} onChange={(e:any) => setEditingEvent({...editingEvent, date: e.target.value})} required />
-                      <Input label="Horario" value={editingEvent.time} onChange={(e:any) => setEditingEvent({...editingEvent, time: e.target.value})} required />
+                      <Input label="Fecha (DD/MM/AAAA)" placeholder="25/12/2025" value={editingEvent.date} onChange={(e:any) => setEditingEvent({...editingEvent, date: e.target.value})} required />
+                      <Input label="Horario" placeholder="14:00 - 20:00" value={editingEvent.time} onChange={(e:any) => setEditingEvent({...editingEvent, time: e.target.value})} required />
                   </div>
                   <Input label="Ubicación" value={editingEvent.location} onChange={(e:any) => setEditingEvent({...editingEvent, location: e.target.value})} required />
                   <Input label="Tags (sep por comas)" value={Array.isArray(editingEvent.tags) ? editingEvent.tags.join(', ') : editingEvent.tags} onChange={(e:any) => setEditingEvent({...editingEvent, tags: e.target.value})} />
@@ -1292,14 +1339,46 @@ export const Admin = () => {
                   </div>
                   <div className="flex gap-4 p-4 bg-gray-50 border border-black">
                       <label className="flex items-center gap-2 cursor-pointer font-bold">
-                        <input type="checkbox" className="w-5 h-5 accent-torami-red" checked={editingEvent.isFeatured} onChange={(e) => setEditingEvent({...editingEvent, isFeatured: e.target.checked})} /> 
+                        <input type="checkbox" className="w-5 h-5 accent-torami-red" checked={editingEvent.isFeatured} onChange={(e) => setEditingEvent({...editingEvent, isFeatured: e.target.checked})} />
                         Destacado
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer font-bold">
-                        <input type="checkbox" className="w-5 h-5 accent-torami-red" checked={editingEvent.rainCheck} onChange={(e) => setEditingEvent({...editingEvent, rainCheck: e.target.checked})} /> 
+                        <input type="checkbox" className="w-5 h-5 accent-torami-red" checked={editingEvent.rainCheck} onChange={(e) => setEditingEvent({...editingEvent, rainCheck: e.target.checked})} />
                         Se suspende por lluvia
                       </label>
                   </div>
+
+                  {/* Precio de entrada */}
+                  <div className="p-4 bg-yellow-50 border-2 border-black space-y-3">
+                      <h4 className="font-bold uppercase text-sm">Entrada</h4>
+                      <label className="flex items-center gap-2 cursor-pointer font-bold">
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 accent-green-600"
+                          checked={editingEvent.isFree}
+                          onChange={(e) => setEditingEvent({...editingEvent, isFree: e.target.checked, ticketPrice: e.target.checked ? undefined : editingEvent.ticketPrice})}
+                        />
+                        Entrada Gratuita
+                      </label>
+                      {!editingEvent.isFree && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <Input
+                            label="Precio (ARS)"
+                            type="number"
+                            placeholder="5000"
+                            value={editingEvent.ticketPrice || ''}
+                            onChange={(e:any) => setEditingEvent({...editingEvent, ticketPrice: parseFloat(e.target.value) || undefined})}
+                          />
+                          <Input
+                            label="Link de compra (opcional)"
+                            placeholder="https://..."
+                            value={editingEvent.ticketLink || ''}
+                            onChange={(e:any) => setEditingEvent({...editingEvent, ticketLink: e.target.value})}
+                          />
+                        </div>
+                      )}
+                  </div>
+
                   <Button type="submit" className="w-full">Guardar Evento</Button>
               </form>
           </Modal>

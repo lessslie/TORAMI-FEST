@@ -7,12 +7,13 @@ import { StandForm } from './pages/StandForm';
 import { CosplayContest } from './pages/CosplayContest';
 import { Admin } from './pages/Admin';
 import { UserDashboard } from './pages/UserDashboard';
-import { Gallery } from './pages/Gallery'; 
+import { Gallery } from './pages/Gallery';
 import { Giveaways } from './pages/Giveaways';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { RecoverPassword } from './pages/RecoverPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { About } from './pages/About';
 import { User, UserRole, AppConfig } from './types';
 import { SectionTitle, MangaCard, Button } from './components/UI';
 import { getConfig, requestPasswordRecovery, resetPassword as apiResetPassword } from './services/data';
@@ -213,7 +214,7 @@ export default function App() {
             <Route path="/sponsors" element={<PlaceholderPage title="Nuestros Sponsors" />} />
             <Route path="/donar" element={<Donations />} />
             <Route path="/contacto" element={<PlaceholderPage title="Contacto" />} />
-            <Route path="/sobre" element={<PlaceholderPage title="Sobre Nosotros" />} />
+            <Route path="/sobre" element={<About />} />
           </Routes>
         </Layout>
       </Router>

@@ -79,3 +79,48 @@ a {
     display: none;
   }
 }
+
+/* Mini gallery marquee */
+.gallery-marquee-container {
+  overflow: hidden;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.gallery-marquee {
+  display: flex;
+  gap: 1rem;
+  animation: scroll-left 30s linear infinite;
+  will-change: transform;
+}
+
+.gallery-marquee.paused {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.gallery-card {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .gallery-marquee {
+    animation-duration: 25s;
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery-marquee {
+    animation-duration: 35s;
+    gap: 1.25rem;
+  }
+}

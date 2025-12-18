@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { MapPin, Calendar, Umbrella, CloudRain, Ticket, Star, Sparkles, Navigation, Bus, TrainFront, TramFront, CalendarPlus, Share2 } from 'lucide-react';
 import { SectionTitle, MangaCard, Badge, Button } from '../components/UI';
+import { ImageCarousel } from '../components/ImageCarousel';
 import { getUpcomingEvents, getEventById } from '../services/data';
 import { Event } from '../types';
 
@@ -23,8 +24,8 @@ export const EventsList = () => {
         {events.map(event => (
           <Link to={`/eventos/${event.id}`} key={event.id}>
              <MangaCard className="h-full group">
-               <div className="aspect-video bg-gray-200 mb-4 overflow-hidden border-2 border-black relative">
-                 <img src={event.images[0] || 'https://via.placeholder.com/400'} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"/>
+               <div className="aspect-video bg-black mb-4 overflow-hidden border-2 border-black relative">
+                 <img src={event.images[0] || 'https://via.placeholder.com/400'} alt={event.title} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"/>
                  {event.isFeatured && (
                    <div className="absolute top-0 right-0 p-2">
                      <Star className="text-yellow-400 fill-current w-8 h-8 drop-shadow-md animate-pulse" />
@@ -38,6 +39,14 @@ export const EventsList = () => {
                <div className="space-y-2 text-sm text-gray-600 mb-4">
                  <p className="flex items-center gap-2"><Calendar size={16} className="text-torami-red"/> {new Date(event.date).toLocaleDateString()} {event.time}</p>
                  <p className="flex items-center gap-2"><MapPin size={16} className="text-torami-red"/> {event.location}</p>
+                 <p className="flex items-center gap-2">
+                   <Ticket size={16} className="text-torami-red"/>
+                   {event.isFree ? (
+                     <span className="font-bold text-green-600">GRATIS</span>
+                   ) : (
+                     <span className="font-bold">${event.ticketPrice?.toLocaleString('es-AR')}</span>
+                   )}
+                 </p>
                </div>
                <div className="flex flex-wrap gap-2">
                  {event.tags.map(tag => (
@@ -128,9 +137,13 @@ export const EventDetail = () => {
         </div>
       </div>
       
-      <div className="relative h-64 md:h-96 w-full mb-8 border-2 border-black shadow-manga group">
-        <img src={event.images[0] || 'https://via.placeholder.com/800'} className="w-full h-full object-cover" alt={event.title} />
-        <div className="absolute bottom-0 left-0 bg-black text-white px-6 py-2 font-display text-xl uppercase skew-x-12 ml-4 mb-4 border-2 border-white">
+      <div className="relative h-64 md:h-96 lg:h-[500px] w-full mb-8 border-2 border-black shadow-manga">
+        <ImageCarousel
+          images={event.images}
+          autoPlayInterval={5000}
+          className="h-full"
+        />
+        <div className="absolute bottom-0 left-0 bg-black text-white px-6 py-2 font-display text-xl uppercase skew-x-12 ml-4 mb-4 border-2 border-white z-10">
           <span className="-skew-x-12 block flex items-center gap-2">
             <Calendar size={18} /> {new Date(event.date).toLocaleDateString()}
           </span>
@@ -172,6 +185,29 @@ export const EventDetail = () => {
                     <CalendarPlus size={20} /> Agendar en Google Calendar
                 </Button>
            </a>
+
+           {/* Precio de entrada */}
+           <MangaCard className={`border-t-4 ${event.isFree ? 'border-t-green-500' : 'border-t-yellow-500'}`}>
+              <div className="flex items-start justify-between mb-4">
+                 <div>
+                    <h3 className="font-display text-2xl uppercase">Entrada</h3>
+                    {event.isFree ? (
+                      <p className="text-2xl font-black text-green-600">GRATIS</p>
+                    ) : (
+                      <p className="text-2xl font-black text-gray-900">${event.ticketPrice?.toLocaleString('es-AR')}</p>
+                    )}
+                 </div>
+                 <Ticket className={`${event.isFree ? 'text-green-500' : 'text-yellow-500'} w-8 h-8`} />
+              </div>
+
+              {!event.isFree && event.ticketLink && (
+                <a href={event.ticketLink} target="_blank" rel="noreferrer">
+                  <Button className="w-full text-sm flex items-center justify-center gap-2 py-3">
+                    <Ticket size={18} /> Comprar Entrada
+                  </Button>
+                </a>
+              )}
+           </MangaCard>
 
            <MangaCard className="border-t-4 border-t-torami-red">
               <div className="flex items-start justify-between mb-4">

@@ -61,7 +61,11 @@ export const getEventById = (id: string) => api.events.getOne(id);
 export const getEvents = () => api.events.getAll();
 export const saveEvent = (data: any) => {
   const { token } = getAuth();
-  if (data.id) return api.events.update(token || '', data.id, data);
+  if (data.id) {
+    // Eliminar id del body antes de enviar al backend
+    const { id, ...dataWithoutId } = data;
+    return api.events.update(token || '', id, dataWithoutId);
+  }
   return api.events.create(token || '', data);
 };
 export const deleteEvent = (id: string) => {
