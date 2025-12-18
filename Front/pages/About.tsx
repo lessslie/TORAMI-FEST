@@ -1,99 +1,112 @@
 import React from 'react';
-import { Heart, Users, Sparkles, Target } from 'lucide-react';
-import { SectionTitle, MangaCard } from '../components/UI';
+import { Heart, Users, Sparkles, Target, Star } from 'lucide-react';
 
 export const About = () => {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <SectionTitle>
-        <span className="flex items-center gap-3">
-          <Heart className="text-torami-red fill-current" /> Sobre Nosotros
-        </span>
-      </SectionTitle>
+    <div className="min-h-screen bg-white">
+      {/* Hero Header */}
+      <div className="bg-black text-white py-16 px-4 text-center border-b-4 border-torami-red">
+        <h1 className="text-5xl md:text-6xl font-bold mb-4 flex items-center justify-center gap-4">
+          <Heart className="text-torami-red fill-current animate-pulse" size={48} />
+          Sobre Nosotros
+        </h1>
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          La historia detrás de Torami Fest
+        </p>
+      </div>
 
-      <div className="space-y-8">
-        {/* Intro */}
-        <MangaCard className="bg-gradient-to-br from-white to-gray-50">
-          <div className="prose prose-lg max-w-none">
-            <p className="text-lg leading-relaxed mb-6">
-              Somos <span className="font-bold text-torami-red">Torami Fest</span>, un evento creado desde la pasión por el animé, el manga, los videojuegos y la cultura geek. Nacimos con una idea clara: construir un espacio donde los fans puedan encontrarse, expresarse y disfrutar de lo que aman, sin importar la edad ni la experiencia dentro del fandom.
+      <div className="max-w-5xl mx-auto px-4 py-12 space-y-12">
+        {/* Intro Section */}
+        <div className="bg-white border-4 border-black p-8 shadow-lg">
+          <div className="space-y-6 text-lg leading-relaxed">
+            <p>
+              Somos <span className="font-black text-torami-red text-2xl">Torami Fest</span>, un evento creado desde la pasión por el animé, el manga, los videojuegos y la cultura geek. Nacimos con una idea clara: construir un espacio donde los fans puedan encontrarse, expresarse y disfrutar de lo que aman, sin importar la edad ni la experiencia dentro del fandom.
             </p>
 
-            <p className="text-lg leading-relaxed mb-6">
+            <p>
               Detrás de Torami Fest hay personas reales, comprometidas y con ganas de hacer las cosas bien. Cada edición es pensada con dedicación, cuidando cada detalle para que el público viva una experiencia auténtica, divertida y segura. No buscamos copiar fórmulas, buscamos crear momentos.
             </p>
           </div>
-        </MangaCard>
-
-        {/* Valores destacados */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <MangaCard className="border-t-4 border-t-torami-red">
-            <div className="flex items-start gap-4">
-              <Users className="text-torami-red w-8 h-8 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-display text-xl mb-2">Comunidad</h3>
-                <p className="text-gray-700">
-                  Un lugar donde artistas, emprendedores y asistentes comparten el mismo entusiasmo y hacen que todo cobre sentido.
-                </p>
-              </div>
-            </div>
-          </MangaCard>
-
-          <MangaCard className="border-t-4 border-t-yellow-500">
-            <div className="flex items-start gap-4">
-              <Sparkles className="text-yellow-500 w-8 h-8 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-display text-xl mb-2">Creatividad</h3>
-                <p className="text-gray-700">
-                  Respeto y creatividad son pilares fundamentales. Cada expresión artística y cada cosplay tienen un lugar especial.
-                </p>
-              </div>
-            </div>
-          </MangaCard>
-
-          <MangaCard className="border-t-4 border-t-blue-500">
-            <div className="flex items-start gap-4">
-              <Heart className="text-blue-500 w-8 h-8 flex-shrink-0 mt-1 fill-current" />
-              <div>
-                <h3 className="font-display text-xl mb-2">Respeto</h3>
-                <p className="text-gray-700">
-                  Un ambiente seguro e inclusivo donde todos pueden ser ellos mismos sin prejuicios ni discriminación.
-                </p>
-              </div>
-            </div>
-          </MangaCard>
-
-          <MangaCard className="border-t-4 border-t-green-500">
-            <div className="flex items-start gap-4">
-              <Target className="text-green-500 w-8 h-8 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-display text-xl mb-2">Encuentro</h3>
-                <p className="text-gray-700">
-                  Creamos espacios donde la comunidad geek se reúne, conecta y comparte experiencias inolvidables.
-                </p>
-              </div>
-            </div>
-          </MangaCard>
         </div>
 
-        {/* Mensaje final */}
-        <MangaCard className="bg-black text-white relative overflow-hidden">
-          <Sparkles className="absolute -right-10 -bottom-10 text-torami-red w-64 h-64 opacity-10" />
-          <div className="relative z-10 text-center py-8">
-            <h2 className="font-display text-3xl md:text-4xl mb-6">
-              Torami Fest es más que un evento:
-            </h2>
-            <p className="text-xl md:text-2xl leading-relaxed mb-6">
-              es <span className="text-yellow-400 font-bold">comunidad</span>, es <span className="text-blue-400 font-bold">respeto</span>, es <span className="text-pink-400 font-bold">creatividad</span> y es <span className="text-green-400 font-bold">encuentro</span>.
+        {/* Values Grid */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Comunidad */}
+          <div className="bg-gradient-to-br from-red-50 to-white border-4 border-black p-6 hover:shadow-2xl transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-torami-red text-white p-3 rounded-lg">
+                <Users size={32} />
+              </div>
+              <h3 className="text-2xl font-black">Comunidad</h3>
+            </div>
+            <p className="text-gray-700 text-lg">
+              Un lugar donde artistas, emprendedores y asistentes comparten el mismo entusiasmo y hacen que todo cobre sentido.
             </p>
-            <p className="text-lg text-gray-300 mb-8">
+          </div>
+
+          {/* Creatividad */}
+          <div className="bg-gradient-to-br from-yellow-50 to-white border-4 border-black p-6 hover:shadow-2xl transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-yellow-500 text-white p-3 rounded-lg">
+                <Sparkles size={32} />
+              </div>
+              <h3 className="text-2xl font-black">Creatividad</h3>
+            </div>
+            <p className="text-gray-700 text-lg">
+              Respeto y creatividad son pilares fundamentales. Cada expresión artística y cada cosplay tienen un lugar especial.
+            </p>
+          </div>
+
+          {/* Respeto */}
+          <div className="bg-gradient-to-br from-blue-50 to-white border-4 border-black p-6 hover:shadow-2xl transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-blue-500 text-white p-3 rounded-lg">
+                <Heart size={32} className="fill-current" />
+              </div>
+              <h3 className="text-2xl font-black">Respeto</h3>
+            </div>
+            <p className="text-gray-700 text-lg">
+              Un ambiente seguro e inclusivo donde todos pueden ser ellos mismos sin prejuicios ni discriminación.
+            </p>
+          </div>
+
+          {/* Encuentro */}
+          <div className="bg-gradient-to-br from-green-50 to-white border-4 border-black p-6 hover:shadow-2xl transition-shadow">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-green-500 text-white p-3 rounded-lg">
+                <Target size={32} />
+              </div>
+              <h3 className="text-2xl font-black">Encuentro</h3>
+            </div>
+            <p className="text-gray-700 text-lg">
+              Creamos espacios donde la comunidad geek se reúne, conecta y comparte experiencias inolvidables.
+            </p>
+          </div>
+        </div>
+
+        {/* Final Message */}
+        <div className="bg-black text-white p-12 text-center relative overflow-hidden border-4 border-torami-red">
+          <div className="absolute inset-0 opacity-5">
+            <Star className="absolute top-10 left-10 w-20 h-20 animate-pulse" />
+            <Star className="absolute bottom-10 right-10 w-20 h-20 animate-pulse" />
+            <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64" />
+          </div>
+
+          <div className="relative z-10">
+            <h2 className="text-4xl md:text-5xl font-black mb-8">
+              Torami Fest es más que un evento
+            </h2>
+            <p className="text-2xl md:text-3xl leading-relaxed mb-8">
+              es <span className="text-yellow-400 font-black">comunidad</span>, es <span className="text-blue-400 font-black">respeto</span>, es <span className="text-pink-400 font-black">creatividad</span> y es <span className="text-green-400 font-black">encuentro</span>.
+            </p>
+            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Seguimos creciendo paso a paso, aprendiendo y mejorando en cada edición, con un solo objetivo: que quienes nos visiten se vayan con una sonrisa y ganas de volver.
             </p>
-            <p className="font-display text-2xl text-torami-red">
+            <p className="text-3xl font-black text-torami-red">
               Bienvenidos a Torami Fest.
             </p>
           </div>
-        </MangaCard>
+        </div>
       </div>
     </div>
   );
