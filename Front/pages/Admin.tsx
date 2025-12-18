@@ -250,6 +250,9 @@ export const Admin = () => {
     getStats().then((data) => {
       console.log('📊 Stats from backend:', data);
       setStats(data);
+    }).catch((err) => {
+      console.error('Error fetching stats:', err);
+      setStats({ users: { total: 0 }, events: { total: 0 }, stands: { pending: 0 }, giveaways: { active: 0 } });
     });
     getStandApplications().then((data) => {
         setStands(data);
