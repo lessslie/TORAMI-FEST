@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
 import { addStandApplication } from '../services/data';
 import { StandApplication } from '../types';
-import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image } from 'lucide-react';
+import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle } from 'lucide-react';
 import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 export const StandForm = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     brandName: '',
     type: 'Merch',
@@ -56,9 +58,12 @@ export const StandForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
-    // Simulate user ID if not logged in (for demo purposes)
-    const userId = user?.id || 'guest_user';
+
+    // Verificar si el usuario está logueado
+    if (!user) {
+      setError('Debes iniciar sesión para solicitar un stand');
+      return;
+    }
 
     if (images.length === 0) {
       setError("Debes subir al menos 1 foto de tu mercadería.");
@@ -66,14 +71,22 @@ export const StandForm = () => {
     }
 
     const finalType = formData.type === 'Otros' ? formData.otherType : formData.type;
-    
-    await addStandApplication({
-      ...formData,
-      userId,
-      type: finalType as any,
-      images: images
-    });
-    setSubmitted(true);
+
+    try {
+      await addStandApplication({
+        ...formData,
+        userId: user.id,
+        type: finalType as any,
+        images: images
+      });
+      setSubmitted(true);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setError('Debes iniciar sesión para solicitar un stand');
+      } else {
+        setError(err.message || 'Error al enviar la solicitud. Por favor intentá de nuevo.');
+      }
+    }
   };
 
   if (submitted) {
@@ -214,11 +227,25 @@ export const StandForm = () => {
           </div>
 
           <Input name="needs" label="Necesidades Especiales (Electricidad, espacio extra)" onChange={handleChange} />
-          
+
           {error && (
-             <div className="p-3 bg-red-100 border border-red-400 text-red-700 text-sm font-bold rounded mb-4">
-                 {error}
-             </div>
+            <MangaCard className="bg-red-50 border-red-500 border-l-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="text-red-600 flex-shrink-0 mt-1" size={24} />
+                <div>
+                  <h4 className="font-bold text-red-800 mb-2">Error en la solicitud</h4>
+                  <p className="text-red-700">{error}</p>
+                  {error.includes('iniciar sesión') && (
+                    <Button
+                      onClick={() => navigate('/login')}
+                      className="mt-3 bg-red-600 hover:bg-red-700"
+                    >
+                      Iniciar Sesión
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </MangaCard>
           )}
 
           <Button type="submit" className="w-full flex items-center justify-center gap-2">

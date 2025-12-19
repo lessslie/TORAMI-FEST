@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { SectionTitle, MangaCard, Input, Button, Badge } from '../components/UI';
 import { addCosplayRegistration } from '../services/data';
-import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send } from 'lucide-react';
+import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle } from 'lucide-react';
 import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 export const CosplayContest = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     participantName: '',
     nickname: '',
@@ -18,6 +20,7 @@ export const CosplayContest = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,12 +40,27 @@ export const CosplayContest = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userId = user?.id || 'guest_user';
-    await addCosplayRegistration({
+    setError(null);
+
+    // Verificar si el usuario está logueado
+    if (!user) {
+      setError('Debes iniciar sesión para inscribirte al concurso');
+      return;
+    }
+
+    try {
+      await addCosplayRegistration({
         ...formData,
-        userId
-    } as any);
-    setSubmitted(true);
+        userId: user.id
+      } as any);
+      setSubmitted(true);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setError('Debes iniciar sesión para inscribirte al concurso');
+      } else {
+        setError(err.message || 'Error al enviar la inscripción. Por favor intentá de nuevo.');
+      }
+    }
   };
 
   if (submitted) {
@@ -152,6 +170,24 @@ export const CosplayContest = () => {
                     <p className="text-xs text-gray-500 mt-1">Si vas a hacer performance, dejanos el link del audio o video de fondo.</p>
                 </div>
             </div>
+
+            {error && (
+              <MangaCard className="bg-red-50 border-red-500 border-l-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="text-red-600 flex-shrink-0 mt-1" size={24} />
+                  <div>
+                    <h4 className="font-bold text-red-800 mb-2">No podés inscribirte</h4>
+                    <p className="text-red-700">{error}</p>
+                    <Button
+                      onClick={() => navigate('/login')}
+                      className="mt-3 bg-red-600 hover:bg-red-700"
+                    >
+                      Iniciar Sesión
+                    </Button>
+                  </div>
+                </div>
+              </MangaCard>
+            )}
 
             <Button type="submit" className="w-full flex items-center justify-center gap-2 py-4 text-lg">
                 <Send size={20} /> Inscribirse al Concurso
