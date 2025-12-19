@@ -303,3 +303,14 @@ export const api = {
 };
 
 export type ApiUser = Awaited<ReturnType<typeof api.me>>;
+
+// Helper function for chat
+export async function chatWithBot(
+  message: string,
+  history: Array<{ id?: string; role: 'user' | 'model'; text: string }>
+): Promise<string> {
+  // Remove 'id' field from history before sending to backend
+  const cleanHistory = history.map(({ role, text }) => ({ role, text }));
+  const response = await api.chat.sendMessage(message, cleanHistory);
+  return response.reply;
+}

@@ -3,11 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { EventsService } from '../events/events.service';
 import { SponsorsService } from '../sponsors/sponsors.service';
 import { ChatMessageDto } from './dto/chat-message.dto';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 @Injectable()
 export class ChatService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenAI;
 
   constructor(
     private configService: ConfigService,
@@ -18,7 +18,7 @@ export class ChatService {
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY not configured in environment variables');
     }
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.genAI = new GoogleGenAI({ apiKey });
   }
 
   async chat(chatDto: ChatMessageDto): Promise<string> {
@@ -64,32 +64,18 @@ export class ChatService {
         - ¡Nunca inventes fechas ni lugares!
       `;
 
-      const model = this.genAI.getGenerativeModel({
-        model: 'gemini-exp-1206',
-        systemInstruction: systemPrompt,
-      });
+      const conversationHistory = chatDto.history.map(m => `${m.role === 'user' ? 'Usuario' : 'Torami-chan'}: ${m.text}`).join('\n');
+      const fullPrompt = `${systemPrompt}\n\nCONVERSACIÓN PREVIA:\n${conversationHistory}\n\nUsuario: ${chatDto.message}\n\nTorami-chan:`;
 
-      // Convert history to Gemini format
-      const contents = [
-        ...chatDto.history.map(m => ({
-          role: m.role,
-          parts: [{ text: m.text }],
-        })),
-        {
-          role: 'user' as const,
-          parts: [{ text: chatDto.message }],
-        },
-      ];
-
-      const result = await model.generateContent({
-        contents,
-        generationConfig: {
+      const response = await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: fullPrompt,
+        config: {
           temperature: 0.7,
-          maxOutputTokens: 500,
-        },
+        }
       });
 
-      return result.response.text() || '¡Ups! Mis circuitos fallaron un poco. Intenta de nuevo. 😵‍💫';
+      return response.text || '¡Ups! Mis circuitos fallaron un poco. Intenta de nuevo. 😵‍💫';
     } catch (error) {
       console.error('Chat error:', error);
       throw new Error('Error al procesar el mensaje');

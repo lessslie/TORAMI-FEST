@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import { X, Send, Sparkles, Bot } from 'lucide-react';
 import { getEvents, getSponsors } from '../services/data';
+import { chatWithBot } from '../services/api';
 
 interface Message {
   id: string;
@@ -73,44 +73,7 @@ export const ToramiBot = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-      if (!apiKey) {
-        throw new Error('API Key no configurada');
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      const systemPrompt = `Eres Torami-chan, la mascota virtual oficial del evento "Torami Fest" (Anime, Gaming y Cultura Pop).
-
-TU PERSONALIDAD:
-- Eres enérgica, amable y muy "otaku".
-- Usas emojis como ✨, 😺, 🎮, 🎌.
-- Tratas al usuario de "nakama" o por su nombre si te lo dice.
-- Tus respuestas son cortas, útiles y divertidas.
-
-TU CONOCIMIENTO (Usa esto para responder):
-${contextData}
-
-REGLAS:
-- Si te preguntan por entradas, diles que pueden comprarlas en la sección de eventos.
-- Si te preguntan cómo llegar, diles que en el detalle del evento hay un botón de Google Maps.
-- Si te preguntan algo que no está en tu conocimiento, di: "Gomen ne (perdón) 😓, no tengo esa info. ¡Preguntá en el Instagram oficial @torami.fest!"
-- ¡Nunca inventes fechas ni lugares!`;
-
-      const conversationHistory = messages.map(m => `${m.role === 'user' ? 'Usuario' : 'Torami-chan'}: ${m.text}`).join('\n');
-      const fullPrompt = `${systemPrompt}\n\nCONVERSACIÓN PREVIA:\n${conversationHistory}\n\nUsuario: ${userMsg}\n\nTorami-chan:`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: fullPrompt,
-        config: {
-          temperature: 0.7,
-        }
-      });
-
-      const reply = response.text || "¡Ups! Mis circuitos fallaron un poco. Intenta de nuevo. 😵‍💫";
-
+      const reply = await chatWithBot(userMsg, messages);
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: reply }]);
 
     } catch (error) {
