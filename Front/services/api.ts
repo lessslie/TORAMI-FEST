@@ -291,6 +291,15 @@ export const api = {
     delete: (token: string, id: string) =>
       request<any>(`/users/${id}`, { method: 'DELETE', token }),
   },
+
+  // ==================== CHAT ====================
+  chat: {
+    sendMessage: (message: string, history: Array<{ role: 'user' | 'model'; text: string }>) =>
+      request<{ reply: string }>('/chat', {
+        method: 'POST',
+        body: { message, history }
+      }),
+  },
 };
 
 export type ApiUser = Awaited<ReturnType<typeof api.me>>;

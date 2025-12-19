@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { StatsModule } from './stats/stats.module';
 import { StampsModule } from './stamps/stamps.module';
 import { ConfigModule as AppConfigModule } from './config/config.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ConfigModule as AppConfigModule } from './config/config.module';
     StatsModule,
     StampsModule,
     AppConfigModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
