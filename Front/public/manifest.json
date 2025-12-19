@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "torami_fest_logo_circle.png",
+      "src": "/torami_fest_logo_circle.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "torami_fest_logo_circle.png",
+      "src": "/torami_fest_logo_circle.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"

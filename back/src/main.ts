@@ -42,7 +42,8 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`API running on http://localhost:${port}/api/v1 (swagger: /api/docs)`);
+  console.log(`API running on http://localhost:${port}/api/v1 `);
+  console.log(`Swagger docs on https://torami-fest.onrender.com/api/docs `);
 }
 
 bootstrap();
