@@ -1,7 +1,5 @@
 {
-  "buildCommand": "cd Front && npm run build",
-  "devCommand": "cd Front && npm run dev",
-  "installCommand": "cd Front && npm install",
-  "framework": "vite",
+  "buildCommand": "npm --prefix Front run build",
+  "installCommand": "npm --prefix Front install",
   "outputDirectory": "Front/dist"
 }
