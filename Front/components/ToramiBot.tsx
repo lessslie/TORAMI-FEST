@@ -32,34 +32,34 @@ export const ToramiBot = () => {
   useEffect(() => {
     // Load data to feed the AI context
     const loadContext = async () => {
-      const events = await getEvents();
-      const stats = await getStats();
-      const sponsors = await getSponsors();
-      
-      const today = new Date().toISOString().split('T')[0];
-      
-      const dataSummary = `
-        FECHA ACTUAL: ${today}
-        
-        EVENTOS:
-        ${JSON.stringify(events.map(e => ({
-            titulo: e.title,
-            fecha: e.date,
-            hora: e.time,
-            lugar: e.location,
-            descripcion: e.description,
-            esPasado: e.isPast,
-            seSuspendePorLluvia: e.rainCheck
-        })))}
+      try {
+        const events = await getEvents();
+        const sponsors = await getSponsors();
 
-        ESTADISTICAS:
-        Usuarios registrados: ${stats.users}
-        Sorteos activos: ${stats.activeGiveaways}
+        const today = new Date().toISOString().split('T')[0];
 
-        SPONSORS:
-        ${sponsors.map(s => s.name).join(', ')}
-      `;
-      setContextData(dataSummary);
+        const dataSummary = `
+          FECHA ACTUAL: ${today}
+
+          EVENTOS:
+          ${JSON.stringify(events.map(e => ({
+              titulo: e.title,
+              fecha: e.date,
+              hora: e.time,
+              lugar: e.location,
+              descripcion: e.description,
+              esPasado: e.isPast,
+              seSuspendePorLluvia: e.rainCheck
+          })))}
+
+          SPONSORS:
+          ${sponsors.map(s => s.name).join(', ')}
+        `;
+        setContextData(dataSummary);
+      } catch (error) {
+        console.error('Error loading bot context:', error);
+        setContextData('FECHA ACTUAL: ' + new Date().toISOString().split('T')[0]);
+      }
     };
     loadContext();
   }, []);
@@ -74,7 +74,13 @@ export const ToramiBot = () => {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error('API Key no configurada');
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       
       const systemPrompt = `
         Eres Torami-chan, la mascota virtual oficial del evento "Torami Fest" (Anime, Gaming y Cultura Pop).
