@@ -10,11 +10,27 @@ export const Home = () => {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [config, setAppConfig] = useState<AppConfig | null>(null);
   const [isGalleryPaused, setIsGalleryPaused] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getUpcomingEvents().then(data => setUpcomingEvents(data));
-    getActiveSponsors().then(setSponsors);
-    getConfig().then(setAppConfig);
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [eventsData, sponsorsData, configData] = await Promise.all([
+          getUpcomingEvents(),
+          getActiveSponsors(),
+          getConfig()
+        ]);
+        setUpcomingEvents(eventsData);
+        setSponsors(sponsorsData);
+        setAppConfig(configData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const galleryImages = config?.homeGalleryImages || [];
@@ -124,6 +140,7 @@ export const Home = () => {
                   src={img}
                   alt="Gallery"
                   className="w-full h-full object-cover bg-black filter grayscale group-hover:grayscale-0 group-hover:saturate-125 transition-all duration-500 group-hover:scale-110"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity"></div>
               </div>
@@ -146,13 +163,32 @@ export const Home = () => {
             <Link to="/proximos-eventos" className="text-sm font-bold underline hover:text-torami-red flex items-center gap-1">Ver todos <ArrowRight size={14} /></Link>
           </div>
           
-          {upcomingEvents.length > 0 ? (
+          {loading ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((n) => (
+                <MangaCard key={n} className="h-full flex flex-col animate-pulse">
+                  <div className="h-40 bg-gray-300 mb-4 border-2 border-black"></div>
+                  <div className="h-6 bg-gray-300 rounded mb-2 w-3/4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </MangaCard>
+              ))}
+            </div>
+          ) : upcomingEvents.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {upcomingEvents.map(event => (
                 <Link to={`/eventos/${event.id}`} key={event.id}>
                   <MangaCard className="h-full flex flex-col relative overflow-hidden">
                      <div className="h-40 bg-gray-200 mb-4 border-2 border-black overflow-hidden relative">
-                        <img src={event.images[0] || 'https://via.placeholder.com/400'} alt={event.title} className="w-full h-full object-cover"/>
+                        <img
+                          src={event.images[0] || 'https://via.placeholder.com/400'}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
                         {event.isFeatured && (
                           <div className="absolute top-2 right-2">
                             <Badge>

@@ -8,9 +8,12 @@ import { Event } from '../types';
 
 export const EventsList = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getUpcomingEvents().then(setEvents);
+    getUpcomingEvents()
+      .then(setEvents)
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -21,11 +24,28 @@ export const EventsList = () => {
          </span>
       </SectionTitle>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {events.map(event => (
+        {loading ? (
+          [1, 2, 3, 4, 5, 6].map((n) => (
+            <MangaCard key={n} className="h-full animate-pulse">
+              <div className="aspect-video bg-gray-300 mb-4 border-2 border-black"></div>
+              <div className="h-6 bg-gray-300 rounded mb-2 w-3/4"></div>
+              <div className="space-y-2 mb-4">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </MangaCard>
+          ))
+        ) : events.map(event => (
           <Link to={`/eventos/${event.id}`} key={event.id}>
              <MangaCard className="h-full group">
                <div className="aspect-video bg-black mb-4 overflow-hidden border-2 border-black relative">
-                 <img src={event.images[0] || 'https://via.placeholder.com/400'} alt={event.title} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"/>
+                 <img
+                   src={event.images[0] || 'https://via.placeholder.com/400'}
+                   alt={event.title}
+                   className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                   loading="lazy"
+                 />
                  {event.isFeatured && (
                    <div className="absolute top-0 right-0 p-2">
                      <Star className="text-yellow-400 fill-current w-8 h-8 drop-shadow-md animate-pulse" />
