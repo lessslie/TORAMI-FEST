@@ -3,22 +3,22 @@ import { ConfigService } from '@nestjs/config';
 import { EventsService } from '../events/events.service';
 import { SponsorsService } from '../sponsors/sponsors.service';
 import { ChatMessageDto } from './dto/chat-message.dto';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Injectable()
 export class ChatService {
-  private openai: OpenAI;
+  private genAI: GoogleGenerativeAI;
 
   constructor(
     private configService: ConfigService,
     private eventsService: EventsService,
     private sponsorsService: SponsorsService,
   ) {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY not configured in environment variables');
+      throw new Error('GEMINI_API_KEY not configured in environment variables');
     }
-    this.openai = new OpenAI({ apiKey });
+    this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
   async chat(chatDto: ChatMessageDto): Promise<string> {
@@ -64,30 +64,32 @@ export class ChatService {
         - ¡Nunca inventes fechas ni lugares!
       `;
 
-      // Convert history to OpenAI format
-      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
+      const model = this.genAI.getGenerativeModel({
+        model: 'gemini-exp-1206',
+        systemInstruction: systemPrompt,
+      });
+
+      // Convert history to Gemini format
+      const contents = [
         ...chatDto.history.map(m => ({
-          role: m.role === 'model' ? ('assistant' as const) : ('user' as const),
-          content: m.text,
+          role: m.role,
+          parts: [{ text: m.text }],
         })),
         {
           role: 'user' as const,
-          content: chatDto.message,
+          parts: [{ text: chatDto.message }],
         },
       ];
 
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages,
-        temperature: 0.7,
-        max_tokens: 500,
+      const result = await model.generateContent({
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        },
       });
 
-      return completion.choices[0]?.message?.content || '¡Ups! Mis circuitos fallaron un poco. Intenta de nuevo. 😵‍💫';
+      return result.response.text() || '¡Ups! Mis circuitos fallaron un poco. Intenta de nuevo. 😵‍💫';
     } catch (error) {
       console.error('Chat error:', error);
       throw new Error('Error al procesar el mensaje');

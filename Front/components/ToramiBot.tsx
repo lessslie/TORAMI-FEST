@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { GoogleGenAI } from "@google/genai";
 import { X, Send, Sparkles, Bot } from 'lucide-react';
-import { api } from '../services/api';
+import { getEvents, getSponsors } from '../services/data';
 
 interface Message {
   id: string;
@@ -11,11 +12,14 @@ interface Message {
 export const ToramiBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'welcome', role: 'model', text: '¡Hola nakama! Soy Torami-chan ✨😺. ¿En qué puedo ayudarte hoy sobre el evento?' }
+    { id: 'welcome', role: 'model', text: '¡Hola nakama! Soy Torami-chan 😺✨. ¿En qué puedo ayudarte hoy sobre el evento?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Context data for the AI
+  const [contextData, setContextData] = useState<string>('');
 
   useEffect(() => {
     // Scroll to bottom on new message
@@ -23,6 +27,41 @@ export const ToramiBot = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    // Load data to feed the AI context
+    const loadContext = async () => {
+      try {
+        const events = await getEvents();
+        const sponsors = await getSponsors();
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const dataSummary = `
+          FECHA ACTUAL: ${today}
+
+          EVENTOS:
+          ${JSON.stringify(events.map(e => ({
+              titulo: e.title,
+              fecha: e.date,
+              hora: e.time,
+              lugar: e.location,
+              descripcion: e.description,
+              esPasado: e.isPast,
+              seSuspendePorLluvia: e.rainCheck
+          })))}
+
+          SPONSORS:
+          ${sponsors.map(s => s.name).join(', ')}
+        `;
+        setContextData(dataSummary);
+      } catch (error) {
+        console.error('Error loading bot context:', error);
+        setContextData('FECHA ACTUAL: ' + new Date().toISOString().split('T')[0]);
+      }
+    };
+    loadContext();
+  }, []);
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -34,25 +73,49 @@ export const ToramiBot = () => {
     setIsLoading(true);
 
     try {
-      // Enviar solo el historial relevante (excluyendo el mensaje de bienvenida)
-      const history = messages
-        .filter(m => m.id !== 'welcome')
-        .map(m => ({ role: m.role, text: m.text }));
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-      const response = await api.chat.sendMessage(userMsg, history);
+      if (!apiKey) {
+        throw new Error('API Key no configurada');
+      }
 
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        text: response.reply
-      }]);
+      const ai = new GoogleGenAI({ apiKey });
+
+      const systemPrompt = `Eres Torami-chan, la mascota virtual oficial del evento "Torami Fest" (Anime, Gaming y Cultura Pop).
+
+TU PERSONALIDAD:
+- Eres enérgica, amable y muy "otaku".
+- Usas emojis como ✨, 😺, 🎮, 🎌.
+- Tratas al usuario de "nakama" o por su nombre si te lo dice.
+- Tus respuestas son cortas, útiles y divertidas.
+
+TU CONOCIMIENTO (Usa esto para responder):
+${contextData}
+
+REGLAS:
+- Si te preguntan por entradas, diles que pueden comprarlas en la sección de eventos.
+- Si te preguntan cómo llegar, diles que en el detalle del evento hay un botón de Google Maps.
+- Si te preguntan algo que no está en tu conocimiento, di: "Gomen ne (perdón) 😓, no tengo esa info. ¡Preguntá en el Instagram oficial @torami.fest!"
+- ¡Nunca inventes fechas ni lugares!`;
+
+      const conversationHistory = messages.map(m => `${m.role === 'user' ? 'Usuario' : 'Torami-chan'}: ${m.text}`).join('\n');
+      const fullPrompt = `${systemPrompt}\n\nCONVERSACIÓN PREVIA:\n${conversationHistory}\n\nUsuario: ${userMsg}\n\nTorami-chan:`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: fullPrompt,
+        config: {
+          temperature: 0.7,
+        }
+      });
+
+      const reply = response.text || "¡Ups! Mis circuitos fallaron un poco. Intenta de nuevo. 😵‍💫";
+
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'model', text: reply }]);
+
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'model',
-        text: 'Lo siento, hubo un error de conexión con mis servidores. Intenta de nuevo. 😵‍💫'
-      }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: "Lo siento, hubo un error de conexión con mis servidores. 😓" }]);
     } finally {
       setIsLoading(false);
     }
