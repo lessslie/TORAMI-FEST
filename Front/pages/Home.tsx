@@ -264,13 +264,11 @@ export const Home = () => {
                     personas que necesitan medicamentos y quienes requieren ayuda.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                    {config.paymentLink && (
-                      <a href={config.paymentLink} target="_blank" rel="noreferrer">
-                        <Button className="w-full sm:w-auto bg-pink-600 hover:bg-pink-700 border-pink-800 flex items-center gap-2">
-                          <Heart size={18} /> Donar Ahora
-                        </Button>
-                      </a>
-                    )}
+                    <Link to="/donaciones">
+                      <Button className="w-full sm:w-auto bg-pink-600 hover:bg-pink-700 border-pink-800 flex items-center gap-2">
+                        <Heart size={18} /> Donar Ahora
+                      </Button>
+                    </Link>
                     {config.aliasCbu && (
                       <div className="bg-white px-4 py-2 border-2 border-pink-300 rounded text-sm">
                         <span className="font-bold text-pink-700">Alias:</span> <span className="font-mono">{config.aliasCbu}</span>

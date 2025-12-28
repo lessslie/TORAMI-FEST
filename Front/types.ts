@@ -144,4 +144,24 @@ export interface AppConfig {
   heroTitle: string;
   heroSubtitle: string;
   heroDateText: string; // Texto libre ej "28 MARZO - BS AS"
+  // Donation Campaign Fields
+  donationTitle?: string;
+  donationDescription?: string;
+  donationImage?: string;
+  donationGoal?: number;
+}
+
+export interface Donation {
+  id: string;
+  donorName?: string;
+  amount: number;
+  isAnonymous: boolean;
+  message?: string;
+  createdAt: string;
+}
+
+export interface DonationStats {
+  total: number;
+  count: number;
+  recent: Donation[];
 }

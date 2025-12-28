@@ -195,3 +195,8 @@ export const getStats = () => {
   if (!token) return Promise.resolve(null);
   return api.stats.getDashboard(token);
 };
+
+// Donations
+export const getDonationStats = () => request('/donations/stats');
+export const createDonation = (data: { donorName?: string; donorEmail: string; amount: number; isAnonymous?: boolean; message?: string }) =>
+  request('/donations', { method: 'POST', body: data });

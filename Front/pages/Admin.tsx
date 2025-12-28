@@ -216,7 +216,7 @@ export const Admin = () => {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
-  const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '' });
+  const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined });
   const [configNotice, setConfigNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isTogglingDonations, setIsTogglingDonations] = useState(false);
 
@@ -1003,28 +1003,93 @@ export const Admin = () => {
                   )}
 
                   <div className="space-y-4">
-                      <Input 
-                        label="Link de MercadoPago (Botón)" 
-                        name="paymentLink" 
-                        value={config.paymentLink} 
-                        onChange={handleConfigChange} 
-                        placeholder="https://link.mercadopago.com.ar/..." 
+                      <Input
+                        label="Link de MercadoPago (Botón)"
+                        name="paymentLink"
+                        value={config.paymentLink}
+                        onChange={handleConfigChange}
+                        placeholder="https://link.mercadopago.com.ar/..."
                       />
-                      <Input 
-                        label="Alias / CBU (Texto)" 
-                        name="aliasCbu" 
-                        value={config.aliasCbu} 
-                        onChange={handleConfigChange} 
-                        placeholder="Ej: torami.fest.mp" 
+                      <Input
+                        label="Alias / CBU (Texto)"
+                        name="aliasCbu"
+                        value={config.aliasCbu}
+                        onChange={handleConfigChange}
+                        placeholder="Ej: torami.fest.mp"
                       />
-                      <Input 
-                        label="URL Imagen QR" 
-                        name="qrImage" 
-                        value={config.qrImage} 
-                        onChange={handleConfigChange} 
+                      <Input
+                        label="URL Imagen QR"
+                        name="qrImage"
+                        value={config.qrImage}
+                        onChange={handleConfigChange}
+                      />
+
+                      <hr className="my-6 border-gray-300" />
+
+                      <div className="space-y-1 mb-4">
+                        <h4 className="font-bold text-md">Campaña de Donación Actual</h4>
+                        <p className="text-xs text-gray-600">
+                          Personaliza el mensaje y la causa de la campaña de donación activa.
+                          Esto se mostrará en la página /donaciones.
+                        </p>
+                      </div>
+
+                      <Input
+                        label="Título de la Campaña"
+                        name="donationTitle"
+                        value={config.donationTitle || ''}
+                        onChange={handleConfigChange}
+                        placeholder="Ej: Donaciones a Caridad"
+                      />
+
+                      <div>
+                        <label className="block text-sm font-bold mb-1 uppercase">Descripción de la Campaña</label>
+                        <textarea
+                          name="donationDescription"
+                          rows={5}
+                          className="w-full border-2 border-black p-3 focus:outline-none focus:shadow-manga"
+                          value={config.donationDescription || ''}
+                          onChange={handleConfigChange}
+                          placeholder="Describe a dónde van las donaciones en esta ocasión..."
+                        />
+                      </div>
+
+                      <Input
+                        label="Imagen de la Campaña (URL - Opcional)"
+                        name="donationImage"
+                        value={config.donationImage || ''}
+                        onChange={handleConfigChange}
+                        placeholder="https://..."
+                      />
+
+                      <Input
+                        label="Meta de Donaciones (ARS) - Opcional"
+                        name="donationGoal"
+                        type="number"
+                        value={config.donationGoal || ''}
+                        onChange={handleConfigChange}
+                        placeholder="Ej: 100000"
                       />
                   </div>
                 </MangaCard>
+
+                {configNotice && (
+                  <div className={`p-4 border-2 shadow-manga animate-in slide-in-from-top-2 flex items-start gap-3 ${configNotice.type === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
+                    {configNotice.type === 'success' ? (
+                      <Check className="text-green-600 flex-shrink-0" size={24} />
+                    ) : (
+                      <AlertTriangle className="text-red-600 flex-shrink-0" size={24} />
+                    )}
+                    <div>
+                      <p className={`font-bold ${configNotice.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+                        {configNotice.type === 'success' ? '✓ Cambios guardados exitosamente' : '✗ Error al guardar'}
+                      </p>
+                      <p className={`text-sm mt-1 ${configNotice.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+                        {configNotice.text}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <Button onClick={handleSaveConfig} className="w-full flex items-center justify-center gap-2 py-4 text-lg">
                     <Save size={18} /> Guardar Cambios Globales

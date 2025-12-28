@@ -176,6 +176,20 @@ model AppConfig {
   heroSubtitle String?
   heroDateText String?
   homeGalleryImages String[]
+  donationTitle String?
+  donationDescription String?
+  donationImage String?
+  donationGoal Decimal? @db.Decimal(10, 2)
+}
+
+model Donation {
+  id          String   @id @default(uuid())
+  donorName   String?
+  donorEmail  String
+  amount      Decimal  @db.Decimal(10, 2)
+  isAnonymous Boolean  @default(false)
+  message     String?
+  createdAt   DateTime @default(now())
 }
 
 enum UserRole {

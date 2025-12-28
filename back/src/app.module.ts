@@ -17,6 +17,7 @@ import { StatsModule } from './stats/stats.module';
 import { StampsModule } from './stamps/stamps.module';
 import { ConfigModule as AppConfigModule } from './config/config.module';
 import { ChatModule } from './chat/chat.module';
+import { DonationsModule } from './donations/donations.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ChatModule } from './chat/chat.module';
     StampsModule,
     AppConfigModule,
     ChatModule,
+    DonationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

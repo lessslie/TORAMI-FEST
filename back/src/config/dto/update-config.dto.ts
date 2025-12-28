@@ -41,4 +41,23 @@ export class UpdateConfigDto {
   @IsOptional()
   @IsArray()
   homeGalleryImages?: string[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  donationTitle?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  donationDescription?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  donationImage?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  donationGoal?: number;
 }
