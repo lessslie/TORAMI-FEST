@@ -514,9 +514,11 @@ export const Admin = () => {
   // CONFIG HANDLERS
   const handleConfigToggle = async () => {
     const newStatus = !config.donationsEnabled;
-    const newConfig = { ...config, donationsEnabled: newStatus };
-    await updateConfig(newConfig);
-    setConfig(newConfig);
+    // Eliminar campos que no deben enviarse al backend (id, createdAt, updatedAt)
+    const { id, ...configWithoutId } = config as any;
+    const configToSave = { ...configWithoutId, donationsEnabled: newStatus };
+    await updateConfig(configToSave);
+    setConfig({ ...config, donationsEnabled: newStatus });
   };
   
   const handleConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -689,6 +691,7 @@ export const Admin = () => {
               <tr className="bg-black text-white text-left">
                 <th className="p-3">Marca</th>
                 <th className="p-3">Tipo</th>
+                <th className="p-3">Evento</th>
                 <th className="p-3">Contacto</th>
                 <th className="p-3">WhatsApp</th>
                 <th className="p-3">Estado</th>
@@ -700,6 +703,16 @@ export const Admin = () => {
                 <tr key={stand.id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="p-3 font-bold">{stand.brandName}</td>
                   <td className="p-3">{stand.type}</td>
+                  <td className="p-3">
+                    {stand.event ? (
+                      <div>
+                        <div className="font-medium">{stand.event.title}</div>
+                        <div className="text-xs text-gray-500">{new Date(stand.event.date).toLocaleDateString('es-AR')}</div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-red-500 italic">Sin evento asignado</span>
+                    )}
+                  </td>
                   <td className="p-3">
                     <div>{stand.contactName}</div>
                     <div className="text-xs text-gray-500">{stand.email}</div>
@@ -738,6 +751,7 @@ export const Admin = () => {
               <tr className="bg-black text-white text-left">
                 <th className="p-3">Personaje</th>
                 <th className="p-3">Participante</th>
+                <th className="p-3">Evento</th>
                 <th className="p-3">Categoría</th>
                 <th className="p-3">Estado</th>
                 <th className="p-3">Acciones</th>
@@ -753,6 +767,16 @@ export const Admin = () => {
                   <td className="p-3">
                       <div>{cos.participantName}</div>
                       <div className="text-xs text-gray-500 italic">{cos.nickname}</div>
+                  </td>
+                  <td className="p-3">
+                    {cos.event ? (
+                      <div>
+                        <div className="font-medium">{cos.event.title}</div>
+                        <div className="text-xs text-gray-500">{new Date(cos.event.date).toLocaleDateString('es-AR')}</div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-red-500 italic">Sin evento</span>
+                    )}
                   </td>
                   <td className="p-3"><Badge color="blue">{cos.category}</Badge></td>
                   <td className="p-3">
@@ -772,7 +796,7 @@ export const Admin = () => {
               ))}
               {cosplayers.length === 0 && (
                   <tr>
-                      <td colSpan={5} className="p-4 text-center text-gray-500 italic">No hay inscriptos aún.</td>
+                      <td colSpan={6} className="p-4 text-center text-gray-500 italic">No hay inscriptos aún.</td>
                   </tr>
               )}
             </tbody>

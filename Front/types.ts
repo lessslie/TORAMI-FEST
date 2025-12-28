@@ -78,6 +78,7 @@ export interface StandApplication {
   images: string[]; // Fotos de la mercadería
   status: 'Pendiente' | 'Aprobada' | 'Rechazada';
   eventId?: string;
+  event?: Event; // Populated event data
   messages: ChatMessage[];
 }
 
@@ -93,6 +94,8 @@ export interface CosplayRegistration {
   referenceImage?: string; // URL o base64
   audioLink?: string; // Para performance
   status: 'Inscripto' | 'Confirmado' | 'Rechazado';
+  eventId?: string;
+  event?: Event; // Populated event data
   messages: ChatMessage[];
 }
 
@@ -115,6 +118,8 @@ export interface Giveaway {
   status: 'Activo' | 'Finalizado';
   winner?: string; // Name of winner
   participantIds: string[]; // IDs of users participating
+  eventId?: string;
+  event?: Event; // Populated event data
   images: string[];
 }
 

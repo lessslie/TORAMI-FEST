@@ -89,7 +89,7 @@ a {
 .gallery-marquee {
   display: flex;
   gap: 1rem;
-  animation: scroll-left 30s linear infinite;
+  animation: scroll-left 20s linear infinite;
   will-change: transform;
 }
 
@@ -112,14 +112,14 @@ a {
 
 @media (max-width: 640px) {
   .gallery-marquee {
-    animation-duration: 25s;
+    animation-duration: 15s;
     gap: 0.75rem;
   }
 }
 
 @media (min-width: 1024px) {
   .gallery-marquee {
-    animation-duration: 35s;
+    animation-duration: 25s;
     gap: 1.25rem;
   }
 }

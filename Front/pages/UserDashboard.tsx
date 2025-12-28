@@ -22,7 +22,7 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 
 export const UserDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('ticket');
+  const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
   
   // Data State
   const [stands, setStands] = useState<StandApplication[]>([]);
@@ -169,8 +169,9 @@ export const UserDashboard = () => {
       {/* Mobile-friendly horizontal scroll tab list */}
       <div className="bg-white border-2 border-black shadow-manga mb-8 overflow-x-auto scrollbar-hide">
          <div className="flex w-full min-w-max">
-            <TabButton id="ticket" label="Entrada" icon={Ticket} />
-            <TabButton id="passport" label="Pasaporte" icon={ScanLine} />
+            {/* Temporarily hidden - will be enabled later */}
+            {/* <TabButton id="ticket" label="Entrada" icon={Ticket} /> */}
+            {/* <TabButton id="passport" label="Pasaporte" icon={ScanLine} /> */}
             <TabButton id="profile" label="Perfil" icon={UserIcon} />
             <TabButton id="stands" label="Stands" icon={Store} />
             <TabButton id="cosplay" label="Cosplay" icon={Trophy} />

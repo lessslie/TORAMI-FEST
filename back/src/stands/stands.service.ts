@@ -10,11 +10,20 @@ export class StandsService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.standApplication.findMany();
+    return this.prisma.standApplication.findMany({
+      include: {
+        event: true,
+      },
+    });
   }
 
   findByUser(userId: string) {
-    return this.prisma.standApplication.findMany({ where: { userId } });
+    return this.prisma.standApplication.findMany({
+      where: { userId },
+      include: {
+        event: true,
+      },
+    });
   }
 
   async create(userId: string, dto: CreateStandDto) {

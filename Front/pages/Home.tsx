@@ -186,7 +186,7 @@ export const Home = () => {
                         <img
                           src={event.images[0] || 'https://via.placeholder.com/400'}
                           alt={event.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           loading="lazy"
                         />
                         {event.isFeatured && (

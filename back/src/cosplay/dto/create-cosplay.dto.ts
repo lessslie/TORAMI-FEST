@@ -29,6 +29,10 @@ export class CreateCosplayDto {
   audioLink?: string;
 
   @IsOptional()
+  @IsString()
+  eventId?: string;
+
+  @IsOptional()
   @IsEnum(CosplayStatus)
   status?: CosplayStatus;
 }

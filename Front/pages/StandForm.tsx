@@ -1,14 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addStandApplication } from '../services/data';
-import { StandApplication } from '../types';
-import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle } from 'lucide-react';
+import { addStandApplication, getUpcomingEvents } from '../services/data';
+import { StandApplication, Event } from '../types';
+import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 
 export const StandForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [events, setEvents] = useState<Event[]>([]);
   const [formData, setFormData] = useState({
     brandName: '',
     type: 'Merch',
@@ -18,13 +19,31 @@ export const StandForm = () => {
     socials: '',
     description: '',
     needs: '',
-    otherType: ''
+    otherType: '',
+    eventId: ''
   });
   
   const [images, setImages] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const upcomingEvents = await getUpcomingEvents();
+        setEvents(upcomingEvents);
+        // Auto-select the first event if available
+        if (upcomingEvents.length > 0) {
+          setFormData(prev => ({ ...prev, eventId: upcomingEvents[0].id }));
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+      }
+    };
+    loadEvents();
+  }, []);
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -65,6 +84,11 @@ export const StandForm = () => {
       return;
     }
 
+    if (!formData.eventId) {
+      setError('Debes seleccionar un evento para tu stand');
+      return;
+    }
+
     if (images.length === 0) {
       setError("Debes subir al menos 1 foto de tu mercadería.");
       return;
@@ -72,11 +96,19 @@ export const StandForm = () => {
 
     const finalType = formData.type === 'Otros' ? formData.otherType : formData.type;
 
+    setIsSubmitting(true);
     try {
+      // Only send fields that the DTO accepts
       await addStandApplication({
-        ...formData,
-        userId: user.id,
-        type: finalType as any,
+        brandName: formData.brandName,
+        type: finalType,
+        contactName: formData.contactName,
+        email: formData.email,
+        phone: formData.phone,
+        socials: formData.socials,
+        description: formData.description,
+        needs: formData.needs,
+        eventId: formData.eventId,
         images: images
       });
       setSubmitted(true);
@@ -86,6 +118,8 @@ export const StandForm = () => {
       } else {
         setError(err.message || 'Error al enviar la solicitud. Por favor intentá de nuevo.');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -96,7 +130,22 @@ export const StandForm = () => {
           <CheckCircle className="text-green-600 w-16 h-16 mb-4" />
           <h2 className="font-display text-3xl mb-4">¡Solicitud Enviada!</h2>
           <p className="mb-6">El equipo de Torami Fest revisará tu propuesta. Te contactaremos pronto.</p>
-          <Button onClick={() => { setSubmitted(false); setImages([]); setFormData({ ...formData, brandName: '' }); }}>Enviar otra</Button>
+          <Button onClick={() => {
+            setSubmitted(false);
+            setImages([]);
+            setFormData({
+              brandName: '',
+              type: 'Merch',
+              contactName: '',
+              email: '',
+              phone: '',
+              socials: '',
+              description: '',
+              needs: '',
+              otherType: '',
+              eventId: events.length > 0 ? events[0].id : ''
+            });
+          }}>Enviar otra</Button>
         </MangaCard>
       </div>
     );
@@ -128,6 +177,33 @@ export const StandForm = () => {
         </MangaCard>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Event Selector */}
+          <div>
+            <label className="block text-sm font-bold mb-2 uppercase flex items-center gap-2">
+              <Calendar size={16} className="text-torami-red" /> Evento al que te querés anotar *
+            </label>
+            {events.length === 0 ? (
+              <div className="border-2 border-gray-300 p-4 bg-gray-50 text-gray-500 text-center">
+                No hay eventos próximos disponibles
+              </div>
+            ) : (
+              <select
+                name="eventId"
+                className="w-full border-2 border-black p-3 bg-white focus:outline-none focus:shadow-manga"
+                onChange={handleChange}
+                value={formData.eventId}
+                required
+              >
+                <option value="">-- Seleccioná un evento --</option>
+                {events.map(event => (
+                  <option key={event.id} value={event.id}>
+                    {event.title} - {new Date(event.date).toLocaleDateString('es-AR')} ({event.location})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           <div className="grid md:grid-cols-2 gap-6">
             <Input name="brandName" label="Nombre del Stand" required onChange={handleChange} placeholder="Ej. Tienda Kawaii" />
             <Input name="contactName" label="Persona de Contacto" required onChange={handleChange} />
@@ -248,8 +324,17 @@ export const StandForm = () => {
             </MangaCard>
           )}
 
-          <Button type="submit" className="w-full flex items-center justify-center gap-2">
-            <Send size={18} /> Enviar Postulación
+          <Button type="submit" disabled={isSubmitting} className="w-full flex items-center justify-center gap-2">
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Send size={18} /> Enviar Postulación
+              </>
+            )}
           </Button>
         </form>
       </div>

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button, Badge } from '../components/UI';
-import { addCosplayRegistration } from '../services/data';
-import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle } from 'lucide-react';
+import { addCosplayRegistration, getUpcomingEvents } from '../services/data';
+import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
+import { Event } from '../types';
 
 export const CosplayContest = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [events, setEvents] = useState<Event[]>([]);
   const [formData, setFormData] = useState({
     participantName: '',
     nickname: '',
@@ -16,11 +18,28 @@ export const CosplayContest = () => {
     seriesName: '',
     category: 'General',
     audioLink: '',
-    referenceImage: ''
+    referenceImage: '',
+    eventId: ''
   });
   const [submitted, setSubmitted] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const upcomingEvents = await getUpcomingEvents();
+        setEvents(upcomingEvents);
+        if (upcomingEvents.length > 0) {
+          setFormData(prev => ({ ...prev, eventId: upcomingEvents[0].id }));
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+      }
+    };
+    loadEvents();
+  }, []);
 
   const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,11 +67,25 @@ export const CosplayContest = () => {
       return;
     }
 
+    if (!formData.eventId) {
+      setError('Debes seleccionar un evento para tu inscripción');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
+      // Only send fields that the DTO accepts
       await addCosplayRegistration({
-        ...formData,
-        userId: user.id
-      } as any);
+        participantName: formData.participantName,
+        nickname: formData.nickname,
+        whatsapp: formData.whatsapp,
+        characterName: formData.characterName,
+        seriesName: formData.seriesName,
+        category: formData.category,
+        referenceImage: formData.referenceImage,
+        audioLink: formData.audioLink,
+        eventId: formData.eventId
+      });
       setSubmitted(true);
     } catch (err: any) {
       if (err.response?.status === 401) {
@@ -60,6 +93,8 @@ export const CosplayContest = () => {
       } else {
         setError(err.message || 'Error al enviar la inscripción. Por favor intentá de nuevo.');
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -113,8 +148,35 @@ export const CosplayContest = () => {
         </MangaCard>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Event Selector */}
+            <div>
+              <label className="block text-sm font-bold mb-2 uppercase flex items-center gap-2">
+                <Calendar size={16} className="text-purple-600" /> Evento al que te querés inscribir *
+              </label>
+              {events.length === 0 ? (
+                <div className="border-2 border-gray-300 p-4 bg-gray-50 text-gray-500 text-center">
+                  No hay eventos próximos disponibles
+                </div>
+              ) : (
+                <select
+                  name="eventId"
+                  className="w-full border-2 border-black p-3 bg-white focus:outline-none focus:shadow-manga"
+                  onChange={handleChange}
+                  value={formData.eventId}
+                  required
+                >
+                  <option value="">-- Seleccioná un evento --</option>
+                  {events.map(event => (
+                    <option key={event.id} value={event.id}>
+                      {event.title} - {new Date(event.date).toLocaleDateString('es-AR')} ({event.location})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             <h3 className="font-display text-xl border-b-2 border-black pb-2 mb-4">Datos del Cosplayer</h3>
-            
+
             <div className="grid md:grid-cols-2 gap-6">
                 <Input name="participantName" label="Nombre Real" required onChange={handleChange} />
                 <Input name="nickname" label="Nombre Artístico / Nick" onChange={handleChange} />
@@ -189,8 +251,17 @@ export const CosplayContest = () => {
               </MangaCard>
             )}
 
-            <Button type="submit" className="w-full flex items-center justify-center gap-2 py-4 text-lg">
-                <Send size={20} /> Inscribirse al Concurso
+            <Button type="submit" disabled={isSubmitting} className="w-full flex items-center justify-center gap-2 py-4 text-lg">
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Enviando inscripción...
+                  </>
+                ) : (
+                  <>
+                    <Send size={20} /> Inscribirse al Concurso
+                  </>
+                )}
             </Button>
         </form>
     </div>

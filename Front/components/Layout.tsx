@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Heart, User as UserIcon, LogOut, Home, Calendar, Image, Store, Gift, MessageCircle, DollarSign, Ghost, Sparkles, ShieldCheck, ArrowUp, Trophy, UserCog, LogIn, Bell } from 'lucide-react';
 import { useAuth } from '../App';
 import { UserRole, Notification } from '../types';
@@ -11,6 +11,7 @@ import { getNotifications, markNotificationRead } from '../services/data';
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout, login } = useAuth();
   
   // Notification State
@@ -57,6 +58,11 @@ export const Navbar = () => {
   const handleMarkRead = async (id: string) => {
       await markNotificationRead(id);
       setNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -170,7 +176,7 @@ export const Navbar = () => {
                  </Link>
               </div>
             ) : (
-              <button onClick={logout} title="Salir" className="ml-2 p-2 hover:bg-red-100 rounded-full text-red-600 border-2 border-transparent hover:border-red-200 transition-all">
+              <button onClick={handleLogout} title="Salir" className="ml-2 p-2 hover:bg-red-100 rounded-full text-red-600 border-2 border-transparent hover:border-red-200 transition-all">
                 <LogOut size={20} />
               </button>
             )}
@@ -228,7 +234,7 @@ export const Navbar = () => {
                     </Link>
                 </div>
               ) : (
-                 <button onClick={logout} className="w-full text-left px-4 py-2 text-red-600 font-bold flex items-center gap-2 hover:bg-red-50">
+                 <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-red-600 font-bold flex items-center gap-2 hover:bg-red-50">
                    <LogOut size={16}/> Cerrar Sesión ({user.name})
                  </button>
               )}

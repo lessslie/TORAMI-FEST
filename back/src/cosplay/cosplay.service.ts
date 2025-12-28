@@ -10,11 +10,20 @@ export class CosplayService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.cosplayRegistration.findMany();
+    return this.prisma.cosplayRegistration.findMany({
+      include: {
+        event: true,
+      },
+    });
   }
 
   findByUser(userId: string) {
-    return this.prisma.cosplayRegistration.findMany({ where: { userId } });
+    return this.prisma.cosplayRegistration.findMany({
+      where: { userId },
+      include: {
+        event: true,
+      },
+    });
   }
 
   create(userId: string, dto: CreateCosplayDto) {
