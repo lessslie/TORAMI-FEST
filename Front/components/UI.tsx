@@ -67,18 +67,38 @@ export const Input = ({ label, error, ...props }: any) => (
 
 export const Countdown = ({ targetDate }: { targetDate: string }) => {
   const [timeLeft, setTimeLeft] = useState<{days: number, hours: number, minutes: number, seconds: number} | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = +new Date(targetDate) - +new Date();
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        });
-      } else {
+      try {
+        const target = new Date(targetDate);
+        const now = new Date();
+
+        // Validar que la fecha sea válida
+        if (isNaN(target.getTime())) {
+          setError(`Fecha inválida: ${targetDate}`);
+          setTimeLeft(null);
+          return;
+        }
+
+        const difference = target.getTime() - now.getTime();
+
+        if (difference > 0) {
+          setTimeLeft({
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((difference / 1000 / 60) % 60),
+            seconds: Math.floor((difference / 1000) % 60)
+          });
+          setError(null);
+        } else {
+          setTimeLeft(null);
+          setError(null); // El evento ya pasó
+        }
+      } catch (err) {
+        console.error('Error calculando countdown:', err);
+        setError('Error al calcular el tiempo');
         setTimeLeft(null);
       }
     };
@@ -87,6 +107,11 @@ export const Countdown = ({ targetDate }: { targetDate: string }) => {
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
   }, [targetDate]);
+
+  // Mostrar error en desarrollo para debug
+  if (error && import.meta.env.DEV) {
+    return <div className="text-xs text-red-500">{error}</div>;
+  }
 
   if (!timeLeft) return null;
 

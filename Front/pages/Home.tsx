@@ -91,7 +91,7 @@ export const Home = () => {
           {nextEvent && (
             <div className="mb-8 flex flex-col items-center gap-2">
               <p className="text-[10px] font-bold uppercase text-gray-400 tracking-widest">Tiempo restante</p>
-              <Countdown targetDate={`${nextEvent.date}T${nextEvent.time.split(' - ')[0]}:00`} />
+              <Countdown targetDate={nextEvent.date} />
             </div>
           )}
 
