@@ -280,13 +280,6 @@ export const EventDetail = () => {
                 </div>
              </div>
            )}
-
-           <MangaCard className="bg-torami-red text-white border-black relative overflow-hidden">
-              <Ticket className="absolute -right-2 -top-2 text-white opacity-20 w-24 h-24 rotate-12" />
-              <h3 className="font-bold text-lg mb-2 flex items-center gap-2"><Ticket /> Entradas</h3>
-              <p className="text-sm mb-4">Conseguí tu anticipada online antes de que se agoten.</p>
-              <Button variant="secondary" className="w-full font-bold">Comprar Ticket</Button>
-           </MangaCard>
         </div>
       </div>
     </div>

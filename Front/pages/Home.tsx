@@ -245,6 +245,44 @@ export const Home = () => {
           <Gift className="absolute -right-10 -bottom-10 text-gray-800 w-64 h-64 opacity-20 rotate-12 group-hover:rotate-6 transition-transform" />
         </section>
 
+        {/* Donaciones a Caridad */}
+        {config?.donationsEnabled && (
+          <section className="max-w-4xl mx-auto px-4 py-8">
+            <MangaCard className="bg-gradient-to-br from-pink-50 to-purple-50 border-l-4 border-l-pink-500 shadow-lg">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center">
+                    <Heart className="text-white w-8 h-8 fill-current animate-pulse" />
+                  </div>
+                </div>
+                <div className="flex-grow text-center md:text-left">
+                  <h3 className="font-display text-2xl md:text-3xl mb-2 text-pink-700">
+                    Donaciones a Caridad
+                  </h3>
+                  <p className="text-gray-700 mb-4">
+                    Lo recaudado se dona a causas benéficas: veterinarios, comedores comunitarios,
+                    personas que necesitan medicamentos y quienes requieren ayuda.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                    {config.paymentLink && (
+                      <a href={config.paymentLink} target="_blank" rel="noreferrer">
+                        <Button className="w-full sm:w-auto bg-pink-600 hover:bg-pink-700 border-pink-800 flex items-center gap-2">
+                          <Heart size={18} /> Donar Ahora
+                        </Button>
+                      </a>
+                    )}
+                    {config.aliasCbu && (
+                      <div className="bg-white px-4 py-2 border-2 border-pink-300 rounded text-sm">
+                        <span className="font-bold text-pink-700">Alias:</span> <span className="font-mono">{config.aliasCbu}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </MangaCard>
+          </section>
+        )}
+
         {/* Sponsors */}
         <section>
            <SectionTitle>
