@@ -218,6 +218,7 @@ export const Admin = () => {
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '' });
   const [configNotice, setConfigNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isTogglingDonations, setIsTogglingDonations] = useState(false);
 
   // Edit State
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
@@ -513,12 +514,21 @@ export const Admin = () => {
 
   // CONFIG HANDLERS
   const handleConfigToggle = async () => {
-    const newStatus = !config.donationsEnabled;
-    // Eliminar campos que no deben enviarse al backend (id, createdAt, updatedAt)
-    const { id, ...configWithoutId } = config as any;
-    const configToSave = { ...configWithoutId, donationsEnabled: newStatus };
-    await updateConfig(configToSave);
-    setConfig({ ...config, donationsEnabled: newStatus });
+    setIsTogglingDonations(true);
+    try {
+      const newStatus = !config.donationsEnabled;
+      // Eliminar campos que no deben enviarse al backend (id, createdAt, updatedAt)
+      const { id, ...configWithoutId } = config as any;
+      const configToSave = { ...configWithoutId, donationsEnabled: newStatus };
+      await updateConfig(configToSave);
+      setConfig({ ...config, donationsEnabled: newStatus });
+    } catch (error) {
+      console.error('Error al cambiar estado de donaciones:', error);
+      setConfigNotice({ type: 'error', text: 'No se pudo cambiar el estado de las donaciones.' });
+      setTimeout(() => setConfigNotice(null), 3000);
+    } finally {
+      setIsTogglingDonations(false);
+    }
   };
   
   const handleConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -963,14 +973,35 @@ export const Admin = () => {
                 <MangaCard>
                   <h3 className="font-bold text-lg mb-4">Donaciones y Pagos</h3>
                   <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 border border-gray-200">
-                    <span className="font-bold">Habilitar Donaciones</span>
-                    <button 
+                    <div>
+                      <span className="font-bold block">Habilitar Donaciones</span>
+                      {isTogglingDonations && (
+                        <span className="text-xs text-gray-500 italic animate-pulse">
+                          {config.donationsEnabled ? 'Desactivando...' : 'Activando...'}
+                        </span>
+                      )}
+                    </div>
+                    <button
                       onClick={handleConfigToggle}
-                      className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.donationsEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
+                      disabled={isTogglingDonations}
+                      className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.donationsEnabled ? 'bg-green-500' : 'bg-gray-300'} ${isTogglingDonations ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                       <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.donationsEnabled ? 'translate-x-6' : ''}`}></div>
+                       <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.donationsEnabled ? 'translate-x-6' : ''} ${isTogglingDonations ? 'animate-pulse' : ''}`}></div>
                     </button>
                   </div>
+
+                  {!config.donationsEnabled && (
+                    <div className="mb-6 p-4 bg-blue-50 border-l-4 border-l-blue-500 text-sm">
+                      <p className="font-bold text-blue-800 mb-2">Propósito de las Donaciones</p>
+                      <p className="text-blue-700">
+                        Lo recaudado en cada festival o encuentro se donará a entidades benéficas.
+                        Por ejemplo: veterinarios, comedores comunitarios, personas que necesitan remedios,
+                        o lugares y personas que necesiten ayuda. Aquí se edita lo que se verá en la parte
+                        de donaciones cuando esté activada.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                       <Input 
                         label="Link de MercadoPago (Botón)" 
