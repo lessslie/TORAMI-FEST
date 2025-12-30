@@ -161,6 +161,8 @@ export const UserDashboard = () => {
           setShowSuccessModal(true);
           // Auto-cerrar el modal después de 2 segundos
           setTimeout(() => setShowSuccessModal(false), 2000);
+          // Recargar la página para actualizar los datos del usuario
+          setTimeout(() => window.location.reload(), 2100);
       }
   };
 
