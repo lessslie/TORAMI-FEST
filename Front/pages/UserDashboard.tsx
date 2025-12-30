@@ -151,7 +151,6 @@ export const UserDashboard = () => {
       e.preventDefault();
       if (user) {
           await updateUserProfile({
-              id: user.id,
               name: profileData.name,
               email: profileData.email,
               whatsapp: profileData.whatsapp,
