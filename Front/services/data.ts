@@ -214,3 +214,19 @@ export const markAllNotificationsAsRead = () => {
   const { token } = getAuth();
   return request('/notifications/read-all', { method: 'PATCH', token });
 };
+
+// Admin - User Management
+export const getAllUsers = () => {
+  const { token } = getAuth();
+  return request('/users', { token });
+};
+
+export const updateUser = (userId: string, data: Partial<{ name: string; email: string; whatsapp: string; phone: string; role: string; entryAuthorized: boolean }>) => {
+  const { token } = getAuth();
+  return request(`/users/${userId}`, { method: 'PUT', body: data, token });
+};
+
+export const deleteUser = (userId: string) => {
+  const { token } = getAuth();
+  return request(`/users/${userId}`, { method: 'DELETE', token });
+};

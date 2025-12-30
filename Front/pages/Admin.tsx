@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
-import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, GalleryItem } from '../types';
+import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, GalleryItem, User } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import {
   getStats, getStandApplications, updateStandStatus, getConfig, updateConfig,
@@ -9,10 +9,11 @@ import {
   getGiveaways, saveGiveaway, deleteGiveaway,
   getGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem,
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
-  getUnreadNotificationCount, markAllNotificationsAsRead
+  getUnreadNotificationCount, markAllNotificationsAsRead,
+  getAllUsers, updateUser, deleteUser
 } from '../services/data';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -207,11 +208,12 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
 
 export const Admin = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'config'|'cosplay'>('dashboard');
-  
+  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'config'|'cosplay'|'users'>('dashboard');
+
   // Data State
   const [stats, setStats] = useState<any>(null);
   const [stands, setStands] = useState<StandApplication[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [cosplayers, setCosplayers] = useState<CosplayRegistration[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
@@ -288,6 +290,7 @@ export const Admin = () => {
     getGiveaways().then(setGiveaways);
     getGallery().then(setGallery);
     getConfig().then(setConfig);
+    getAllUsers().then((data: User[]) => setUsers(data));
     getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
   };
 
@@ -660,6 +663,7 @@ export const Admin = () => {
             <option value="gallery">Galería</option>
             <option value="giveaways">Sorteos</option>
             <option value="sponsors">Sponsors</option>
+            <option value="users">Usuarios</option>
             <option value="config">Config</option>
           </select>
         </div>
@@ -673,6 +677,7 @@ export const Admin = () => {
           <TabButton id="gallery" label="Galería" icon={Image} />
           <TabButton id="giveaways" label="Sorteos" icon={Gift} />
           <TabButton id="sponsors" label="Sponsors" icon={DollarSign} />
+          <TabButton id="users" label="Usuarios" icon={Users} />
           <TabButton id="config" label="Config" icon={Upload} />
         </div>
       </div>
@@ -976,6 +981,108 @@ export const Admin = () => {
                         </div>
                     </MangaCard>
                 ))}
+            </div>
+          </div>
+      )}
+
+      {/* --- USERS MANAGEMENT --- */}
+      {activeTab === 'users' && (
+          <div className="animate-in fade-in">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
+                <h3 className="font-display text-xl sm:text-2xl">Gestión de Usuarios</h3>
+            </div>
+            <div className="animate-in fade-in -mx-2 sm:mx-0">
+              <div className="overflow-x-auto">
+                <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[900px]">
+                  <thead>
+                    <tr className="bg-black text-white text-left">
+                      <th className="p-2 sm:p-3 whitespace-nowrap">Nombre</th>
+                      <th className="p-2 sm:p-3 whitespace-nowrap">Email</th>
+                      <th className="p-2 sm:p-3 whitespace-nowrap">WhatsApp</th>
+                      <th className="p-2 sm:p-3 whitespace-nowrap">Rol</th>
+                      <th className="p-2 sm:p-3 whitespace-nowrap">Entrada</th>
+                      <th className="p-2 sm:p-3 whitespace-nowrap">Fecha</th>
+                      <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u.id} className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="p-2 sm:p-3 font-bold whitespace-nowrap">{u.name}</td>
+                        <td className="p-2 sm:p-3 whitespace-nowrap text-xs">{u.email}</td>
+                        <td className="p-2 sm:p-3 whitespace-nowrap font-mono text-xs">
+                          {u.whatsapp ? (
+                            <a href={`https://wa.me/${u.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700 flex items-center gap-1">
+                              <Phone size={12} />
+                              {u.whatsapp}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <Badge color={u.role === 'SUPER_ADMIN' ? 'red' : u.role === 'ADMIN' ? 'blue' : 'purple'}>
+                            {u.role}
+                          </Badge>
+                        </td>
+                        <td className="p-2 sm:p-3 text-center">
+                          {u.entryAuthorized ? (
+                            <Check size={18} className="text-green-600 mx-auto" />
+                          ) : (
+                            <X size={18} className="text-gray-400 mx-auto" />
+                          )}
+                        </td>
+                        <td className="p-2 sm:p-3 whitespace-nowrap text-xs text-gray-500">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-AR') : '-'}
+                        </td>
+                        <td className="p-2 sm:p-3">
+                          <div className="flex gap-1 sm:gap-2 items-center whitespace-nowrap">
+                            <button
+                              onClick={() => {
+                                const newRole = prompt(`Cambiar rol de ${u.name}:\nActual: ${u.role}\n\nOpciones: USER, ADMIN, SUPER_ADMIN`, u.role);
+                                if (newRole && ['USER', 'ADMIN', 'SUPER_ADMIN'].includes(newRole.toUpperCase())) {
+                                  updateUser(u.id, { role: newRole.toUpperCase() as any }).then(() => refreshData());
+                                }
+                              }}
+                              className="bg-blue-50 text-blue-600 p-1 sm:p-2 rounded hover:bg-blue-100 border border-blue-200"
+                              title="Cambiar rol"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                updateUser(u.id, { entryAuthorized: !u.entryAuthorized }).then(() => refreshData());
+                              }}
+                              className={`p-1 sm:p-2 rounded border ${u.entryAuthorized ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}
+                              title={u.entryAuthorized ? 'Revocar entrada' : 'Autorizar entrada'}
+                            >
+                              {u.entryAuthorized ? <X size={16} /> : <Check size={16} />}
+                            </button>
+                            {user?.role === 'SUPER_ADMIN' && u.id !== user.id && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`¿Eliminar usuario ${u.name}? Esta acción no se puede deshacer.`)) {
+                                    deleteUser(u.id).then(() => refreshData());
+                                  }
+                                }}
+                                className="bg-red-50 text-red-600 p-1 sm:p-2 rounded hover:bg-red-100 border border-red-200"
+                                title="Eliminar usuario"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="p-4 text-center text-gray-500 italic">Cargando usuarios...</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
       )}

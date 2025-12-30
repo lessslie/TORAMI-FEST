@@ -150,9 +150,15 @@ export const UserDashboard = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
       if (user) {
-          await updateUserProfile({ ...user, name: profileData.name, email: profileData.email, whatsapp: profileData.whatsapp });
+          await updateUserProfile({
+              id: user.id,
+              name: profileData.name,
+              email: profileData.email,
+              whatsapp: profileData.whatsapp,
+              avatar: user.avatar
+          });
           setIsEditingProfile(false);
-          alert('Perfil actualizado (Simulado)');
+          alert('Perfil actualizado correctamente');
       }
   };
 
