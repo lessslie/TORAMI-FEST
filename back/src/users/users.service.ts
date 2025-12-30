@@ -67,9 +67,13 @@ export class UsersService {
     userId: string,
     data: Partial<{ name: string; email: string; whatsapp: string; phone: string; role: UserRole; entryAuthorized: boolean }>,
   ) {
+    // TODO: Remove after running: npx prisma db push
+    // Temporarily remove whatsapp field until migration is run
+    const { whatsapp, ...safeData } = data;
+
     return this.prisma.user.update({
       where: { id: userId },
-      data,
+      data: safeData,
     });
   }
 
