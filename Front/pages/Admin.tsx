@@ -12,7 +12,7 @@ import {
   getUnreadNotificationCount, markAllNotificationsAsRead
 } from '../services/data';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -1383,8 +1383,20 @@ export const Admin = () => {
       {(chatStand || chatCosplay) && (
           <Modal title={`Chat con ${chatStand ? chatStand.brandName : chatCosplay?.participantName}`} onClose={() => {setChatStand(null); setChatCosplay(null); setChatImage(null);}}>
               <div className="flex flex-col h-[50vh]">
-                  <div className="bg-gray-50 p-3 mb-4 text-xs border border-gray-200 rounded">
-                      <span className="font-bold">Contacto:</span> {chatStand ? `${chatStand.contactName} (${chatStand.phone})` : `${chatCosplay?.participantName} (${chatCosplay?.whatsapp})`}
+                  <div className="bg-gray-50 p-3 mb-4 text-xs border border-gray-200 rounded flex items-center justify-between">
+                      <div>
+                          <span className="font-bold">Contacto:</span> {chatStand ? chatStand.contactName : chatCosplay?.participantName}
+                      </div>
+                      <a
+                          href={`https://wa.me/${(chatStand ? chatStand.phone : chatCosplay?.whatsapp)?.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full font-bold transition-colors text-xs"
+                          title="Abrir WhatsApp"
+                      >
+                          <Phone size={14} />
+                          {chatStand ? chatStand.phone : chatCosplay?.whatsapp}
+                      </a>
                   </div>
                   <div className="flex-grow overflow-y-auto space-y-4 p-2 mb-4" ref={chatScrollRef}>
                       {(chatStand ? chatStand.messages : chatCosplay?.messages || []).length === 0 && <div className="text-center text-gray-400 italic text-sm mt-10">No hay mensajes. Iniciá la conversación.</div>}

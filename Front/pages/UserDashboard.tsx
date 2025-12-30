@@ -3,7 +3,7 @@ import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway } from '../types';
-import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown } from 'lucide-react';
+import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -580,15 +580,33 @@ export const UserDashboard = () => {
 
       {/* CHAT MODAL FOR USER (Stands/Cosplay) */}
       {(activeChatStand || activeChatCosplay) && (
-          <Modal 
-            title={activeChatStand ? `Chat Stand: ${activeChatStand.brandName}` : `Chat Cosplay: ${activeChatCosplay?.characterName}`} 
+          <Modal
+            title={activeChatStand ? `Chat Stand: ${activeChatStand.brandName}` : `Chat Cosplay: ${activeChatCosplay?.characterName}`}
             onClose={() => { setActiveChatStand(null); setActiveChatCosplay(null); }}
           >
               <div className="flex flex-col h-[50vh]">
+                  {/* WhatsApp Contact Banner */}
+                  <div className="bg-green-50 border-2 border-green-200 p-3 mb-3 rounded flex items-center justify-between">
+                      <div className="flex-grow">
+                          <p className="text-xs font-bold text-green-800 mb-1">Contacto Directo</p>
+                          <p className="text-xs text-green-700">¿Preferís hablar por WhatsApp?</p>
+                      </div>
+                      <a
+                          href="https://wa.me/5492975585027"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-full font-bold transition-colors text-xs whitespace-nowrap"
+                          title="Contactar por WhatsApp"
+                      >
+                          <Phone size={14} />
+                          WhatsApp
+                      </a>
+                  </div>
+
                   {/* Status Banner */}
                   <div className={`p-3 mb-4 rounded border-2 ${
-                      (activeChatStand?.status || activeChatCosplay?.status)?.includes('Rechaza') ? 'bg-red-50 border-red-200' : 
-                      (activeChatStand?.status === 'Aprobada' || activeChatCosplay?.status === 'Confirmado') ? 'bg-green-50 border-green-200' : 
+                      (activeChatStand?.status || activeChatCosplay?.status)?.includes('Rechaza') ? 'bg-red-50 border-red-200' :
+                      (activeChatStand?.status === 'Aprobada' || activeChatCosplay?.status === 'Confirmado') ? 'bg-green-50 border-green-200' :
                       'bg-blue-50 border-blue-200'
                   }`}>
                       <div className="flex items-center gap-2 font-bold mb-1">
@@ -596,8 +614,8 @@ export const UserDashboard = () => {
                           <span className="uppercase">Estado: {activeChatStand?.status || activeChatCosplay?.status}</span>
                       </div>
                       <p className="text-xs text-gray-600">
-                          {(activeChatStand?.status || activeChatCosplay?.status)?.includes('Rechaza') 
-                              ? 'Tu solicitud fue rechazada. Revisa los mensajes abajo para ver el motivo y responde si deseas corregirlo.' 
+                          {(activeChatStand?.status || activeChatCosplay?.status)?.includes('Rechaza')
+                              ? 'Tu solicitud fue rechazada. Revisa los mensajes abajo para ver el motivo y responde si deseas corregirlo.'
                               : 'Usa este chat para comunicarte directamente con los organizadores.'}
                       </p>
                   </div>
