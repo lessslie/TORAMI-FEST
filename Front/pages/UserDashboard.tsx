@@ -36,7 +36,7 @@ export const UserDashboard = () => {
   const [stampMessage, setStampMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   
   // Profile Edit State
-  const [profileData, setProfileData] = useState({ name: '', email: '' });
+  const [profileData, setProfileData] = useState({ name: '', email: '', whatsapp: '' });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Chat State
@@ -74,7 +74,7 @@ export const UserDashboard = () => {
           getUserGallery(user.id).then(setGalleryItems);
           getUserGiveaways(user.id).then(setMyGiveaways);
           getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
-          setProfileData({ name: user.name, email: user.email });
+          setProfileData({ name: user.name, email: user.email, whatsapp: user.whatsapp || '' });
 
           const currentStamps = user.stamps || [];
           setStamps(currentStamps);
@@ -150,7 +150,7 @@ export const UserDashboard = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
       if (user) {
-          await updateUserProfile({ ...user, name: profileData.name, email: profileData.email });
+          await updateUserProfile({ ...user, name: profileData.name, email: profileData.email, whatsapp: profileData.whatsapp });
           setIsEditingProfile(false);
           alert('Perfil actualizado (Simulado)');
       }
@@ -391,6 +391,12 @@ export const UserDashboard = () => {
                               <form onSubmit={handleProfileUpdate} className="w-full space-y-4">
                                   <Input label="Nombre" value={profileData.name} onChange={(e:any) => setProfileData({...profileData, name: e.target.value})} />
                                   <Input label="Email" value={profileData.email} onChange={(e:any) => setProfileData({...profileData, email: e.target.value})} />
+                                  <Input
+                                      label="WhatsApp"
+                                      placeholder="+54 9 11 1234-5678"
+                                      value={profileData.whatsapp || ''}
+                                      onChange={(e:any) => setProfileData({...profileData, whatsapp: e.target.value})}
+                                  />
                                   <div className="flex gap-2">
                                       <Button type="submit" className="w-full text-sm py-2">Guardar</Button>
                                       <Button type="button" variant="outline" className="w-full text-sm py-2" onClick={() => setIsEditingProfile(false)}>Cancelar</Button>
@@ -403,11 +409,25 @@ export const UserDashboard = () => {
                                 <div className="mt-6 w-full space-y-2 text-sm text-gray-600 border-t border-gray-200 pt-4">
                                     <div className="flex justify-between">
                                         <span className="font-bold">Email:</span>
-                                        <span>{user.email}</span>
+                                        <span className="break-all">{user.email}</span>
                                     </div>
+                                    {user.whatsapp && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-bold">WhatsApp:</span>
+                                            <a
+                                                href={`https://wa.me/${user.whatsapp.replace(/\D/g, '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-green-600 hover:text-green-700 font-mono"
+                                            >
+                                                <Phone size={14} />
+                                                {user.whatsapp}
+                                            </a>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between">
                                         <span className="font-bold">ID:</span>
-                                        <span className="font-mono">{user.id}</span>
+                                        <span className="font-mono text-xs">{user.id}</span>
                                     </div>
                                 </div>
                                 <button onClick={() => setIsEditingProfile(true)} className="mt-6 text-xs text-gray-500 hover:text-torami-red underline">

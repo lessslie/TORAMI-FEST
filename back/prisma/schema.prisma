@@ -19,6 +19,7 @@ model User {
   ticketType String?
   age       Int?
   phone     String?
+  whatsapp  String?
   stamps    Stamp[]
   stands    StandApplication[]
   cosplays  CosplayRegistration[]

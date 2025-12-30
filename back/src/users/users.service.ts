@@ -22,6 +22,7 @@ export class UsersService {
     password: string;
     age?: number;
     phone?: string;
+    whatsapp?: string;
     role?: UserRole;
   }) {
     return this.prisma.user.create({
@@ -32,7 +33,7 @@ export class UsersService {
     });
   }
 
-  async updateProfile(userId: string, data: Partial<{ name: string; email: string; avatar: string }>) {
+  async updateProfile(userId: string, data: Partial<{ name: string; email: string; avatar: string; whatsapp: string }>) {
     return this.prisma.user.update({
       where: { id: userId },
       data,

@@ -18,6 +18,7 @@ export interface User {
   stamps?: string[]; // Array of collected stamp IDs
   age?: number;
   phone?: string;
+  whatsapp?: string;
 }
 
 export interface Notification {
