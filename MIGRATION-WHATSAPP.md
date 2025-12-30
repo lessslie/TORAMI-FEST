@@ -4,9 +4,17 @@
 
 Se agregó el campo `whatsapp` al modelo User en Prisma, pero la base de datos aún no tiene esta columna.
 
-## Paso a paso:
+## Opción 1: Migración Automática (Recomendada)
 
-### 1. Ejecutar la migración de base de datos
+### 1.1 Verificar conexión a base de datos
+
+Si tienes problemas de conexión con Supabase:
+- Ve a https://supabase.com/dashboard
+- Selecciona tu proyecto
+- Si está pausado, haz click en **"Restore"** o **"Resume"**
+- Espera unos minutos a que se active
+
+### 1.2 Ejecutar migración
 
 ```bash
 cd back
@@ -14,6 +22,29 @@ npx prisma db push
 ```
 
 Este comando agregará la columna `whatsapp` a la tabla `User` en la base de datos.
+
+## Opción 2: SQL Directo en Supabase (Si Opción 1 falla)
+
+Si no puedes ejecutar `npx prisma db push`:
+
+1. Ve a tu proyecto en Supabase Dashboard
+2. Click en **SQL Editor** (en el menú lateral)
+3. Click en **+ New Query**
+4. Pega este SQL:
+
+```sql
+ALTER TABLE "User" ADD COLUMN "whatsapp" TEXT;
+```
+
+5. Click en **Run** o presiona `Ctrl+Enter`
+6. Deberías ver: "Success. No rows returned"
+
+Luego, ejecuta localmente:
+
+```bash
+cd back
+npx prisma generate
+```
 
 ### 2. Descomentar código temporalmente deshabilitado
 
@@ -88,6 +119,37 @@ async findAll() {
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
+  });
+}
+```
+
+#### En el método `updateUser()` (líneas 66-78):
+**ANTES:**
+```typescript
+async updateUser(
+  userId: string,
+  data: Partial<{ name: string; email: string; whatsapp: string; phone: string; role: UserRole; entryAuthorized: boolean }>,
+) {
+  // TODO: Remove after running: npx prisma db push
+  // Temporarily remove whatsapp field until migration is run
+  const { whatsapp, ...safeData } = data;
+
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: safeData,
+  });
+}
+```
+
+**DESPUÉS:**
+```typescript
+async updateUser(
+  userId: string,
+  data: Partial<{ name: string; email: string; whatsapp: string; phone: string; role: UserRole; entryAuthorized: boolean }>,
+) {
+  return this.prisma.user.update({
+    where: { id: userId },
+    data,
   });
 }
 ```
