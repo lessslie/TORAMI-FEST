@@ -421,9 +421,9 @@ export const UserDashboard = () => {
                                         <span className="font-bold">Email:</span>
                                         <span className="break-all">{user.email}</span>
                                     </div>
-                                    {user.whatsapp && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-bold">WhatsApp:</span>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold">WhatsApp:</span>
+                                        {user.whatsapp ? (
                                             <a
                                                 href={`https://wa.me/${user.whatsapp.replace(/\D/g, '')}`}
                                                 target="_blank"
@@ -433,8 +433,10 @@ export const UserDashboard = () => {
                                                 <Phone size={14} />
                                                 {user.whatsapp}
                                             </a>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <span className="text-gray-400 italic text-xs">No configurado</span>
+                                        )}
+                                    </div>
                                     <div className="flex justify-between">
                                         <span className="font-bold">ID:</span>
                                         <span className="font-mono text-xs">{user.id}</span>
