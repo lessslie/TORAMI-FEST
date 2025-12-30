@@ -248,6 +248,8 @@ export const Admin = () => {
   const [chatImage, setChatImage] = useState<string | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatFileRef = useRef<HTMLInputElement>(null);
+  const chatStandRef = useRef<StandApplication | null>(null);
+  const chatCosplayRef = useRef<CosplayRegistration | null>(null);
 
   // Gallery Moderation State
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
@@ -264,17 +266,17 @@ export const Admin = () => {
     });
     getStandApplications().then((data) => {
         setStands(data);
-        // Only update active chat if explicitly requested (when chat is open)
-        if (updateOpenChat && chatStand) {
-            const updatedStand = data.find(s => s.id === chatStand.id);
+        // Only update active chat if explicitly requested AND chat is currently open
+        if (updateOpenChat && chatStandRef.current) {
+            const updatedStand = data.find(s => s.id === chatStandRef.current!.id);
             if (updatedStand) setChatStand(updatedStand);
         }
     });
     getCosplayRegistrations().then((data) => {
         setCosplayers(data);
-        // Only update active chat if explicitly requested (when chat is open)
-        if (updateOpenChat && chatCosplay) {
-            const updatedCos = data.find(c => c.id === chatCosplay.id);
+        // Only update active chat if explicitly requested AND chat is currently open
+        if (updateOpenChat && chatCosplayRef.current) {
+            const updatedCos = data.find(c => c.id === chatCosplayRef.current!.id);
             if(updatedCos) setChatCosplay(updatedCos);
         }
     });
@@ -292,6 +294,12 @@ export const Admin = () => {
   useEffect(() => {
     refreshData();
   }, [activeTab]);
+
+  // Sync refs with state
+  useEffect(() => {
+    chatStandRef.current = chatStand;
+    chatCosplayRef.current = chatCosplay;
+  }, [chatStand, chatCosplay]);
 
   // Auto-refresh notifications every 10 seconds
   useEffect(() => {
