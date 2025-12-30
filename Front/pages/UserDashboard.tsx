@@ -151,12 +151,17 @@ export const UserDashboard = () => {
   const handleProfileUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
       if (user) {
-          await updateUserProfile({
+          const updateData = {
               name: profileData.name,
               email: profileData.email,
               whatsapp: profileData.whatsapp,
               avatar: user.avatar
-          });
+          };
+          console.log('🔍 Datos a enviar al backend:', updateData);
+
+          const result = await updateUserProfile(updateData);
+          console.log('✅ Respuesta del backend:', result);
+
           setIsEditingProfile(false);
           setShowSuccessModal(true);
           // Auto-cerrar el modal después de 2 segundos
@@ -436,10 +441,6 @@ export const UserDashboard = () => {
                                         ) : (
                                             <span className="text-gray-400 italic text-xs">No configurado</span>
                                         )}
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-bold">ID:</span>
-                                        <span className="font-mono text-xs">{user.id}</span>
                                     </div>
                                 </div>
                                 <button onClick={() => setIsEditingProfile(true)} className="mt-6 text-xs text-gray-500 hover:text-torami-red underline">

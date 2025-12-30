@@ -227,6 +227,7 @@ export const Admin = () => {
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingSponsor, setEditingSponsor] = useState<Partial<Sponsor> | null>(null);
   const [editingGiveaway, setEditingGiveaway] = useState<Partial<Giveaway> | null>(null);
+  const [editingUser, setEditingUser] = useState<Partial<User> | null>(null);
   
   // Chat & Detail State (Stands)
   const [chatStand, setChatStand] = useState<StandApplication | null>(null);
@@ -532,6 +533,17 @@ export const Admin = () => {
   const handleDeleteGiveaway = async (id: string) => {
       if (window.confirm('¿Eliminar sorteo?')) await deleteGiveaway(id);
       refreshData();
+  };
+
+  // Users
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser && editingUser.id) {
+        const { id, createdAt, ...updateData } = editingUser;
+        await updateUser(id, updateData);
+        setEditingUser(null);
+        refreshData();
+    }
   };
 
   // Gallery
@@ -1038,14 +1050,9 @@ export const Admin = () => {
                         <td className="p-2 sm:p-3">
                           <div className="flex gap-1 sm:gap-2 items-center whitespace-nowrap">
                             <button
-                              onClick={() => {
-                                const newRole = prompt(`Cambiar rol de ${u.name}:\nActual: ${u.role}\n\nOpciones: USER, ADMIN, SUPER_ADMIN`, u.role);
-                                if (newRole && ['USER', 'ADMIN', 'SUPER_ADMIN'].includes(newRole.toUpperCase())) {
-                                  updateUser(u.id, { role: newRole.toUpperCase() as any }).then(() => refreshData());
-                                }
-                              }}
+                              onClick={() => setEditingUser(u)}
                               className="bg-blue-50 text-blue-600 p-1 sm:p-2 rounded hover:bg-blue-100 border border-blue-200"
-                              title="Cambiar rol"
+                              title="Editar usuario"
                             >
                               <Edit size={16} />
                             </button>
@@ -1771,6 +1778,62 @@ export const Admin = () => {
                       </select>
                   </div>
                   <Button type="submit" className="w-full">Guardar</Button>
+              </form>
+          </Modal>
+      )}
+
+      {/* EDIT USER MODAL */}
+      {editingUser && (
+          <Modal title="Editar Usuario" onClose={() => setEditingUser(null)}>
+              <form onSubmit={handleSaveUser} className="space-y-4">
+                  <Input
+                    label="Nombre"
+                    value={editingUser.name || ''}
+                    onChange={(e:any) => setEditingUser({...editingUser, name: e.target.value})}
+                    required
+                  />
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={editingUser.email || ''}
+                    onChange={(e:any) => setEditingUser({...editingUser, email: e.target.value})}
+                    required
+                  />
+                  <Input
+                    label="WhatsApp"
+                    placeholder="+54 9 11 1234-5678"
+                    value={editingUser.whatsapp || ''}
+                    onChange={(e:any) => setEditingUser({...editingUser, whatsapp: e.target.value})}
+                  />
+                  <Input
+                    label="Teléfono"
+                    placeholder="+54 9 11 1234-5678"
+                    value={editingUser.phone || ''}
+                    onChange={(e:any) => setEditingUser({...editingUser, phone: e.target.value})}
+                  />
+                  <div>
+                      <label className="block text-sm font-bold mb-1 uppercase">Rol</label>
+                      <select
+                        className="w-full border-2 border-black p-2 bg-white"
+                        value={editingUser.role || 'USER'}
+                        onChange={(e:any) => setEditingUser({...editingUser, role: e.target.value as UserRole})}
+                      >
+                          <option value="USER">USER</option>
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                          <option value="EMPRENDEDOR">EMPRENDEDOR</option>
+                      </select>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer p-2 bg-gray-50 border border-black font-bold">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 accent-torami-red"
+                      checked={editingUser.entryAuthorized || false}
+                      onChange={(e) => setEditingUser({...editingUser, entryAuthorized: e.target.checked})}
+                    />
+                    Entrada Autorizada
+                  </label>
+                  <Button type="submit" className="w-full">Guardar Cambios</Button>
               </form>
           </Modal>
       )}
