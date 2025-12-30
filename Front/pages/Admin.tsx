@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, GalleryItem } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { 
+import {
   getStats, getStandApplications, updateStandStatus, getConfig, updateConfig,
   getEvents, saveEvent, deleteEvent,
   getSponsors, saveSponsor, deleteSponsor,
   getGiveaways, saveGiveaway, deleteGiveaway,
   getGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem,
-  addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage
+  addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
+  getUnreadNotificationCount, markAllNotificationsAsRead
 } from '../services/data';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2 } from 'lucide-react';
@@ -230,12 +231,18 @@ export const Admin = () => {
   const [viewStand, setViewStand] = useState<StandApplication | null>(null); // State for viewing stand details
   const [isRejectingStand, setIsRejectingStand] = useState(false);
   const [standRejectionReason, setStandRejectionReason] = useState('');
-  
+
   // Chat & Detail State (Cosplay)
   const [viewCosplay, setViewCosplay] = useState<CosplayRegistration | null>(null);
   const [chatCosplay, setChatCosplay] = useState<CosplayRegistration | null>(null);
   const [isRejectingCosplay, setIsRejectingCosplay] = useState(false);
+
+  // Image Viewer
+  const [viewImage, setViewImage] = useState<string | null>(null);
   const [cosplayRejectionReason, setCosplayRejectionReason] = useState('');
+
+  // Notifications
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [chatMessage, setChatMessage] = useState('');
   const [chatImage, setChatImage] = useState<string | null>(null);
@@ -247,7 +254,7 @@ export const Admin = () => {
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const refreshData = () => {
+  const refreshData = (updateOpenChat = false) => {
     getStats().then((data) => {
       console.log('📊 Stats from backend:', data);
       setStats(data);
@@ -257,14 +264,16 @@ export const Admin = () => {
     });
     getStandApplications().then((data) => {
         setStands(data);
-        if (chatStand) {
+        // Only update active chat if explicitly requested (when chat is open)
+        if (updateOpenChat && chatStand) {
             const updatedStand = data.find(s => s.id === chatStand.id);
             if (updatedStand) setChatStand(updatedStand);
         }
     });
     getCosplayRegistrations().then((data) => {
         setCosplayers(data);
-        if (chatCosplay) {
+        // Only update active chat if explicitly requested (when chat is open)
+        if (updateOpenChat && chatCosplay) {
             const updatedCos = data.find(c => c.id === chatCosplay.id);
             if(updatedCos) setChatCosplay(updatedCos);
         }
@@ -277,11 +286,46 @@ export const Admin = () => {
     getGiveaways().then(setGiveaways);
     getGallery().then(setGallery);
     getConfig().then(setConfig);
+    getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
   };
 
   useEffect(() => {
     refreshData();
   }, [activeTab]);
+
+  // Auto-refresh notifications every 10 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Mark all notifications as read when opening chat
+  useEffect(() => {
+    if (chatStand || chatCosplay) {
+      markAllNotificationsAsRead().then(() => {
+        setUnreadCount(0);
+      });
+    }
+  }, [chatStand?.id, chatCosplay?.id]);
+
+  // Auto-refresh chat messages every 5 seconds when chat is open
+  useEffect(() => {
+    if (!chatStand && !chatCosplay) return;
+
+    // Initial refresh with chat update enabled
+    refreshData(true);
+
+    // Set up polling interval with chat update enabled
+    const intervalId = setInterval(() => {
+      refreshData(true);
+    }, 5000); // Refresh every 5 seconds
+
+    // Cleanup on unmount or when chat closes
+    return () => clearInterval(intervalId);
+  }, [chatStand?.id, chatCosplay?.id]);
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -388,7 +432,7 @@ export const Admin = () => {
 
       setChatMessage('');
       setChatImage(null);
-      refreshData();
+      refreshData(true);
   };
 
   // Events
@@ -571,7 +615,15 @@ export const Admin = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-         <SectionTitle>Panel de Administración</SectionTitle>
+         <div className="flex items-center gap-4">
+           <SectionTitle>Panel de Administración</SectionTitle>
+           {unreadCount > 0 && (
+             <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse flex items-center gap-2">
+               <MessageCircle size={16} />
+               {unreadCount} {unreadCount === 1 ? 'mensaje nuevo' : 'mensajes nuevos'}
+             </div>
+           )}
+         </div>
          <div className="text-sm">Hola, <span className="font-bold">{user.name}</span> <span className="text-xs bg-gray-200 px-1 rounded">{user.role}</span></div>
       </div>
 
@@ -1151,6 +1203,19 @@ export const Admin = () => {
                     )}
                  </div>
 
+                 {/* CHAT BUTTON */}
+                 <div className="pt-4 border-t border-gray-200">
+                    <Button
+                        onClick={() => {
+                            setChatStand(viewStand);
+                            setViewStand(null);
+                        }}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white border-blue-800 flex items-center justify-center gap-2"
+                    >
+                        <MessageCircle size={20} /> Enviar Mensaje al Vendedor
+                    </Button>
+                 </div>
+
                  {/* REJECTION LOGIC FOR STANDS */}
                  {viewStand.status !== 'Aprobada' && (
                      <div className="pt-4 border-t border-gray-200">
@@ -1314,8 +1379,13 @@ export const Admin = () => {
                               <div className={`max-w-[80%] p-3 border-2 border-black shadow-sm ${msg.sender === 'ADMIN' ? 'bg-torami-red text-white rounded-tl-xl rounded-bl-xl rounded-br-xl' : 'bg-white text-black rounded-tr-xl rounded-br-xl rounded-bl-xl'}`}>
                                   <p className="text-sm font-bold mb-1">{msg.sender === 'ADMIN' ? 'Tú (Admin)' : (chatStand ? chatStand.contactName : chatCosplay?.participantName)}</p>
                                   {msg.imageUrl && (
-                                    <div className="mb-2">
-                                        <img src={msg.imageUrl} alt="attachment" className="rounded border border-black max-h-40 object-cover bg-white" />
+                                    <div className="mb-2 cursor-pointer group relative" onClick={() => setViewImage(msg.imageUrl)}>
+                                        <img src={msg.imageUrl} alt="attachment" className="rounded border border-black max-h-40 object-cover bg-white transition-opacity group-hover:opacity-80" />
+                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded flex items-center justify-center">
+                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100 bg-black bg-opacity-70 px-2 py-1 rounded">
+                                                Click para ampliar
+                                            </span>
+                                        </div>
                                     </div>
                                   )}
                                   <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
@@ -1570,6 +1640,26 @@ export const Admin = () => {
                   <Button type="submit" className="w-full">Guardar</Button>
               </form>
           </Modal>
+      )}
+
+      {/* IMAGE VIEWER MODAL */}
+      {viewImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setViewImage(null)}>
+              <div className="max-w-4xl max-h-[90vh] relative">
+                  <button
+                      onClick={() => setViewImage(null)}
+                      className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2"
+                  >
+                      <X size={24} />
+                  </button>
+                  <img
+                      src={viewImage}
+                      alt="Vista completa"
+                      className="max-w-full max-h-[90vh] object-contain border-4 border-white shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                  />
+              </div>
+          </div>
       )}
     </div>
   );

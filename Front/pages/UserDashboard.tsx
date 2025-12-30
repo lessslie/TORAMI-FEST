@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp } from '../services/data';
+import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway } from '../types';
 import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -44,27 +44,38 @@ export const UserDashboard = () => {
   const [activeChatCosplay, setActiveChatCosplay] = useState<CosplayRegistration | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const chatStandRef = useRef<StandApplication | null>(null);
+  const chatCosplayRef = useRef<CosplayRegistration | null>(null);
 
-  const refreshData = () => {
+  // Notification State
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Image Modal State
+  const [viewImage, setViewImage] = useState<string | null>(null);
+
+  const refreshData = (updateOpenChat = false) => {
       if (user) {
           getUserStands(user.id).then(data => {
               setStands(data);
-              if (activeChatStand) {
-                  const updated = data.find(s => s.id === activeChatStand.id);
+              // Only update active chat if explicitly requested AND chat is currently open
+              if (updateOpenChat && chatStandRef.current) {
+                  const updated = data.find(s => s.id === chatStandRef.current!.id);
                   if (updated) setActiveChatStand(updated);
               }
           });
           getUserCosplays(user.id).then(data => {
               setCosplays(data);
-              if (activeChatCosplay) {
-                  const updated = data.find(c => c.id === activeChatCosplay.id);
+              // Only update active chat if explicitly requested AND chat is currently open
+              if (updateOpenChat && chatCosplayRef.current) {
+                  const updated = data.find(c => c.id === chatCosplayRef.current!.id);
                   if (updated) setActiveChatCosplay(updated);
               }
           });
           getUserGallery(user.id).then(setGalleryItems);
           getUserGiveaways(user.id).then(setMyGiveaways);
+          getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
           setProfileData({ name: user.name, email: user.email });
-          
+
           const currentStamps = user.stamps || [];
           setStamps(currentStamps);
       }
@@ -73,6 +84,49 @@ export const UserDashboard = () => {
   useEffect(() => {
     refreshData();
   }, [user]);
+
+  // Sync refs with state
+  useEffect(() => {
+    chatStandRef.current = activeChatStand;
+    chatCosplayRef.current = activeChatCosplay;
+  }, [activeChatStand, activeChatCosplay]);
+
+  // Auto-refresh notifications every 10 seconds
+  useEffect(() => {
+    if (!user) return;
+
+    const intervalId = setInterval(() => {
+      getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [user]);
+
+  // Mark all notifications as read when opening chat
+  useEffect(() => {
+    if (activeChatStand || activeChatCosplay) {
+      markAllNotificationsAsRead().then(() => {
+        setUnreadCount(0);
+      });
+    }
+  }, [activeChatStand?.id, activeChatCosplay?.id]);
+
+  // Auto-refresh chat messages every 5 seconds when chat is open
+  useEffect(() => {
+    const chatIsOpen = activeChatStand !== null || activeChatCosplay !== null;
+    if (!chatIsOpen) return;
+
+    // Initial refresh with chat update enabled
+    refreshData(true);
+
+    // Set up polling interval with chat update enabled
+    const intervalId = setInterval(() => {
+      refreshData(true);
+    }, 5000); // Refresh every 5 seconds
+
+    // Cleanup on unmount or when chat closes
+    return () => clearInterval(intervalId);
+  }, [activeChatStand !== null, activeChatCosplay !== null]);
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -90,7 +144,7 @@ export const UserDashboard = () => {
           await addCosplayMessage(activeChatCosplay.id, chatMessage, 'USER');
       }
       setChatMessage('');
-      refreshData();
+      refreshData(true);
   };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
@@ -127,14 +181,48 @@ export const UserDashboard = () => {
       return <Clock className="text-blue-600" />;
   };
 
-  const TabButton = ({ id, label, icon: Icon }: any) => (
-      <button 
+  const TabButton = ({ id, label, icon: Icon, badge }: any) => (
+      <button
          onClick={() => setActiveTab(id)}
-         className={`flex-1 min-w-[80px] py-3 font-bold uppercase flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 border-b-4 transition-colors text-[10px] md:text-sm ${activeTab === id ? 'border-torami-red bg-gray-50 text-torami-red' : 'border-transparent text-gray-500 hover:text-black hover:bg-gray-50'}`}
+         className={`flex-1 min-w-[80px] py-3 font-bold uppercase flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 border-b-4 transition-colors text-[10px] md:text-sm relative ${activeTab === id ? 'border-torami-red bg-gray-50 text-torami-red' : 'border-transparent text-gray-500 hover:text-black hover:bg-gray-50'}`}
       >
           <Icon size={18} /> <span>{label}</span>
+          {badge > 0 && (
+              <span className="absolute top-2 right-2 md:top-1 md:right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {badge > 9 ? '9+' : badge}
+              </span>
+          )}
       </button>
   );
+
+  // Calculate unread messages for each category
+  const getStandUnreadCount = () => {
+    return stands.reduce((count, stand) => {
+      const messages = stand.messages as any[] || [];
+      const lastUserMessage = messages.filter(m => m.sender === 'USER').pop();
+      const lastAdminMessage = messages.filter(m => m.sender === 'ADMIN').pop();
+
+      // If there's an admin message after the last user message, count as unread
+      if (lastAdminMessage && (!lastUserMessage || new Date(lastAdminMessage.timestamp) > new Date(lastUserMessage.timestamp))) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  };
+
+  const getCosplayUnreadCount = () => {
+    return cosplays.reduce((count, cosplay) => {
+      const messages = cosplay.messages as any[] || [];
+      const lastUserMessage = messages.filter(m => m.sender === 'USER').pop();
+      const lastAdminMessage = messages.filter(m => m.sender === 'ADMIN').pop();
+
+      // If there's an admin message after the last user message, count as unread
+      if (lastAdminMessage && (!lastUserMessage || new Date(lastAdminMessage.timestamp) > new Date(lastUserMessage.timestamp))) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  };
 
   if (!user) return <div className="p-10 text-center">Inicia sesión para ver tu panel.</div>;
 
@@ -173,8 +261,8 @@ export const UserDashboard = () => {
             {/* <TabButton id="ticket" label="Entrada" icon={Ticket} /> */}
             {/* <TabButton id="passport" label="Pasaporte" icon={ScanLine} /> */}
             <TabButton id="profile" label="Perfil" icon={UserIcon} />
-            <TabButton id="stands" label="Stands" icon={Store} />
-            <TabButton id="cosplay" label="Cosplay" icon={Trophy} />
+            <TabButton id="stands" label="Stands" icon={Store} badge={getStandUnreadCount()} />
+            <TabButton id="cosplay" label="Cosplay" icon={Trophy} badge={getCosplayUnreadCount()} />
             <TabButton id="gallery" label="Fotos" icon={Image} />
             <TabButton id="giveaways" label="Sorteos" icon={Gift} />
          </div>
@@ -531,8 +619,13 @@ export const UserDashboard = () => {
                               }`}>
                                   <p className="text-xs font-bold mb-1 opacity-70">{msg.sender === 'USER' ? 'Tú' : 'Organización Torami'}</p>
                                   {msg.imageUrl && (
-                                    <div className="mb-2">
-                                        <img src={msg.imageUrl} alt="attachment" className="rounded border border-gray-500 max-h-40 object-cover" />
+                                    <div className="mb-2 cursor-pointer group relative" onClick={() => setViewImage(msg.imageUrl)}>
+                                        <img src={msg.imageUrl} alt="attachment" className="rounded border border-gray-500 max-h-40 object-cover transition-opacity group-hover:opacity-80" />
+                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded flex items-center justify-center">
+                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100 bg-black bg-opacity-70 px-2 py-1 rounded">
+                                                Click para ver completa
+                                            </span>
+                                        </div>
                                     </div>
                                   )}
                                   <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
@@ -557,6 +650,26 @@ export const UserDashboard = () => {
                   </form>
               </div>
           </Modal>
+      )}
+
+      {/* IMAGE VIEWER MODAL */}
+      {viewImage && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={() => setViewImage(null)}>
+              <div className="max-w-4xl max-h-[90vh] relative">
+                  <button
+                      onClick={() => setViewImage(null)}
+                      className="absolute -top-10 right-0 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2"
+                  >
+                      <X size={24} />
+                  </button>
+                  <img
+                      src={viewImage}
+                      alt="Vista completa"
+                      className="max-w-full max-h-[90vh] object-contain border-4 border-white shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                  />
+              </div>
+          </div>
       )}
     </div>
   );

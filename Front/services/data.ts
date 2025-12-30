@@ -200,3 +200,17 @@ export const getStats = () => {
 export const getDonationStats = () => request('/donations/stats');
 export const createDonation = (data: { donorName?: string; donorEmail: string; amount: number; isAnonymous?: boolean; message?: string }) =>
   request('/donations', { method: 'POST', body: data });
+
+// Notifications
+export const getUnreadNotificationCount = () => {
+  const { token } = getAuth();
+  return request('/notifications/unread-count', { token });
+};
+export const markNotificationAsRead = (id: string) => {
+  const { token } = getAuth();
+  return request(`/notifications/${id}/read`, { method: 'PATCH', token });
+};
+export const markAllNotificationsAsRead = () => {
+  const { token } = getAuth();
+  return request('/notifications/read-all', { method: 'PATCH', token });
+};

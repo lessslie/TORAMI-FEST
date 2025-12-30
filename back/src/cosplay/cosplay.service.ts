@@ -52,6 +52,45 @@ export class CosplayService {
       ...(item.messages as any[]),
       { id: Date.now().toString(), ...dto, timestamp: new Date().toISOString() },
     ];
+
+    // Create notification when admin sends message to user
+    if (dto.sender === 'ADMIN') {
+      await this.prisma.notification.create({
+        data: {
+          userId: item.userId,
+          title: 'Nuevo mensaje sobre tu inscripción al concurso',
+          message: `Recibiste un mensaje sobre "${item.characterName}"`,
+          type: 'CHAT_COSPLAY',
+          link: '/dashboard',
+        },
+      });
+    }
+
+    // Create notification for ALL admins when user sends message
+    if (dto.sender === 'USER') {
+      const admins = await this.prisma.user.findMany({
+        where: {
+          role: { in: ['ADMIN', 'SUPER_ADMIN'] },
+        },
+        select: { id: true },
+      });
+
+      // Create notification for each admin
+      await Promise.all(
+        admins.map((admin) =>
+          this.prisma.notification.create({
+            data: {
+              userId: admin.id,
+              title: 'Nuevo mensaje de participante',
+              message: `${item.participantName} te envió un mensaje sobre su cosplay "${item.characterName}"`,
+              type: 'CHAT_COSPLAY',
+              link: '/admin',
+            },
+          })
+        )
+      );
+    }
+
     return this.prisma.cosplayRegistration.update({
       where: { id },
       data: { messages: updatedMessages },
