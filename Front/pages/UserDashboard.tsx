@@ -3,7 +3,7 @@ import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway } from '../types';
-import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone } from 'lucide-react';
+import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -38,6 +38,7 @@ export const UserDashboard = () => {
   // Profile Edit State
   const [profileData, setProfileData] = useState({ name: '', email: '', whatsapp: '' });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Chat State
   const [activeChatStand, setActiveChatStand] = useState<StandApplication | null>(null);
@@ -157,7 +158,9 @@ export const UserDashboard = () => {
               avatar: user.avatar
           });
           setIsEditingProfile(false);
-          alert('Perfil actualizado correctamente');
+          setShowSuccessModal(true);
+          // Auto-cerrar el modal después de 2 segundos
+          setTimeout(() => setShowSuccessModal(false), 2000);
       }
   };
 
@@ -711,6 +714,21 @@ export const UserDashboard = () => {
                       className="max-w-full max-h-[90vh] object-contain border-4 border-white shadow-2xl"
                       onClick={(e) => e.stopPropagation()}
                   />
+              </div>
+          </div>
+      )}
+
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white border-4 border-black shadow-manga p-8 max-w-sm mx-4 animate-in zoom-in-95 duration-200">
+                  <div className="flex flex-col items-center text-center">
+                      <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                          <Check size={32} className="text-white" strokeWidth={3} />
+                      </div>
+                      <h3 className="font-display text-2xl uppercase mb-2">¡Perfecto!</h3>
+                      <p className="text-gray-700 font-bold">Perfil actualizado correctamente</p>
+                  </div>
               </div>
           </div>
       )}
