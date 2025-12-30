@@ -16,13 +16,13 @@ import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, Doll
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-    <div className="bg-white border-2 border-black shadow-manga w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-      <div className="flex justify-between items-center bg-black text-white p-4 sticky top-0 z-10 flex-shrink-0">
-        <h3 className="font-display text-xl">{title}</h3>
-        <button onClick={onClose}><X size={24} /></button>
+  <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-sm">
+    <div className="bg-white border-2 border-black shadow-manga w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
+      <div className="flex justify-between items-center bg-black text-white p-3 sm:p-4 sticky top-0 z-10 flex-shrink-0">
+        <h3 className="font-display text-lg sm:text-xl">{title}</h3>
+        <button onClick={onClose}><X size={20} className="sm:w-6 sm:h-6" /></button>
       </div>
-      <div className="p-6 flex-grow overflow-y-auto">
+      <div className="p-4 sm:p-6 flex-grow overflow-y-auto">
         {children}
       </div>
     </div>
@@ -31,13 +31,13 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 
 // Special wider modal for photo moderation
 const PhotoModal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-md">
       <div className="bg-white border-2 border-black shadow-manga w-full max-w-4xl max-h-[95vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
-        <div className="flex justify-between items-center bg-black text-white p-4 sticky top-0 z-10 flex-shrink-0">
-          <h3 className="font-display text-xl">{title}</h3>
-          <button onClick={onClose}><X size={24} /></button>
+        <div className="flex justify-between items-center bg-black text-white p-3 sm:p-4 sticky top-0 z-10 flex-shrink-0">
+          <h3 className="font-display text-lg sm:text-xl">{title}</h3>
+          <button onClick={onClose}><X size={20} className="sm:w-6 sm:h-6" /></button>
         </div>
-        <div className="flex-grow overflow-y-auto p-0 md:flex">
+        <div className="flex-grow overflow-y-auto p-0 flex flex-col md:flex-row">
           {children}
         </div>
       </div>
@@ -621,18 +621,18 @@ export const Admin = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-         <div className="flex items-center gap-4">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6 sm:mb-8">
+         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
            <SectionTitle>Panel de Administración</SectionTitle>
            {unreadCount > 0 && (
-             <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse flex items-center gap-2">
+             <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-bold animate-pulse flex items-center gap-2">
                <MessageCircle size={16} />
                {unreadCount} {unreadCount === 1 ? 'mensaje nuevo' : 'mensajes nuevos'}
              </div>
            )}
          </div>
-         <div className="text-sm">Hola, <span className="font-bold">{user.name}</span> <span className="text-xs bg-gray-200 px-1 rounded">{user.role}</span></div>
+         <div className="text-xs sm:text-sm w-full sm:w-auto text-left sm:text-right">Hola, <span className="font-bold">{user.name}</span> <span className="text-xs bg-gray-200 px-1 rounded">{user.role}</span></div>
       </div>
 
       {configNotice && (
@@ -712,31 +712,31 @@ export const Admin = () => {
       {/* --- EVENTS CRUD --- */}
       {activeTab === 'events' && (
         <div className="animate-in fade-in">
-            <div className="flex justify-between mb-4">
-                <h3 className="font-display text-2xl">Listado de Eventos</h3>
-                <Button onClick={() => setEditingEvent({ title: '', date: '', time: '', location: '', description: '', tags: [], isFeatured: false, rainCheck: false, images: [], isFree: true, ticketPrice: undefined, ticketLink: undefined })}>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
+                <h3 className="font-display text-xl sm:text-2xl">Listado de Eventos</h3>
+                <Button onClick={() => setEditingEvent({ title: '', date: '', time: '', location: '', description: '', tags: [], isFeatured: false, rainCheck: false, images: [], isFree: true, ticketPrice: undefined, ticketLink: undefined })} className="text-sm sm:text-base">
                     <Plus size={18} className="mr-2 inline" /> Nuevo Evento
                 </Button>
             </div>
             <div className="grid gap-4">
                 {events.map(ev => (
                     <MangaCard key={ev.id} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div className="flex items-start gap-4">
-                            <img src={ev.images[0] || 'https://via.placeholder.com/100'} alt={ev.title} className="w-16 h-16 object-cover border border-black hidden sm:block" />
-                            <div>
+                        <div className="flex items-start gap-3 sm:gap-4 w-full md:w-auto">
+                            <img src={ev.images[0] || 'https://via.placeholder.com/100'} alt={ev.title} className="w-12 h-12 sm:w-16 sm:h-16 object-cover border border-black flex-shrink-0" />
+                            <div className="flex-grow min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="font-bold text-lg">{ev.title}</h4>
+                                    <h4 className="font-bold text-base sm:text-lg break-words">{ev.title}</h4>
                                     {ev.isFeatured && <Badge color="blue">Destacado</Badge>}
                                     {ev.isPast && <Badge color="purple">Pasado</Badge>}
                                 </div>
-                                <div className="text-sm text-gray-600 flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1">
-                                    <span><Calendar size={14} className="inline"/> {new Date(ev.date).toLocaleDateString('es-AR')}</span>
-                                    <span>{ev.location}</span>
+                                <div className="text-xs sm:text-sm text-gray-600 flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1">
+                                    <span className="whitespace-nowrap"><Calendar size={14} className="inline"/> {new Date(ev.date).toLocaleDateString('es-AR')}</span>
+                                    <span className="break-words">{ev.location}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="secondary" className="px-3 py-2" onClick={() => {
+                        <div className="flex gap-2 w-full md:w-auto md:flex-shrink-0">
+                            <Button variant="secondary" className="px-2 sm:px-3 py-2 flex-1 md:flex-initial text-sm" onClick={() => {
                                 // Convertir fecha ISO a DD/MM/YYYY para edición (usar UTC para evitar cambios de zona horaria)
                                 const dateISO = new Date(ev.date);
                                 const day = dateISO.getUTCDate().toString().padStart(2, '0');
@@ -745,7 +745,7 @@ export const Admin = () => {
                                 const dateFormatted = `${day}/${month}/${year}`;
                                 setEditingEvent({...ev, date: dateFormatted});
                             }}><Edit size={16}/></Button>
-                            <Button variant="outline" className="px-3 py-2 text-red-600 border-red-600 hover:bg-red-600" onClick={() => handleDeleteEvent(ev.id)}><Trash2 size={16}/></Button>
+                            <Button variant="outline" className="px-2 sm:px-3 py-2 flex-1 md:flex-initial text-red-600 border-red-600 hover:bg-red-600 text-sm" onClick={() => handleDeleteEvent(ev.id)}><Trash2 size={16}/></Button>
                         </div>
                     </MangaCard>
                 ))}
@@ -755,130 +755,136 @@ export const Admin = () => {
 
       {/* --- STANDS LIST --- */}
       {activeTab === 'stands' && (
-        <div className="overflow-x-auto animate-in fade-in">
-          <table className="w-full border-2 border-black bg-white text-sm shadow-manga">
-            <thead>
-              <tr className="bg-black text-white text-left">
-                <th className="p-3">Marca</th>
-                <th className="p-3">Tipo</th>
-                <th className="p-3">Evento</th>
-                <th className="p-3">Contacto</th>
-                <th className="p-3">WhatsApp</th>
-                <th className="p-3">Estado</th>
-                <th className="p-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stands.map(stand => (
-                <tr key={stand.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="p-3 font-bold">{stand.brandName}</td>
-                  <td className="p-3">{stand.type}</td>
-                  <td className="p-3">
-                    {stand.event ? (
-                      <div>
-                        <div className="font-medium">{stand.event.title}</div>
-                        <div className="text-xs text-gray-500">{new Date(stand.event.date).toLocaleDateString('es-AR')}</div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-red-500 italic">Sin evento asignado</span>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <div>{stand.contactName}</div>
-                    <div className="text-xs text-gray-500">{stand.email}</div>
-                  </td>
-                  <td className="p-3 font-mono">{stand.phone}</td>
-                  <td className="p-3">
-                    <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'red' : 'purple'}>
-                      {stand.status}
-                    </Badge>
-                  </td>
-                  <td className="p-3 flex gap-2 items-center">
-                    <button onClick={() => setViewStand(stand)} className="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200 border border-gray-300" title="Ver Detalle"><Eye size={18} /></button>
-                    <button onClick={() => setChatStand(stand)} className="bg-blue-50 text-blue-600 p-2 rounded hover:bg-blue-100 border border-blue-200" title="Chat"><MessageCircle size={18} /></button>
-                    {stand.status === 'Pendiente' && (
-                      <>
-                        <button onClick={() => handleStandStatus(stand.id, 'Aprobada')} className="text-green-600 bg-green-50 p-1 rounded hover:bg-green-100"><Check size={18}/></button>
-                        <button onClick={() => { setViewStand(stand); setIsRejectingStand(true); }} className="text-red-600 bg-red-50 p-1 rounded hover:bg-red-100"><X size={18}/></button>
-                      </>
-                    )}
-                  </td>
+        <div className="animate-in fade-in -mx-2 sm:mx-0">
+          <div className="overflow-x-auto">
+            <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[800px]">
+              <thead>
+                <tr className="bg-black text-white text-left">
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Marca</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Tipo</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Evento</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Contacto</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">WhatsApp</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Estado</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {stands.map(stand => (
+                  <tr key={stand.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="p-2 sm:p-3 font-bold whitespace-nowrap">{stand.brandName}</td>
+                    <td className="p-2 sm:p-3 whitespace-nowrap">{stand.type}</td>
+                    <td className="p-2 sm:p-3">
+                      {stand.event ? (
+                        <div>
+                          <div className="font-medium whitespace-nowrap">{stand.event.title}</div>
+                          <div className="text-xs text-gray-500 whitespace-nowrap">{new Date(stand.event.date).toLocaleDateString('es-AR')}</div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-red-500 italic whitespace-nowrap">Sin evento asignado</span>
+                      )}
+                    </td>
+                    <td className="p-2 sm:p-3">
+                      <div className="whitespace-nowrap">{stand.contactName}</div>
+                      <div className="text-xs text-gray-500 whitespace-nowrap">{stand.email}</div>
+                    </td>
+                    <td className="p-2 sm:p-3 font-mono whitespace-nowrap">{stand.phone}</td>
+                    <td className="p-2 sm:p-3">
+                      <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'red' : 'purple'}>
+                        {stand.status}
+                      </Badge>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                      <div className="flex gap-1 sm:gap-2 items-center whitespace-nowrap">
+                        <button onClick={() => setViewStand(stand)} className="bg-gray-100 text-gray-700 p-1 sm:p-2 rounded hover:bg-gray-200 border border-gray-300" title="Ver Detalle"><Eye size={16} /></button>
+                        <button onClick={() => setChatStand(stand)} className="bg-blue-50 text-blue-600 p-1 sm:p-2 rounded hover:bg-blue-100 border border-blue-200" title="Chat"><MessageCircle size={16} /></button>
+                        {stand.status === 'Pendiente' && (
+                          <>
+                            <button onClick={() => handleStandStatus(stand.id, 'Aprobada')} className="text-green-600 bg-green-50 p-1 rounded hover:bg-green-100"><Check size={16}/></button>
+                            <button onClick={() => { setViewStand(stand); setIsRejectingStand(true); }} className="text-red-600 bg-red-50 p-1 rounded hover:bg-red-100"><X size={16}/></button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* --- COSPLAY LIST --- */}
       {activeTab === 'cosplay' && (
-        <div className="overflow-x-auto animate-in fade-in">
-           <div className="flex justify-between mb-4">
-                <h3 className="font-display text-2xl">Inscriptos Cosplay</h3>
+        <div className="animate-in fade-in -mx-2 sm:mx-0">
+           <div className="flex justify-between mb-4 px-2 sm:px-0">
+                <h3 className="font-display text-xl sm:text-2xl">Inscriptos Cosplay</h3>
            </div>
-          <table className="w-full border-2 border-black bg-white text-sm shadow-manga">
-            <thead>
-              <tr className="bg-black text-white text-left">
-                <th className="p-3">Personaje</th>
-                <th className="p-3">Participante</th>
-                <th className="p-3">Evento</th>
-                <th className="p-3">Categoría</th>
-                <th className="p-3">Estado</th>
-                <th className="p-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cosplayers.map(cos => (
-                <tr key={cos.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="p-3">
-                    <div className="font-bold">{cos.characterName}</div>
-                    <div className="text-xs text-gray-500">{cos.seriesName}</div>
-                  </td>
-                  <td className="p-3">
-                      <div>{cos.participantName}</div>
-                      <div className="text-xs text-gray-500 italic">{cos.nickname}</div>
-                  </td>
-                  <td className="p-3">
-                    {cos.event ? (
-                      <div>
-                        <div className="font-medium">{cos.event.title}</div>
-                        <div className="text-xs text-gray-500">{new Date(cos.event.date).toLocaleDateString('es-AR')}</div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-red-500 italic">Sin evento</span>
-                    )}
-                  </td>
-                  <td className="p-3"><Badge color="blue">{cos.category}</Badge></td>
-                  <td className="p-3">
-                      <Badge color={cos.status === 'Inscripto' ? 'yellow' : cos.status === 'Confirmado' ? 'green' : 'red'}>
-                          {cos.status}
-                      </Badge>
-                  </td>
-                  <td className="p-3">
-                     <button 
-                        onClick={() => setViewCosplay(cos)} 
-                        className="bg-gray-100 text-gray-700 p-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-1 text-xs font-bold"
-                     >
-                        <Eye size={16} /> Ver Detalle
-                     </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[800px]">
+              <thead>
+                <tr className="bg-black text-white text-left">
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Personaje</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Participante</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Evento</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Categoría</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Estado</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
                 </tr>
-              ))}
-              {cosplayers.length === 0 && (
-                  <tr>
-                      <td colSpan={6} className="p-4 text-center text-gray-500 italic">No hay inscriptos aún.</td>
+              </thead>
+              <tbody>
+                {cosplayers.map(cos => (
+                  <tr key={cos.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="p-2 sm:p-3">
+                      <div className="font-bold whitespace-nowrap">{cos.characterName}</div>
+                      <div className="text-xs text-gray-500 whitespace-nowrap">{cos.seriesName}</div>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                        <div className="whitespace-nowrap">{cos.participantName}</div>
+                        <div className="text-xs text-gray-500 italic whitespace-nowrap">{cos.nickname}</div>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                      {cos.event ? (
+                        <div>
+                          <div className="font-medium whitespace-nowrap">{cos.event.title}</div>
+                          <div className="text-xs text-gray-500 whitespace-nowrap">{new Date(cos.event.date).toLocaleDateString('es-AR')}</div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-red-500 italic whitespace-nowrap">Sin evento</span>
+                      )}
+                    </td>
+                    <td className="p-2 sm:p-3"><Badge color="blue">{cos.category}</Badge></td>
+                    <td className="p-2 sm:p-3">
+                        <Badge color={cos.status === 'Inscripto' ? 'yellow' : cos.status === 'Confirmado' ? 'green' : 'red'}>
+                            {cos.status}
+                        </Badge>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                       <button
+                          onClick={() => setViewCosplay(cos)}
+                          className="bg-gray-100 text-gray-700 p-1 sm:p-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-1 text-xs font-bold whitespace-nowrap"
+                       >
+                          <Eye size={16} /> Ver
+                       </button>
+                    </td>
                   </tr>
-              )}
-            </tbody>
-          </table>
+                ))}
+                {cosplayers.length === 0 && (
+                    <tr>
+                        <td colSpan={6} className="p-4 text-center text-gray-500 italic">No hay inscriptos aún.</td>
+                    </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* --- GALLERY MODERATION --- */}
       {activeTab === 'gallery' && (
           <div className="animate-in fade-in">
-              <h3 className="font-display text-2xl mb-4">Moderación de Fotos</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <h3 className="font-display text-xl sm:text-2xl mb-4">Moderación de Fotos</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
                   {gallery.map(img => (
                       <div 
                         key={img.id} 
@@ -912,24 +918,24 @@ export const Admin = () => {
       {/* --- SPONSORS CRUD --- */}
       {activeTab === 'sponsors' && (
           <div className="animate-in fade-in">
-            <div className="flex justify-between mb-4">
-                <h3 className="font-display text-2xl">Sponsors</h3>
-                <Button onClick={() => setEditingSponsor({ name: '', logoUrl: '', category: 'Colaborador', link: '', active: true })}>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
+                <h3 className="font-display text-xl sm:text-2xl">Sponsors</h3>
+                <Button onClick={() => setEditingSponsor({ name: '', logoUrl: '', category: 'Colaborador', link: '', active: true })} className="text-sm sm:text-base">
                     <Plus size={18} className="mr-2 inline" /> Nuevo Sponsor
                 </Button>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
                 {sponsors.map(sp => (
-                    <MangaCard key={sp.id} className="flex items-center gap-4">
-                        <img src={sp.logoUrl} alt={sp.name} className="w-16 h-16 object-contain border border-gray-200" />
-                        <div className="flex-grow">
-                            <h4 className="font-bold">{sp.name}</h4>
+                    <MangaCard key={sp.id} className="flex items-center gap-3 sm:gap-4">
+                        <img src={sp.logoUrl} alt={sp.name} className="w-12 h-12 sm:w-16 sm:h-16 object-contain border border-gray-200 flex-shrink-0" />
+                        <div className="flex-grow min-w-0">
+                            <h4 className="font-bold text-sm sm:text-base break-words">{sp.name}</h4>
                             <div className="text-xs text-gray-500">{sp.category}</div>
                             <Badge color={sp.active ? 'red' : 'purple'}>{sp.active ? 'Activo' : 'Inactivo'}</Badge>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <button onClick={() => setEditingSponsor(sp)} className="text-blue-600"><Edit size={16}/></button>
-                            <button onClick={() => handleDeleteSponsor(sp.id)} className="text-red-600"><Trash2 size={16}/></button>
+                        <div className="flex flex-row sm:flex-col gap-2 sm:gap-1 flex-shrink-0">
+                            <button onClick={() => setEditingSponsor(sp)} className="text-blue-600 p-1"><Edit size={16}/></button>
+                            <button onClick={() => handleDeleteSponsor(sp.id)} className="text-red-600 p-1"><Trash2 size={16}/></button>
                         </div>
                     </MangaCard>
                 ))}
@@ -940,29 +946,29 @@ export const Admin = () => {
       {/* --- GIVEAWAYS CRUD --- */}
       {activeTab === 'giveaways' && (
           <div className="animate-in fade-in">
-            <div className="flex justify-between mb-4">
-                <h3 className="font-display text-2xl">Sorteos</h3>
-                <Button onClick={() => setEditingGiveaway({ title: '', description: '', prize: '', startDate: '', endDate: '', status: 'Activo', images: [] })}>
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
+                <h3 className="font-display text-xl sm:text-2xl">Sorteos</h3>
+                <Button onClick={() => setEditingGiveaway({ title: '', description: '', prize: '', startDate: '', endDate: '', status: 'Activo', images: [] })} className="text-sm sm:text-base">
                     <Plus size={18} className="mr-2 inline" /> Nuevo Sorteo
                 </Button>
             </div>
             <div className="grid gap-4">
                 {giveaways.map(g => (
                     <MangaCard key={g.id}>
-                        <div className="flex justify-between">
-                            <div className="flex gap-4">
+                        <div className="flex flex-col sm:flex-row justify-between gap-4">
+                            <div className="flex gap-3 sm:gap-4">
                                 {g.images && g.images.length > 0 && (
-                                   <img src={g.images[0]} alt={g.title} className="w-20 h-20 object-cover border border-black hidden sm:block" />
+                                   <img src={g.images[0]} alt={g.title} className="w-16 h-16 sm:w-20 sm:h-20 object-cover border border-black flex-shrink-0" />
                                 )}
-                                <div>
-                                    <h4 className="font-bold text-lg">{g.title}</h4>
-                                    <p className="text-sm text-gray-600">Premio: {g.prize}</p>
+                                <div className="flex-grow min-w-0">
+                                    <h4 className="font-bold text-base sm:text-lg break-words">{g.title}</h4>
+                                    <p className="text-xs sm:text-sm text-gray-600 break-words">Premio: {g.prize}</p>
                                     <div className="mt-2 text-xs">Participantes: {g.participantIds.length}</div>
                                 </div>
                             </div>
-                            <div className="text-right">
+                            <div className="flex sm:flex-col items-start sm:items-end justify-between sm:justify-start gap-3 sm:gap-2">
                                 <Badge color={g.status === 'Activo' ? 'red' : 'purple'}>{g.status}</Badge>
-                                <div className="mt-2 flex gap-2 justify-end">
+                                <div className="flex gap-2">
                                     <button onClick={() => setEditingGiveaway(g)} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button>
                                     <button onClick={() => handleDeleteGiveaway(g.id)} className="text-red-600 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button>
                                 </div>
@@ -1437,10 +1443,10 @@ export const Admin = () => {
       {/* GALLERY PHOTO MODERATION MODAL */}
       {selectedPhoto && (
           <PhotoModal title="Moderación de Foto" onClose={() => setSelectedPhoto(null)}>
-              <div className="md:w-2/3 bg-black flex items-center justify-center p-4 min-h-[400px]">
-                  <img src={selectedPhoto.url} alt="Moderation content" className="max-w-full max-h-[80vh] object-contain" />
+              <div className="w-full md:w-2/3 bg-black flex items-center justify-center p-2 sm:p-4 min-h-[200px] sm:min-h-[400px]">
+                  <img src={selectedPhoto.url} alt="Moderation content" className="max-w-full max-h-[40vh] sm:max-h-[80vh] object-contain" />
               </div>
-              <div className="md:w-1/3 p-6 bg-white flex flex-col border-l-2 border-black">
+              <div className="w-full md:w-1/3 p-4 sm:p-6 bg-white flex flex-col border-t-2 md:border-t-0 md:border-l-2 border-black">
                   <div className="mb-6 flex justify-between items-start">
                     <div>
                       <h4 className="font-bold text-sm text-gray-500 uppercase mb-2">Estado Actual</h4>
