@@ -34,13 +34,9 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, data: Partial<{ name: string; email: string; avatar: string; whatsapp: string }>) {
-    // TODO: Remove after running: npx prisma db push
-    // Temporarily remove whatsapp field until migration is run
-    const { whatsapp, ...safeData } = data;
-
     return this.prisma.user.update({
       where: { id: userId },
-      data: safeData,
+      data,
     });
   }
 
@@ -52,7 +48,7 @@ export class UsersService {
         email: true,
         role: true,
         avatar: true,
-        // whatsapp: true, // TODO: Uncomment after running: npx prisma db push
+        whatsapp: true,
         phone: true,
         age: true,
         entryAuthorized: true,
@@ -67,13 +63,9 @@ export class UsersService {
     userId: string,
     data: Partial<{ name: string; email: string; whatsapp: string; phone: string; role: UserRole; entryAuthorized: boolean }>,
   ) {
-    // TODO: Remove after running: npx prisma db push
-    // Temporarily remove whatsapp field until migration is run
-    const { whatsapp, ...safeData } = data;
-
     return this.prisma.user.update({
       where: { id: userId },
-      data: safeData,
+      data,
     });
   }
 
