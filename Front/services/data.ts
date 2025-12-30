@@ -151,11 +151,17 @@ export const addCosplayRegistration = (data: any) => {
 };
 
 // Gallery
-export const getGallery = (userId?: string, approved?: boolean) => api.gallery.getAll(userId, approved);
-export const getUserGallery = () => api.gallery.getAll(undefined, undefined);
+export const getGallery = (userId?: string, approved?: boolean) => api.gallery.getAll(userId, approved, undefined);
+export const getOfficialGallery = () => api.gallery.getAll(undefined, true, true);
+export const getCommunityGallery = () => api.gallery.getAll(undefined, true, false);
+export const getUserGallery = () => api.gallery.getAll(undefined, undefined, undefined);
 export const addGalleryItem = (data: any) => {
   const { token } = getAuth();
   return api.gallery.create(token || '', data);
+};
+export const addOfficialGalleryItem = (data: any) => {
+  const { token } = getAuth();
+  return api.gallery.createOfficial(token || '', data);
 };
 export const approveGalleryItem = (id: string) => {
   const { token } = getAuth();

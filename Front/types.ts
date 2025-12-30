@@ -124,15 +124,16 @@ export interface Giveaway {
   images: string[];
 }
 
-export interface GalleryItem { 
-  id: string; 
-  eventId: string; 
+export interface GalleryItem {
+  id: string;
+  eventId: string;
   userId?: string; // Owner ID
-  url: string; 
-  approved: boolean; 
+  url: string;
+  approved: boolean;
   status: 'pending' | 'approved' | 'rejected';
-  description: string; 
+  description: string;
   feedback?: string; // Reason for rejection
+  isOfficial?: boolean; // True for admin-uploaded official photos
 }
 
 export interface AppConfig {

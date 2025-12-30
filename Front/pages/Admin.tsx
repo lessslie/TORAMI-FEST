@@ -7,13 +7,13 @@ import {
   getEvents, saveEvent, deleteEvent,
   getSponsors, saveSponsor, deleteSponsor,
   getGiveaways, saveGiveaway, deleteGiveaway,
-  getGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem,
+  getGallery, getOfficialGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem, addOfficialGalleryItem,
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
   getUnreadNotificationCount, markAllNotificationsAsRead,
   getAllUsers, updateUser, deleteUser
 } from '../services/data';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -208,7 +208,7 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
 
 export const Admin = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'config'|'cosplay'|'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'officialgallery'|'config'|'cosplay'|'users'>('dashboard');
 
   // Data State
   const [stats, setStats] = useState<any>(null);
@@ -219,6 +219,7 @@ export const Admin = () => {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [officialGallery, setOfficialGallery] = useState<GalleryItem[]>([]);
   const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined });
   const [configNotice, setConfigNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isTogglingDonations, setIsTogglingDonations] = useState(false);
@@ -259,6 +260,10 @@ export const Admin = () => {
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  // Official Gallery Upload State
+  const [showOfficialUpload, setShowOfficialUpload] = useState(false);
+  const [officialUploadData, setOfficialUploadData] = useState({ eventId: '', description: '', url: '' });
+
   const refreshData = (updateOpenChat = false) => {
     getStats().then((data) => {
       console.log('📊 Stats from backend:', data);
@@ -290,6 +295,7 @@ export const Admin = () => {
     getSponsors().then(setSponsors);
     getGiveaways().then(setGiveaways);
     getGallery().then(setGallery);
+    getOfficialGallery().then(setOfficialGallery);
     getConfig().then(setConfig);
     getAllUsers().then((data: User[]) => setUsers(data));
     getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
@@ -672,7 +678,8 @@ export const Admin = () => {
             <option value="events">Eventos</option>
             <option value="stands">Stands</option>
             <option value="cosplay">Cosplay</option>
-            <option value="gallery">Galería</option>
+            <option value="gallery">Galería Comunitaria</option>
+            <option value="officialgallery">📸 Galería Oficial</option>
             <option value="giveaways">Sorteos</option>
             <option value="sponsors">Sponsors</option>
             <option value="users">Usuarios</option>
@@ -686,7 +693,8 @@ export const Admin = () => {
           <TabButton id="events" label="Eventos" icon={Calendar} />
           <TabButton id="stands" label="Stands" icon={Store} />
           <TabButton id="cosplay" label="Cosplay" icon={Trophy} />
-          <TabButton id="gallery" label="Galería" icon={Image} />
+          <TabButton id="gallery" label="👥 Comunitaria" icon={Image} />
+          <TabButton id="officialgallery" label="📸 Oficial" icon={Sparkles} />
           <TabButton id="giveaways" label="Sorteos" icon={Gift} />
           <TabButton id="sponsors" label="Sponsors" icon={DollarSign} />
           <TabButton id="users" label="Usuarios" icon={Users} />
@@ -897,17 +905,17 @@ export const Admin = () => {
         </div>
       )}
 
-      {/* --- GALLERY MODERATION --- */}
+      {/* --- GALLERY MODERATION (COMMUNITY) --- */}
       {activeTab === 'gallery' && (
           <div className="animate-in fade-in">
-              <h3 className="font-display text-xl sm:text-2xl mb-4">Moderación de Fotos</h3>
+              <h3 className="font-display text-xl sm:text-2xl mb-4">👥 Moderación de Galería Comunitaria</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
                   {gallery.map(img => (
-                      <div 
-                        key={img.id} 
+                      <div
+                        key={img.id}
                         onClick={() => setSelectedPhoto(img)}
                         className={`relative group border-2 ${
-                            img.status === 'approved' ? 'border-green-500' : 
+                            img.status === 'approved' ? 'border-green-500' :
                             img.status === 'rejected' ? 'border-red-500' : 'border-yellow-400'
                         } p-1 cursor-pointer hover:shadow-manga transition-all`}
                       >
@@ -916,7 +924,7 @@ export const Admin = () => {
                                <ZoomIn className="text-white w-8 h-8 drop-shadow-lg" />
                           </div>
                           <div className={`absolute top-2 right-2 px-2 py-1 text-xs font-bold text-white ${
-                              img.status === 'approved' ? 'bg-green-600' : 
+                              img.status === 'approved' ? 'bg-green-600' :
                               img.status === 'rejected' ? 'bg-red-600' : 'bg-yellow-600'
                           }`}>
                               {img.status === 'approved' ? 'Aprobada' : img.status === 'rejected' ? 'Rechazada' : 'Pendiente'}
@@ -928,6 +936,42 @@ export const Admin = () => {
                           )}
                       </div>
                   ))}
+              </div>
+          </div>
+      )}
+
+      {/* --- OFFICIAL GALLERY --- */}
+      {activeTab === 'officialgallery' && (
+          <div className="animate-in fade-in">
+              <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
+                  <h3 className="font-display text-xl sm:text-2xl">📸 Galería Oficial</h3>
+                  <Button onClick={() => setShowOfficialUpload(true)} className="text-sm sm:text-base">
+                      <Plus size={18} className="mr-2 inline" /> Subir Foto Oficial
+                  </Button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
+                  {officialGallery.map(img => (
+                      <div
+                        key={img.id}
+                        className="relative group border-2 border-torami-red p-1 hover:shadow-manga transition-all"
+                      >
+                          <img src={img.url} alt="Official Gallery" className="w-full h-40 object-cover" />
+                          <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold text-white bg-torami-red">
+                              Oficial
+                          </div>
+                          <button
+                            onClick={() => { if (confirm('¿Eliminar esta foto oficial?')) { deleteGalleryItem(img.id).then(() => refreshData()); } }}
+                            className="absolute bottom-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                      </div>
+                  ))}
+                  {officialGallery.length === 0 && (
+                    <div className="col-span-full text-center py-10 text-gray-500">
+                      No hay fotos oficiales aún. Hacé clic en "Subir Foto Oficial" para agregar.
+                    </div>
+                  )}
               </div>
           </div>
       )}
@@ -1834,6 +1878,92 @@ export const Admin = () => {
                     Entrada Autorizada
                   </label>
                   <Button type="submit" className="w-full">Guardar Cambios</Button>
+              </form>
+          </Modal>
+      )}
+
+      {/* OFFICIAL GALLERY UPLOAD MODAL */}
+      {showOfficialUpload && (
+          <Modal title="📸 Subir Foto Oficial" onClose={() => {
+              setShowOfficialUpload(false);
+              setOfficialUploadData({ eventId: '', description: '', url: '' });
+          }}>
+              <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!officialUploadData.url || !officialUploadData.eventId) {
+                      alert('⚠️ Debés seleccionar un evento y subir una foto');
+                      return;
+                  }
+                  try {
+                      await addOfficialGalleryItem(officialUploadData);
+                      setShowOfficialUpload(false);
+                      setOfficialUploadData({ eventId: '', description: '', url: '' });
+                      refreshData();
+                  } catch (error) {
+                      console.error('Error uploading official photo:', error);
+                      alert('❌ Error al subir la foto oficial. Intentá nuevamente.');
+                  }
+              }} className="space-y-4">
+                  <div>
+                      <label className="block text-sm font-bold mb-1 uppercase">Evento *</label>
+                      <select
+                        className="w-full border-2 border-black p-2 bg-white"
+                        required
+                        value={officialUploadData.eventId}
+                        onChange={(e) => setOfficialUploadData({...officialUploadData, eventId: e.target.value})}
+                      >
+                          <option value="">Seleccioná un evento...</option>
+                          {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
+                      </select>
+                  </div>
+
+                  <div>
+                      <label className="block text-sm font-bold mb-1 uppercase">Foto *</label>
+                      <div className="border-2 border-dashed border-gray-400 bg-gray-50 p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors relative">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                        setOfficialUploadData(prev => ({ ...prev, url: reader.result as string }));
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                }
+                            }}
+                            required={!officialUploadData.url}
+                          />
+                          {officialUploadData.url ? (
+                              <img src={officialUploadData.url} alt="Preview" className="h-48 mx-auto object-contain shadow-sm" />
+                          ) : (
+                              <div className="text-gray-500 py-8">
+                                  <Image className="mx-auto mb-2" size={32} />
+                                  <span className="text-sm font-bold uppercase">Hacé clic para seleccionar imagen</span>
+                              </div>
+                          )}
+                      </div>
+                  </div>
+
+                  <div>
+                      <label className="block text-sm font-bold mb-1 uppercase">Descripción *</label>
+                      <textarea
+                        className="w-full border-2 border-black p-2"
+                        rows={3}
+                        placeholder="Describí la foto..."
+                        value={officialUploadData.description}
+                        onChange={(e) => setOfficialUploadData({...officialUploadData, description: e.target.value})}
+                        required
+                      ></textarea>
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                      <Upload size={18} className="mr-2 inline" /> Publicar Foto Oficial
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center italic">
+                      Las fotos oficiales se publican inmediatamente sin moderación
+                  </p>
               </form>
           </Modal>
       )}

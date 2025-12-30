@@ -142,6 +142,7 @@ model GalleryItem {
   approved    Boolean @default(false)
   status      GalleryStatus @default(PENDING)
   feedback    String?
+  isOfficial  Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

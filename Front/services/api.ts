@@ -103,10 +103,11 @@ export const api = {
 
   // ==================== GALLERY ====================
   gallery: {
-    getAll: (userId?: string, approved?: boolean) => {
+    getAll: (userId?: string, approved?: boolean, isOfficial?: boolean) => {
       const params = new URLSearchParams();
       if (userId) params.append('userId', userId);
       if (approved !== undefined) params.append('approved', String(approved));
+      if (isOfficial !== undefined) params.append('isOfficial', String(isOfficial));
       return request<any[]>(`/gallery?${params.toString()}`);
     },
 
@@ -115,6 +116,9 @@ export const api = {
 
     create: (token: string, data: any) =>
       request<any>('/gallery', { method: 'POST', body: data, token }),
+
+    createOfficial: (token: string, data: any) =>
+      request<any>('/gallery/official', { method: 'POST', body: data, token }),
 
     moderate: (token: string, id: string, status: string, feedback?: string) =>
       request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status, feedback }, token }),

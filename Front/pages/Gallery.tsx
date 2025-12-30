@@ -21,7 +21,8 @@ export const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
 
   useEffect(() => {
-    getGallery().then(data => setItems(data.filter(i => i.approved || (user && i.userId === user.id)))); // Show approved or OWN pending/rejected
+    // Show community photos (isOfficial=false) that are approved OR user's own pending/rejected
+    getGallery().then(data => setItems(data.filter(i => !i.isOfficial && (i.approved || (user && i.userId === user.id)))));
     getEvents().then(setEvents);
   }, [user]); // Re-fetch if user status changes
 
@@ -55,7 +56,7 @@ export const Gallery = () => {
         setShowUpload(false);
         setUploadData({ eventId: '', description: '', url: '' });
         setSelectedFile(null);
-        getGallery().then(data => setItems(data.filter(i => i.approved || (user && i.userId === user.id)))); // Refresh list
+        getGallery().then(data => setItems(data.filter(i => !i.isOfficial && (i.approved || (user && i.userId === user.id))))); // Refresh list
     }, 2000);
   };
 
@@ -68,7 +69,7 @@ export const Gallery = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <SectionTitle>
            <span className="flex items-center gap-2">
-             <Camera className="text-torami-red transform rotate-12" /> Galería
+             <Camera className="text-torami-red transform rotate-12" /> Galería Comunitaria
            </span>
         </SectionTitle>
         

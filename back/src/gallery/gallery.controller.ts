@@ -27,12 +27,15 @@ export class GalleryController {
   @Get()
   @ApiQuery({ name: 'userId', required: false })
   @ApiQuery({ name: 'approved', required: false })
+  @ApiQuery({ name: 'isOfficial', required: false })
   findAll(
     @Query('userId') userId?: string,
     @Query('approved') approved?: string,
+    @Query('isOfficial') isOfficial?: string,
   ) {
     const approvedBool = approved === undefined ? undefined : approved === 'true';
-    return this.galleryService.findAll(userId, approvedBool);
+    const isOfficialBool = isOfficial === undefined ? undefined : isOfficial === 'true';
+    return this.galleryService.findAll(userId, approvedBool, isOfficialBool);
   }
 
   @Get(':id')
@@ -45,6 +48,14 @@ export class GalleryController {
   @Post()
   create(@Request() req, @Body() dto: CreateGalleryItemDto) {
     return this.galleryService.create(req.user.userId, dto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Post('official')
+  createOfficial(@Request() req, @Body() dto: CreateGalleryItemDto) {
+    return this.galleryService.createOfficial(req.user.userId, dto);
   }
 
   @ApiBearerAuth()

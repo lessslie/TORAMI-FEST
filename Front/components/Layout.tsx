@@ -100,7 +100,8 @@ export const Navbar = () => {
             <Link to="/proximos-eventos" className={isActive('/proximos-eventos')}>Eventos</Link>
             <Link to="/quiero-un-stand" className={isActive('/quiero-un-stand')}>Stands</Link>
             <Link to="/concursos-cosplay" className={isActive('/concursos-cosplay')}>Concursos</Link>
-            <Link to="/galeria" className={isActive('/galeria')}>Galería</Link>
+            <Link to="/galeria-oficial" className={isActive('/galeria-oficial')}>📸 Oficial</Link>
+            <Link to="/galeria" className={isActive('/galeria')}>👥 Comunitaria</Link>
             <Link to="/sorteos" className={isActive('/sorteos')}>Sorteos</Link>
             
             {(user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN) && (
@@ -212,7 +213,8 @@ export const Navbar = () => {
             <NavLink to="/proximos-eventos" icon={Calendar}>Próximos Eventos</NavLink>
             <NavLink to="/concursos-cosplay" icon={Trophy}>Concursos Cosplay</NavLink>
             <NavLink to="/quiero-un-stand" icon={Store}>Quiero un Stand</NavLink>
-            <NavLink to="/galeria" icon={Image}>Galería</NavLink>
+            <NavLink to="/galeria-oficial" icon={Sparkles}>📸 Galería Oficial</NavLink>
+            <NavLink to="/galeria" icon={Image}>👥 Galería Comunitaria</NavLink>
             <NavLink to="/eventos-pasados" icon={Ghost}>Blog / Pasados</NavLink>
             <NavLink to="/sorteos" icon={Gift}>Sorteos</NavLink>
             <NavLink to="/donar" icon={DollarSign}>Donar / Apoyar</NavLink>

@@ -8,7 +8,7 @@ import { GalleryStatus } from '@prisma/client';
 export class GalleryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId?: string, approved?: boolean) {
+  async findAll(userId?: string, approved?: boolean, isOfficial?: boolean) {
     const where: any = {};
 
     if (userId) {
@@ -16,6 +16,10 @@ export class GalleryService {
     } else if (approved !== undefined) {
       where.approved = approved;
       where.status = GalleryStatus.APPROVED;
+    }
+
+    if (isOfficial !== undefined) {
+      where.isOfficial = isOfficial;
     }
 
     return this.prisma.galleryItem.findMany({
@@ -68,6 +72,29 @@ export class GalleryService {
         userId,
         approved: false,
         status: GalleryStatus.PENDING,
+        isOfficial: false,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        event: true,
+      },
+    });
+  }
+
+  async createOfficial(userId: string, data: CreateGalleryItemDto) {
+    return this.prisma.galleryItem.create({
+      data: {
+        ...data,
+        userId,
+        approved: true,
+        status: GalleryStatus.APPROVED,
+        isOfficial: true,
       },
       include: {
         user: {

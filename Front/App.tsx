@@ -8,6 +8,7 @@ import { CosplayContest } from './pages/CosplayContest';
 import { Admin } from './pages/Admin';
 import { UserDashboard } from './pages/UserDashboard';
 import { Gallery } from './pages/Gallery';
+import { OfficialGallery } from './pages/OfficialGallery';
 import { Giveaways } from './pages/Giveaways';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -141,6 +142,7 @@ export default function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/galeria" element={<Gallery />} />
+            <Route path="/galeria-oficial" element={<OfficialGallery />} />
             <Route path="/sorteos" element={<Giveaways />} />
             
             <Route path="/eventos-pasados" element={<PlaceholderPage title="Eventos Pasados" />} />
