@@ -127,7 +127,7 @@ export const api = {
       request<any>('/gallery/official', { method: 'POST', body: data, token }),
 
     moderate: (token: string, id: string, status: string, feedback?: string) =>
-      request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status, feedback }, token }),
+      request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status: status.toUpperCase(), feedback }, token }),
 
     delete: (token: string, id: string) =>
       request<any>(`/gallery/${id}`, { method: 'DELETE', token }),
