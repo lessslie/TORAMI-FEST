@@ -259,6 +259,7 @@ export const Admin = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Official Gallery Upload State
   const [showOfficialUpload, setShowOfficialUpload] = useState(false);
@@ -570,8 +571,9 @@ export const Admin = () => {
   };
 
   const handleGalleryDelete = async () => {
-      if (selectedPhoto && window.confirm('¿Eliminar esta foto permanentemente (Spam)?')) {
+      if (selectedPhoto) {
           await deleteGalleryItem(selectedPhoto.id);
+          setShowDeleteConfirm(false);
           setSelectedPhoto(null);
           refreshData();
       }
@@ -1759,7 +1761,7 @@ export const Admin = () => {
                                   <RefreshCw size={20} /> Rechazar (Solicitar Cambios)
                               </Button>
 
-                              <Button onClick={handleGalleryDelete} variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50 flex items-center justify-center gap-2 text-xs py-2">
+                              <Button onClick={() => setShowDeleteConfirm(true)} variant="outline" className="w-full border-red-600 text-red-600 hover:bg-red-50 flex items-center justify-center gap-2 text-xs py-2">
                                   <Trash2 size={16} /> Eliminar Definitivamente (Spam)
                               </Button>
                           </div>
@@ -1767,6 +1769,47 @@ export const Admin = () => {
                   </div>
               </div>
           </PhotoModal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && selectedPhoto && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4 backdrop-blur-md">
+          <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <h3 className="font-display text-xl">¡Advertencia!</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-lg font-bold mb-3">¿Eliminar esta foto permanentemente?</p>
+              <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+              <p className="text-sm text-gray-600 mb-4">Solo eliminá fotos que sean spam o contenido inapropiado.</p>
+
+              <div className="bg-gray-50 p-3 border-2 border-gray-200 rounded mb-4">
+                <p className="text-xs text-gray-500 mb-1">📸 Foto de:</p>
+                <p className="font-bold">{selectedPhoto.user?.name || 'Usuario desconocido'}</p>
+                {selectedPhoto.event && (
+                  <p className="text-sm text-gray-600 mt-1">Evento: {selectedPhoto.event.title}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleGalleryDelete}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Sí, Eliminar
+                </Button>
+                <Button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* EDIT EVENT MODAL */}
