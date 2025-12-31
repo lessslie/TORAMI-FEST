@@ -3,7 +3,7 @@ import { SectionTitle, MangaCard, Button, Badge } from '../components/UI';
 import { getGallery, getEvents, addGalleryItem } from '../services/data';
 import { Event, GalleryItem } from '../types';
 import { useAuth } from '../App';
-import { Image, Camera, X, Upload, Filter, Heart, ZoomIn, CheckCircle, Sparkles, ShieldCheck } from 'lucide-react';
+import { Image, Camera, X, Upload, Filter, Heart, ZoomIn, CheckCircle, Sparkles, ShieldCheck, User, Calendar } from 'lucide-react';
 
 export const Gallery = () => {
   const { user } = useAuth();
@@ -132,6 +132,27 @@ export const Gallery = () => {
             <div key={item.id} className="break-inside-avoid relative group cursor-pointer" onClick={() => setSelectedImage(item)}>
                 <div className="border-2 border-black bg-white p-1 shadow-manga hover:shadow-manga-hover transition-all">
                     <img src={item.url} alt="Gallery Item" className="w-full h-auto object-cover" />
+
+                    {/* Metadata - shown below image */}
+                    <div className="p-1 space-y-0.5 text-xs">
+                      {item.user && (
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <User size={10} />
+                          <span className="font-bold truncate">{item.user.name}</span>
+                        </div>
+                      )}
+                      {item.event && (
+                        <div className="text-gray-600 truncate">
+                          <span className="font-bold">📸 {item.event.title}</span>
+                        </div>
+                      )}
+                      {item.createdAt && (
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <Calendar size={10} />
+                          <span>{new Date(item.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                      )}
+                    </div>
                 </div>
                 {!item.approved && (
                     <div className="absolute top-3 right-3 z-10">
@@ -229,16 +250,37 @@ export const Gallery = () => {
               </button>
               <div className="max-w-4xl max-h-screen relative" onClick={(e) => e.stopPropagation()}>
                   <img src={selectedImage.url} alt="Full size" className="max-w-full max-h-[85vh] border-4 border-white shadow-2xl" />
-                  <div className="bg-white p-4 mt-2 border-2 border-black shadow-manga flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <p className="font-bold">{selectedImage.description}</p>
-                        {selectedImage.feedback && (
-                            <p className="text-xs text-red-600 font-bold mt-1 bg-red-50 p-1 border border-red-200 inline-block">
-                                Rechazada: {selectedImage.feedback}
-                            </p>
-                        )}
+                  <div className="bg-white p-4 mt-2 border-2 border-black shadow-manga">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <p className="font-bold text-lg mb-2">{selectedImage.description}</p>
+                          <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                            {selectedImage.user && (
+                              <div className="flex items-center gap-1">
+                                <User size={14} />
+                                <span className="font-bold">{selectedImage.user.name}</span>
+                              </div>
+                            )}
+                            {selectedImage.event && (
+                              <div>
+                                <span className="font-bold">📸 {selectedImage.event.title}</span>
+                              </div>
+                            )}
+                            {selectedImage.createdAt && (
+                              <div className="flex items-center gap-1">
+                                <Calendar size={14} />
+                                <span>{new Date(selectedImage.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                              </div>
+                            )}
+                          </div>
+                          {selectedImage.feedback && (
+                              <p className="text-xs text-red-600 font-bold mt-2 bg-red-50 p-2 border border-red-200 inline-block">
+                                  Rechazada: {selectedImage.feedback}
+                              </p>
+                          )}
+                        </div>
+                        <button className="text-red-500 hover:scale-110 transition-transform flex-shrink-0"><Heart fill="currentColor" /></button>
                       </div>
-                      <button className="text-red-500 hover:scale-110 transition-transform"><Heart fill="currentColor" /></button>
                   </div>
               </div>
           </div>

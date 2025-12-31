@@ -135,6 +135,17 @@ export interface GalleryItem {
   description: string;
   feedback?: string; // Reason for rejection
   isOfficial?: boolean; // True for admin-uploaded official photos
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+  user?: {
+    id: string;
+    name: string;
+    avatar: string | null;
+  };
+  event?: {
+    id: string;
+    title: string;
+  };
 }
 
 export interface AppConfig {

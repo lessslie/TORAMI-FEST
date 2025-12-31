@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SectionTitle, MangaCard } from '../components/UI';
 import { getOfficialGallery, getEvents } from '../services/data';
 import { Event, GalleryItem } from '../types';
-import { Camera, Filter, ZoomIn, Sparkles, Award, X } from 'lucide-react';
+import { Camera, Filter, ZoomIn, Sparkles, Award, X, User, Calendar } from 'lucide-react';
 
 export const OfficialGallery = () => {
   const [items, setItems] = useState<GalleryItem[]>([]);
@@ -88,11 +88,32 @@ export const OfficialGallery = () => {
             <div key={item.id} className="break-inside-avoid relative group cursor-pointer" onClick={() => setSelectedImage(item)}>
                 <div className="border-2 border-black bg-white p-2 shadow-manga hover:shadow-manga-hover transition-all">
                     <img src={item.url} alt="Official Gallery" className="w-full h-auto object-cover" />
-                    {item.description && (
-                      <div className="mt-2 text-sm font-bold text-gray-700">
-                        {item.description}
-                      </div>
-                    )}
+
+                    {/* Metadata */}
+                    <div className="mt-2 space-y-1">
+                      {item.user && (
+                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                          <User size={12} />
+                          <span className="font-bold">{item.user.name}</span>
+                        </div>
+                      )}
+                      {item.event && (
+                        <div className="text-xs text-gray-600">
+                          <span className="font-bold">📸 {item.event.title}</span>
+                        </div>
+                      )}
+                      {item.createdAt && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Calendar size={12} />
+                          <span>{new Date(item.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                      )}
+                      {item.description && (
+                        <div className="mt-2 text-sm font-bold text-gray-700">
+                          {item.description}
+                        </div>
+                      )}
+                    </div>
                 </div>
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <ZoomIn className="text-white drop-shadow-md w-12 h-12" />
@@ -109,11 +130,30 @@ export const OfficialGallery = () => {
               </button>
               <div className="max-w-6xl max-h-screen relative" onClick={(e) => e.stopPropagation()}>
                   <img src={selectedImage.url} alt="Full size" className="max-w-full max-h-[85vh] border-4 border-white shadow-2xl" />
-                  {selectedImage.description && (
-                    <div className="bg-white p-4 mt-2 border-2 border-black shadow-manga">
-                      <p className="font-bold text-lg">{selectedImage.description}</p>
+                  <div className="bg-white p-4 mt-2 border-2 border-black shadow-manga">
+                    {selectedImage.description && (
+                      <p className="font-bold text-lg mb-2">{selectedImage.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      {selectedImage.user && (
+                        <div className="flex items-center gap-1">
+                          <User size={14} />
+                          <span className="font-bold">{selectedImage.user.name}</span>
+                        </div>
+                      )}
+                      {selectedImage.event && (
+                        <div>
+                          <span className="font-bold">📸 {selectedImage.event.title}</span>
+                        </div>
+                      )}
+                      {selectedImage.createdAt && (
+                        <div className="flex items-center gap-1">
+                          <Calendar size={14} />
+                          <span>{new Date(selectedImage.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
               </div>
           </div>
       )}
