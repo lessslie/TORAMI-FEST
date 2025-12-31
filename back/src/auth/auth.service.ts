@@ -21,8 +21,10 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(dto.password, 10);
     const user = await this.usersService.create({ ...dto, password: hashed });
-    // Enviamos email de bienvenida, pero no bloqueamos el registro si falla
-    await this.mailService.sendWelcomeEmail(user.email, user.name);
+    // Enviamos email de bienvenida en segundo plano (no bloqueamos el registro)
+    this.mailService.sendWelcomeEmail(user.email, user.name).catch((err) => {
+      console.error('Error enviando email de bienvenida:', err.message);
+    });
     const token = this.signToken(user.id, user.email, user.role);
     return { user: this.sanitize(user), token };
   }
