@@ -46,8 +46,7 @@ export const Gallery = () => {
     await addGalleryItem({
         eventId: uploadData.eventId,
         description: uploadData.description,
-        url: uploadData.url,
-        userId: user?.id
+        url: uploadData.url
     });
     
     setIsSuccess(true);
