@@ -1674,6 +1674,27 @@ export const Admin = () => {
                   <img src={selectedPhoto.url} alt="Moderation content" className="max-w-full max-h-[40vh] sm:max-h-[80vh] object-contain" />
               </div>
               <div className="w-full md:w-1/3 p-4 sm:p-6 bg-white flex flex-col border-t-2 md:border-t-0 md:border-l-2 border-black">
+                  {/* Photo Metadata */}
+                  <div className="mb-4 bg-gray-50 p-3 border-2 border-gray-200 space-y-2">
+                    {selectedPhoto.user && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users size={14} className="text-gray-500" />
+                        <span className="font-bold">{selectedPhoto.user.name}</span>
+                      </div>
+                    )}
+                    {selectedPhoto.event && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar size={14} className="text-gray-500" />
+                        <span className="font-bold">{selectedPhoto.event.title}</span>
+                      </div>
+                    )}
+                    {selectedPhoto.createdAt && (
+                      <div className="text-xs text-gray-500">
+                        Subida: {new Date(selectedPhoto.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="mb-6 flex justify-between items-start">
                     <div>
                       <h4 className="font-bold text-sm text-gray-500 uppercase mb-2">Estado Actual</h4>
