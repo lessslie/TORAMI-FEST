@@ -11,6 +11,7 @@ export class UserEntity implements User {
   ticketType!: string | null;
   age!: number | null;
   phone!: string | null;
+  whatsapp!: string | null;
   createdAt!: Date;
   updatedAt!: Date;
 

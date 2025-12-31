@@ -4,20 +4,20 @@ import { Type } from 'class-transformer';
 export class MessageDto {
   @IsString()
   @IsNotEmpty()
-  role: 'user' | 'model';
+  role!: 'user' | 'model';
 
   @IsString()
   @IsNotEmpty()
-  text: string;
+  text!: string;
 }
 
 export class ChatMessageDto {
   @IsString()
   @IsNotEmpty()
-  message: string;
+  message!: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MessageDto)
-  history: MessageDto[];
+  history!: MessageDto[];
 }

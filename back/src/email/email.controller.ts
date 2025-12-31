@@ -7,7 +7,7 @@ class SendTestEmailDto {
   @ApiProperty({ example: 'agata.morales92@gmail.com' })
   @IsEmail()
   @IsNotEmpty()
-  to: string;
+  to!: string;
 }
 
 @ApiTags('email-test')
