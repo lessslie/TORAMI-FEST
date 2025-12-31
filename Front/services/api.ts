@@ -99,6 +99,12 @@ export const api = {
 
     sendMessage: (token: string, id: string, message: any) =>
       request<any>(`/cosplay/${id}/messages`, { method: 'POST', body: message, token }),
+
+    getAvailableSlots: () =>
+      request<{ available: number; limit: number; occupied: number }>('/cosplay/available-slots'),
+
+    addToWaitingList: (token: string, data: any) =>
+      request<any>('/cosplay/waiting-list', { method: 'POST', body: data, token }),
   },
 
   // ==================== GALLERY ====================

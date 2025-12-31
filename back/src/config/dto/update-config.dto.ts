@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsString, IsArray, IsOptional } from 'class-validator';
+import { IsBoolean, IsString, IsArray, IsOptional, IsInt, Min } from 'class-validator';
 
 export class UpdateConfigDto {
   @ApiProperty({ required: false })
@@ -60,4 +60,10 @@ export class UpdateConfigDto {
   @ApiProperty({ required: false })
   @IsOptional()
   donationGoal?: number;
+
+  @ApiProperty({ required: false, description: 'Límite de cupos para el concurso de cosplay' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  cosplayLimit?: number;
 }

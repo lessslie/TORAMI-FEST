@@ -723,6 +723,41 @@ export const Admin = () => {
                 <div className="text-xs uppercase text-gray-500 font-bold">Sorteos Activos</div>
              </MangaCard>
            </div>
+
+           {/* Cosplay Stats Row */}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <MangaCard className={`text-center border-l-4 ${
+               (stats.cosplay?.approved || 0) + (stats.cosplay?.pending || 0) >= (config.cosplayLimit || 20)
+                 ? 'bg-red-50 border-l-red-600'
+                 : (stats.cosplay?.approved || 0) + (stats.cosplay?.pending || 0) > ((config.cosplayLimit || 20) * 0.75)
+                 ? 'bg-yellow-50 border-l-yellow-600'
+                 : 'bg-green-50 border-l-green-600'
+             }`}>
+                <div className="text-3xl font-display">
+                  {(stats.cosplay?.approved || 0) + (stats.cosplay?.pending || 0)}/{config.cosplayLimit || 20}
+                </div>
+                <div className="text-xs uppercase text-gray-500 font-bold">Cupos Cosplay</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {(config.cosplayLimit || 20) - ((stats.cosplay?.approved || 0) + (stats.cosplay?.pending || 0))} disponibles
+                </div>
+             </MangaCard>
+
+             <MangaCard className="text-center bg-blue-50">
+                <div className="text-3xl font-display text-blue-600">{stats.cosplay?.waitingList || 0}</div>
+                <div className="text-xs uppercase text-gray-500 font-bold">Lista de Espera</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {stats.cosplay?.waitingList > 0 ? 'Recibirán email si se libera cupo' : 'Nadie en espera'}
+                </div>
+             </MangaCard>
+
+             <MangaCard className="text-center">
+                <div className="text-3xl font-display text-purple-600">{stats.cosplay?.total || 0}</div>
+                <div className="text-xs uppercase text-gray-500 font-bold">Total Inscripciones</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  Aprobados: {stats.cosplay?.approved || 0} | Rechazados: {stats.cosplay?.rejected || 0}
+                </div>
+             </MangaCard>
+           </div>
            <div className="bg-white p-4 border-2 border-black h-80 shadow-manga">
               <h3 className="font-bold mb-4 uppercase">Asistencia por Evento</h3>
               <ResponsiveContainer width="100%" height="100%">
@@ -1295,6 +1330,28 @@ export const Admin = () => {
                         placeholder="Ej: 100000"
                       />
                   </div>
+                </MangaCard>
+
+                <MangaCard className="border-t-4 border-t-purple-600">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Trophy size={20} /> Concurso de Cosplay
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Configurá el límite de cupos para el concurso de cosplay. Cuando se alcance el límite,
+                    los usuarios solo podrán anotarse en la lista de espera.
+                  </p>
+                  <Input
+                    label="Límite de Cupos"
+                    name="cosplayLimit"
+                    type="number"
+                    value={config.cosplayLimit || 20}
+                    onChange={handleConfigChange}
+                    placeholder="20"
+                    min="1"
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Cupos actuales: {stats?.cosplay?.approved || 0} aprobados + {stats?.cosplay?.pending || 0} pendientes = {(stats?.cosplay?.approved || 0) + (stats?.cosplay?.pending || 0)} ocupados
+                  </p>
                 </MangaCard>
 
                 {configNotice && (

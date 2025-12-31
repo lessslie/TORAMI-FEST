@@ -51,4 +51,28 @@ export class CosplayController {
   addMessage(@Param('id') id: string, @Req() req: any, @Body() dto: CosplayAddMessageDto) {
     return this.cosplayService.addMessage(id, dto, req.user.userId, req.user.role);
   }
+
+  /**
+   * Get available slots for cosplay registration
+   */
+  @Get('available-slots')
+  async getAvailableSlots() {
+    const available = await this.cosplayService.getAvailableSlots();
+    const limit = await this.cosplayService.getCosplayLimit();
+    return {
+      available,
+      limit,
+      occupied: limit - available,
+    };
+  }
+
+  /**
+   * Add user to waiting list
+   */
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('waiting-list')
+  addToWaitingList(@Req() req: any, @Body() dto: CreateCosplayDto) {
+    return this.cosplayService.addToWaitingList(req.user.userId, dto);
+  }
 }

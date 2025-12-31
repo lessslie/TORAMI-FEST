@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button, Badge } from '../components/UI';
-import { addCosplayRegistration, getUpcomingEvents } from '../services/data';
-import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle, Calendar } from 'lucide-react';
+import { addCosplayRegistration, getUpcomingEvents, getCosplayAvailableSlots, addToWaitingList } from '../services/data';
+import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle, Calendar, Mail, X } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '../types';
@@ -26,19 +26,33 @@ export const CosplayContest = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Cosplay Slots State
+  const [availableSlots, setAvailableSlots] = useState<number | null>(null);
+  const [totalSlots, setTotalSlots] = useState<number>(20);
+  const [showWaitingListModal, setShowWaitingListModal] = useState(false);
+  const [waitingListEmail, setWaitingListEmail] = useState('');
+  const [notifyBySocial, setNotifyBySocial] = useState(true);
+  const [waitingListSubmitted, setWaitingListSubmitted] = useState(false);
+
   useEffect(() => {
-    const loadEvents = async () => {
+    const loadData = async () => {
       try {
+        // Load events
         const upcomingEvents = await getUpcomingEvents();
         setEvents(upcomingEvents);
         if (upcomingEvents.length > 0) {
           setFormData(prev => ({ ...prev, eventId: upcomingEvents[0].id }));
         }
+
+        // Load available slots
+        const slotsData = await getCosplayAvailableSlots();
+        setAvailableSlots(slotsData.available);
+        setTotalSlots(slotsData.limit);
       } catch (error) {
-        console.error('Error loading events:', error);
+        console.error('Error loading data:', error);
       }
     };
-    loadEvents();
+    loadData();
   }, []);
 
   const handleChange = (e: any) => {
@@ -87,12 +101,48 @@ export const CosplayContest = () => {
         eventId: formData.eventId
       });
       setSubmitted(true);
+      // Refresh slots
+      const slotsData = await getCosplayAvailableSlots();
+      setAvailableSlots(slotsData.available);
     } catch (err: any) {
       if (err.response?.status === 401) {
         setError('Debes iniciar sesión para inscribirte al concurso');
+      } else if (err.message && err.message.includes('cupos')) {
+        setError('No hay cupos disponibles. Podés anotarte en la lista de espera.');
       } else {
         setError(err.message || 'Error al enviar la inscripción. Por favor intentá de nuevo.');
       }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleWaitingListSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      setError('Debes iniciar sesión para anotarte en la lista de espera');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addToWaitingList({
+        participantName: formData.participantName || user.name,
+        nickname: formData.nickname,
+        whatsapp: formData.whatsapp,
+        characterName: formData.characterName || 'Pendiente',
+        seriesName: formData.seriesName || 'Pendiente',
+        category: formData.category,
+        referenceImage: formData.referenceImage,
+        audioLink: formData.audioLink,
+        eventId: formData.eventId || events[0]?.id,
+        notifyEmail: waitingListEmail || user.email,
+      });
+      setWaitingListSubmitted(true);
+      setShowWaitingListModal(false);
+    } catch (err: any) {
+      setError(err.message || 'Error al anotarte en la lista de espera');
+      setShowWaitingListModal(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -111,6 +161,22 @@ export const CosplayContest = () => {
     );
   }
 
+  if (waitingListSubmitted) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center">
+        <MangaCard className="py-12 bg-blue-50 border-blue-800 flex flex-col items-center">
+          <Mail className="text-blue-600 w-20 h-20 mb-4" />
+          <h2 className="font-display text-3xl mb-4">¡Te anotaste en la Lista de Espera!</h2>
+          <p className="mb-4">Te avisaremos por email si se libera un cupo.</p>
+          <p className="text-sm text-gray-600 mb-6">También seguí nuestras redes sociales para estar al tanto de las novedades.</p>
+          <Button onClick={() => navigate('/')}>Volver al Inicio</Button>
+        </MangaCard>
+      </div>
+    );
+  }
+
+  const noSlotsAvailable = availableSlots === 0;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
         <SectionTitle>
@@ -118,6 +184,33 @@ export const CosplayContest = () => {
              <Trophy className="text-yellow-500 fill-current transform rotate-12" /> Concurso de Cosplay
            </span>
         </SectionTitle>
+
+        {/* Slot Counter Banner */}
+        {availableSlots !== null && (
+          <MangaCard className={`mb-6 ${noSlotsAvailable ? 'bg-red-50 border-red-600' : availableSlots <= 5 ? 'bg-yellow-50 border-yellow-600' : 'bg-green-50 border-green-600'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg">
+                  {noSlotsAvailable ? '🚫 Cupos Agotados' : `⚠️ Quedan ${availableSlots} cupos disponibles`}
+                </h3>
+                <p className="text-sm text-gray-700">
+                  {noSlotsAvailable
+                    ? `Los ${totalSlots} cupos están ocupados. Podés anotarte en la lista de espera.`
+                    : `Total: ${availableSlots}/${totalSlots} cupos libres`
+                  }
+                </p>
+              </div>
+              {noSlotsAvailable && (
+                <Button
+                  onClick={() => setShowWaitingListModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Mail size={18} className="mr-2 inline" /> Lista de Espera
+                </Button>
+              )}
+            </div>
+          </MangaCard>
+        )}
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
             <MangaCard className="bg-blue-50 text-center">
@@ -251,11 +344,19 @@ export const CosplayContest = () => {
               </MangaCard>
             )}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full flex items-center justify-center gap-2 py-4 text-lg">
+            <Button
+              type="submit"
+              disabled={isSubmitting || noSlotsAvailable}
+              className="w-full flex items-center justify-center gap-2 py-4 text-lg"
+            >
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     Enviando inscripción...
+                  </>
+                ) : noSlotsAvailable ? (
+                  <>
+                    🚫 Cupos Agotados
                   </>
                 ) : (
                   <>
@@ -263,7 +364,68 @@ export const CosplayContest = () => {
                   </>
                 )}
             </Button>
+
+            {noSlotsAvailable && (
+              <Button
+                onClick={() => setShowWaitingListModal(true)}
+                className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2 py-4 text-lg"
+              >
+                <Mail size={20} /> Anotarme en Lista de Espera
+              </Button>
+            )}
         </form>
+
+        {/* Waiting List Modal */}
+        {showWaitingListModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-white border-2 border-black shadow-manga w-full max-w-md">
+              <div className="flex justify-between items-center bg-black text-white p-4">
+                <h3 className="font-display text-xl">📧 Lista de Espera</h3>
+                <button onClick={() => setShowWaitingListModal(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleWaitingListSubmit} className="p-6 space-y-4">
+                <p className="text-gray-700">
+                  Los cupos están completos ({totalSlots}/{totalSlots} ocupados).
+                </p>
+                <p className="text-gray-700 font-bold">
+                  ¿Querés que te avisemos si se libera un cupo?
+                </p>
+
+                <div>
+                  <label className="block text-sm font-bold mb-1 uppercase">Email para notificaciones</label>
+                  <Input
+                    type="email"
+                    value={waitingListEmail}
+                    onChange={(e) => setWaitingListEmail(e.target.value)}
+                    placeholder={user?.email || 'tu@email.com'}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {user?.email ? `Por defecto: ${user.email}` : 'Necesitamos tu email para avisarte'}
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    id="notifyBySocial"
+                    checked={notifyBySocial}
+                    onChange={(e) => setNotifyBySocial(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <label htmlFor="notifyBySocial" className="text-sm text-gray-700">
+                    Avisarme por las redes sociales (estate atenta/o)
+                  </label>
+                </div>
+
+                <Button type="submit" disabled={isSubmitting} className="w-full">
+                  {isSubmitting ? 'Enviando...' : 'Anotarme en Lista de Espera'}
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

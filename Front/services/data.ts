@@ -150,6 +150,13 @@ export const addCosplayRegistration = (data: any) => {
   return api.cosplay.create(token || '', data);
 };
 
+export const getCosplayAvailableSlots = () => api.cosplay.getAvailableSlots();
+
+export const addToWaitingList = (data: any) => {
+  const { token } = getAuth();
+  return api.cosplay.addToWaitingList(token || '', data);
+};
+
 // Gallery
 export const getGallery = (userId?: string, approved?: boolean) => api.gallery.getAll(userId, approved, undefined);
 export const getOfficialGallery = () => api.gallery.getAll(undefined, true, true);

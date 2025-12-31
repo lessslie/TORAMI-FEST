@@ -92,8 +92,11 @@ model CosplayRegistration {
   event          Event?   @relation("EventCosplays", fields: [eventId], references: [id])
   eventId        String?
   messages       Json[]
+  notifyEmail    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([status])
 }
 
 model Sponsor {
@@ -182,6 +185,7 @@ model AppConfig {
   donationDescription String?
   donationImage String?
   donationGoal Decimal? @db.Decimal(10, 2)
+  cosplayLimit Int @default(20)
 }
 
 model Donation {
@@ -212,6 +216,7 @@ enum CosplayStatus {
   INSCRIPTO
   CONFIRMADO
   RECHAZADO
+  WAITING_LIST
 }
 
 enum GiveawayStatus {

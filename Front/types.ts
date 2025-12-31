@@ -94,10 +94,11 @@ export interface CosplayRegistration {
   category: 'General' | 'Performance' | 'Chibi' | 'Grupal';
   referenceImage?: string; // URL o base64
   audioLink?: string; // Para performance
-  status: 'Inscripto' | 'Confirmado' | 'Rechazado';
+  status: 'Inscripto' | 'Confirmado' | 'Rechazado' | 'Lista de Espera';
   eventId?: string;
   event?: Event; // Populated event data
   messages: ChatMessage[];
+  notifyEmail?: string; // Email para notificar si se libera cupo (opcional)
 }
 
 export interface Sponsor {
@@ -151,6 +152,8 @@ export interface AppConfig {
   donationDescription?: string;
   donationImage?: string;
   donationGoal?: number;
+  // Cosplay Limit
+  cosplayLimit?: number; // Límite de cupos para concurso de cosplay
 }
 
 export interface Donation {
