@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { CosplayService } from './cosplay.service';
 import { CreateCosplayDto } from './dto/create-cosplay.dto';
 import { UpdateCosplayStatusDto } from './dto/update-cosplay-status.dto';
@@ -18,8 +18,22 @@ export class CosplayController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Get()
-  findAll() {
-    return this.cosplayService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    return this.cosplayService.findAll(pageNum, limitNum, status);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.cosplayService.findOne(id);
   }
 
   @ApiBearerAuth()

@@ -14,9 +14,15 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Get()
-  findAll(@Query('upcoming') upcoming?: string) {
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('upcoming') upcoming?: string
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
     const upcomingBool = upcoming === undefined ? undefined : upcoming === 'true';
-    return this.eventsService.findAll(upcomingBool);
+    return this.eventsService.findAll(pageNum, limitNum, upcomingBool);
   }
 
   @Get(':id')

@@ -5,32 +5,32 @@ export class CreateCosplayGuestDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  participantName: string;
+  participantName!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  nickname: string;
+  nickname!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  whatsapp: string;
+  whatsapp!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  characterName: string;
+  characterName!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  seriesName: string;
+  seriesName!: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  category: string;
+  category!: string;
 
   @ApiPropertyOptional()
   @IsString()
@@ -55,5 +55,5 @@ export class CreateCosplayGuestDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  eventId: string;
+  eventId!: string;
 }

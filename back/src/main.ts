@@ -3,9 +3,13 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Enable HTTP compression for all responses
+  app.use(compression());
 
   // Aumentar límite de payload para imágenes en base64 (10MB)
   app.use(bodyParser.json({ limit: '10mb' }));

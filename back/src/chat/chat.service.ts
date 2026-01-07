@@ -24,7 +24,7 @@ export class ChatService {
   async chat(chatDto: ChatMessageDto): Promise<string> {
     try {
       // Get context data
-      const events = await this.eventsService.findAll();
+      const eventsResponse = await this.eventsService.findAll();
       const sponsors = await this.sponsorsService.findAll();
 
       const today = new Date().toISOString().split('T')[0];
@@ -33,7 +33,7 @@ export class ChatService {
         FECHA ACTUAL: ${today}
 
         EVENTOS:
-        ${JSON.stringify(events.map(e => ({
+        ${JSON.stringify(eventsResponse.data.map(e => ({
           titulo: e.title,
           fecha: e.date,
           hora: e.time,

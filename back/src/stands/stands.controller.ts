@@ -18,8 +18,22 @@ export class StandsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Get()
-  findAll() {
-    return this.standsService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    return this.standsService.findAll(pageNum, limitNum, status);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.standsService.findOne(id);
   }
 
   @ApiBearerAuth()

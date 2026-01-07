@@ -12,6 +12,8 @@ export class CosplayEntity implements CosplayRegistration {
   category!: string;
   referenceImage!: string | null;
   audioLink!: string | null;
+  audioStartTime!: string | null;
+  audioEndTime!: string | null;
   status!: CosplayStatus;
   notifyEmail!: string | null;
   messages!: any[];

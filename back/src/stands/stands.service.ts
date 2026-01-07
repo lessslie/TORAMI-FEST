@@ -9,12 +9,40 @@ import { StandStatus } from '@prisma/client';
 export class StandsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.standApplication.findMany({
-      include: {
-        event: true,
-      },
-    });
+  async findAll(page: number = 1, limit: number = 20, status?: string) {
+    const skip = (page - 1) * limit;
+    const where = status ? { status: status as StandStatus } : {};
+
+    const [stands, total] = await Promise.all([
+      this.prisma.standApplication.findMany({
+        take: limit,
+        skip,
+        where,
+        select: {
+          id: true,
+          brandName: true,
+          type: true,
+          status: true,
+          contactName: true,
+          email: true,
+          createdAt: true,
+          eventId: true,
+          // NO incluir messages ni images hasta que se abra el detalle
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      this.prisma.standApplication.count({ where })
+    ]);
+
+    return {
+      data: stands,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   findByUser(userId: string) {
@@ -23,6 +51,23 @@ export class StandsService {
       include: {
         event: true,
       },
+    });
+  }
+
+  // Método para obtener detalle completo de un stand
+  findOne(id: string) {
+    return this.prisma.standApplication.findUnique({
+      where: { id },
+      include: {
+        event: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
   }
 

@@ -8,39 +8,66 @@ import { GalleryStatus } from '@prisma/client';
 export class GalleryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId?: string, approved?: boolean, isOfficial?: boolean) {
+  async findAll(page: number = 1, limit: number = 20, eventId?: string, status?: string, isOfficial?: boolean) {
+    const skip = (page - 1) * limit;
     const where: any = {};
 
-    if (userId) {
-      where.userId = userId;
-    } else if (approved !== undefined) {
-      where.approved = approved;
-      where.status = GalleryStatus.APPROVED;
+    if (eventId) {
+      where.eventId = eventId;
+    }
+
+    if (status) {
+      where.status = status as GalleryStatus;
     }
 
     if (isOfficial !== undefined) {
       where.isOfficial = isOfficial;
     }
 
-    return this.prisma.galleryItem.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
+    const [items, total] = await Promise.all([
+      this.prisma.galleryItem.findMany({
+        take: limit,
+        skip,
+        where,
+        select: {
+          id: true,
+          url: true,
+          description: true,
+          approved: true,
+          status: true,
+          isOfficial: true,
+          createdAt: true,
+          eventId: true,
+          userId: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+            },
           },
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+            },
           },
+          // NO incluir feedback (solo en detalle)
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.galleryItem.count({ where })
+    ]);
+
+    return {
+      data: items,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   async findOne(id: string) {

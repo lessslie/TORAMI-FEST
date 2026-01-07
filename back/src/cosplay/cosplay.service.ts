@@ -13,12 +13,42 @@ export class CosplayService {
     private readonly emailService: EmailService,
   ) {}
 
-  findAll() {
-    return this.prisma.cosplayRegistration.findMany({
-      include: {
-        event: true,
-      },
-    });
+  async findAll(page: number = 1, limit: number = 20, status?: string) {
+    const skip = (page - 1) * limit;
+    const where = status ? { status: status as CosplayStatus } : {};
+
+    const [registrations, total] = await Promise.all([
+      this.prisma.cosplayRegistration.findMany({
+        take: limit,
+        skip,
+        where,
+        select: {
+          id: true,
+          participantName: true,
+          nickname: true,
+          characterName: true,
+          seriesName: true,
+          category: true,
+          status: true,
+          createdAt: true,
+          eventId: true,
+          userId: true,
+          // NO incluir messages hasta el detalle
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      this.prisma.cosplayRegistration.count({ where })
+    ]);
+
+    return {
+      data: registrations,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   findByUser(userId: string) {
@@ -27,6 +57,23 @@ export class CosplayService {
       include: {
         event: true,
       },
+    });
+  }
+
+  // Método para obtener detalle completo
+  findOne(id: string) {
+    return this.prisma.cosplayRegistration.findUnique({
+      where: { id },
+      include: {
+        event: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
     });
   }
 

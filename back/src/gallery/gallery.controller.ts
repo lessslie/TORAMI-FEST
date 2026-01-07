@@ -25,17 +25,22 @@ export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
   @Get()
-  @ApiQuery({ name: 'userId', required: false })
-  @ApiQuery({ name: 'approved', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'eventId', required: false })
+  @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'isOfficial', required: false })
   findAll(
-    @Query('userId') userId?: string,
-    @Query('approved') approved?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('eventId') eventId?: string,
+    @Query('status') status?: string,
     @Query('isOfficial') isOfficial?: string,
   ) {
-    const approvedBool = approved === undefined ? undefined : approved === 'true';
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
     const isOfficialBool = isOfficial === undefined ? undefined : isOfficial === 'true';
-    return this.galleryService.findAll(userId, approvedBool, isOfficialBool);
+    return this.galleryService.findAll(pageNum, limitNum, eventId, status, isOfficialBool);
   }
 
   @Get(':id')

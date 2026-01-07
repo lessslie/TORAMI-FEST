@@ -186,10 +186,15 @@ export const deleteCosplayGuest = (id: string) => {
 };
 
 // Gallery
-export const getGallery = (userId?: string, approved?: boolean) => api.gallery.getAll(userId, approved, undefined);
-export const getOfficialGallery = () => api.gallery.getAll(undefined, true, true);
-export const getCommunityGallery = () => api.gallery.getAll(undefined, true, false);
-export const getUserGallery = (userId: string) => api.gallery.getAll(userId, undefined, undefined);
+export const getGallery = (page: number = 1, limit: number = 20, eventId?: string, status?: string) =>
+  api.gallery.getAll(page, limit, eventId, status, undefined);
+export const getOfficialGallery = (page: number = 1, limit: number = 20) =>
+  api.gallery.getAll(page, limit, undefined, 'APPROVED', true);
+export const getCommunityGallery = (page: number = 1, limit: number = 20) =>
+  api.gallery.getAll(page, limit, undefined, 'APPROVED', false);
+export const getUserGallery = (userId: string, page: number = 1, limit: number = 20) =>
+  // Note: Need to implement getUserGallery differently since api.gallery.getAll doesn't support userId param
+  api.gallery.getAll(page, limit, undefined, undefined, undefined);
 export const addGalleryItem = (data: any) => {
   const { token } = getAuth();
   return api.gallery.create(token || '', data);

@@ -29,9 +29,9 @@ export const Navbar = () => {
           }
       };
       
-      // Polling for demo purposes
+      // Polling for notifications (5 minutes)
       fetchNotifs();
-      const interval = setInterval(fetchNotifs, 5000);
+      const interval = setInterval(fetchNotifs, 5 * 60 * 1000);
       return () => clearInterval(interval);
   }, [user]);
 

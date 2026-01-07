@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapPin, Calendar, Umbrella, CloudRain, Ticket, Star, Sparkles, Navigation, Bus, TrainFront, TramFront, CalendarPlus, Share2 } from 'lucide-react';
+import { MapPin, Calendar, Umbrella, CloudRain, Ticket, Star, Sparkles, Navigation, Bus, TrainFront, TramFront, CalendarPlus, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SectionTitle, MangaCard, Badge, Button } from '../components/UI';
 import { ImageCarousel } from '../components/ImageCarousel';
-import { getUpcomingEvents, getEventById } from '../services/data';
+import { getEventById } from '../services/data';
+import { api } from '../services/api';
 import { Event } from '../types';
 
 export const EventsList = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 0 });
 
   useEffect(() => {
-    getUpcomingEvents()
-      .then(setEvents)
+    setLoading(true);
+    api.events.getAll(true, page, 10)
+      .then(response => {
+        setEvents(response.data);
+        setPagination(response.pagination);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -23,6 +30,7 @@ export const EventsList = () => {
             <Calendar className="text-torami-red transform -rotate-6" /> Calendario de Eventos
          </span>
       </SectionTitle>
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {loading ? (
           [1, 2, 3, 4, 5, 6].map((n) => (
@@ -41,7 +49,7 @@ export const EventsList = () => {
              <MangaCard className="h-full group">
                <div className="aspect-video bg-black mb-4 overflow-hidden border-2 border-black relative">
                  <img
-                   src={event.images[0] || 'https://via.placeholder.com/400'}
+                   src={event.images?.[0] || 'https://via.placeholder.com/400'}
                    alt={event.title}
                    className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                    loading="lazy"
@@ -79,6 +87,33 @@ export const EventsList = () => {
           </Link>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {pagination.totalPages > 1 && (
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={20} /> Anterior
+          </Button>
+
+          <span className="text-sm font-bold">
+            Página {pagination.page} de {pagination.totalPages}
+          </span>
+
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+            disabled={page === pagination.totalPages}
+            className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Siguiente <ChevronRight size={20} />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

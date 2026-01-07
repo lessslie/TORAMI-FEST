@@ -1,12 +1,25 @@
+import { cacheManager } from '../src/services/cache';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 type RequestOptions = {
   method?: string;
   body?: any;
   token?: string | null;
+  useCache?: boolean;
+  cacheTTL?: number;
 };
 
 async function request<T = any>(path: string, options: RequestOptions = {}): Promise<T> {
+  // Check cache for GET requests
+  if ((!options.method || options.method === 'GET') && options.useCache !== false) {
+    const cacheKey = `${path}`;
+    const cached = cacheManager.get<T>(cacheKey, options.cacheTTL);
+    if (cached !== null) {
+      return cached;
+    }
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -24,7 +37,16 @@ async function request<T = any>(path: string, options: RequestOptions = {}): Pro
     const text = await res.text();
     throw new Error(text || res.statusText);
   }
-  return res.json();
+
+  const data = await res.json();
+
+  // Cache GET responses
+  if ((!options.method || options.method === 'GET') && options.useCache !== false) {
+    const cacheKey = `${path}`;
+    cacheManager.set(cacheKey, data);
+  }
+
+  return data;
 }
 
 // ==================== AUTH ====================
@@ -49,62 +71,122 @@ export const api = {
 
   // ==================== EVENTS ====================
   events: {
-    getAll: (upcoming?: boolean) =>
-      request<any[]>(`/events${upcoming !== undefined ? `?upcoming=${upcoming}` : ''}`),
+    getAll: (upcoming?: boolean, page: number = 1, limit: number = 10) => {
+      const params = new URLSearchParams();
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      if (upcoming !== undefined) params.append('upcoming', String(upcoming));
+      return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/events?${params.toString()}`,
+        { useCache: true }
+      );
+    },
 
     getOne: (id: string) =>
-      request<any>(`/events/${id}`),
+      request<any>(`/events/${id}`, { useCache: true }),
 
     create: (token: string, data: any) =>
-      request<any>('/events', { method: 'POST', body: data, token }),
+      request<any>('/events', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('events');
+        return result;
+      }),
 
     update: (token: string, id: string, data: any) =>
-      request<any>(`/events/${id}`, { method: 'PUT', body: data, token }),
+      request<any>(`/events/${id}`, { method: 'PUT', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('events');
+        return result;
+      }),
 
     delete: (token: string, id: string) =>
-      request<any>(`/events/${id}`, { method: 'DELETE', token }),
+      request<any>(`/events/${id}`, { method: 'DELETE', token, useCache: false }).then(result => {
+        cacheManager.clear('events');
+        return result;
+      }),
   },
 
   // ==================== STANDS ====================
   stands: {
-    getAll: (token: string) =>
-      request<any[]>('/stands', { token }),
+    getAll: (token: string, page: number = 1, limit: number = 20, status?: string) => {
+      const params = new URLSearchParams();
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      if (status) params.append('status', status);
+      return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/stands?${params.toString()}`,
+        { token, useCache: true }
+      );
+    },
+
+    getOne: (token: string, id: string) =>
+      request<any>(`/stands/${id}`, { token, useCache: true }),
 
     getByUser: (token: string, userId: string) =>
-      request<any[]>(`/stands/user/${userId}`, { token }),
+      request<any[]>(`/stands/user/${userId}`, { token, useCache: true }),
 
     create: (token: string, data: any) =>
-      request<any>('/stands', { method: 'POST', body: data, token }),
+      request<any>('/stands', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('stands');
+        return result;
+      }),
 
     updateStatus: (token: string, id: string, status: string) =>
-      request<any>(`/stands/${id}/status`, { method: 'PATCH', body: { status }, token }),
+      request<any>(`/stands/${id}/status`, { method: 'PATCH', body: { status }, token, useCache: false }).then(result => {
+        cacheManager.clear('stands');
+        return result;
+      }),
 
     sendMessage: (token: string, id: string, message: any) =>
-      request<any>(`/stands/${id}/messages`, { method: 'POST', body: message, token }),
+      request<any>(`/stands/${id}/messages`, { method: 'POST', body: message, token, useCache: false }).then(result => {
+        cacheManager.clear('stands');
+        return result;
+      }),
   },
 
   // ==================== COSPLAY ====================
   cosplay: {
-    getAll: (token: string) =>
-      request<any[]>('/cosplay', { token }),
+    getAll: (token: string, page: number = 1, limit: number = 20, status?: string) => {
+      const params = new URLSearchParams();
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      if (status) params.append('status', status);
+      return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/cosplay?${params.toString()}`,
+        { token, useCache: true }
+      );
+    },
+
+    getOne: (token: string, id: string) =>
+      request<any>(`/cosplay/${id}`, { token, useCache: true }),
 
     getByUser: (token: string, userId: string) =>
-      request<any[]>(`/cosplay/user/${userId}`, { token }),
+      request<any[]>(`/cosplay/user/${userId}`, { token, useCache: true }),
 
     create: (token: string, data: any) =>
-      request<any>('/cosplay', { method: 'POST', body: data, token }),
+      request<any>('/cosplay', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('cosplay');
+        return result;
+      }),
 
     updateStatus: (token: string, id: string, status: string) =>
-      request<any>(`/cosplay/${id}/status`, { method: 'PATCH', body: { status }, token }),
+      request<any>(`/cosplay/${id}/status`, { method: 'PATCH', body: { status }, token, useCache: false }).then(result => {
+        cacheManager.clear('cosplay');
+        return result;
+      }),
 
     sendMessage: (token: string, id: string, message: any) =>
-      request<any>(`/cosplay/${id}/messages`, { method: 'POST', body: message, token }),
+      request<any>(`/cosplay/${id}/messages`, { method: 'POST', body: message, token, useCache: false }).then(result => {
+        cacheManager.clear('cosplay');
+        return result;
+      }),
 
     getAvailableSlots: () =>
-      request<{ available: number; limit: number; occupied: number }>('/cosplay/available-slots'),
+      request<{ available: number; limit: number; occupied: number }>('/cosplay/available-slots', { useCache: true, cacheTTL: 60000 }),
 
     addToWaitingList: (token: string, data: any) =>
-      request<any>('/cosplay/waiting-list', { method: 'POST', body: data, token }),
+      request<any>('/cosplay/waiting-list', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('cosplay');
+        return result;
+      }),
   },
 
   // ==================== COSPLAY GUEST ====================
@@ -136,31 +218,51 @@ export const api = {
 
   // ==================== GALLERY ====================
   gallery: {
-    getAll: (userId?: string, approved?: boolean, isOfficial?: boolean) => {
+    getAll: (page: number = 1, limit: number = 20, eventId?: string, status?: string, isOfficial?: boolean) => {
       const params = new URLSearchParams();
-      if (userId) params.append('userId', userId);
-      if (approved !== undefined) params.append('approved', String(approved));
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      if (eventId) params.append('eventId', eventId);
+      if (status) params.append('status', status);
       if (isOfficial !== undefined) params.append('isOfficial', String(isOfficial));
-      return request<any[]>(`/gallery?${params.toString()}`);
+      return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/gallery?${params.toString()}`,
+        { useCache: true }
+      );
     },
 
     getOne: (id: string) =>
-      request<any>(`/gallery/${id}`),
+      request<any>(`/gallery/${id}`, { useCache: true }),
 
     create: (token: string, data: any) =>
-      request<any>('/gallery', { method: 'POST', body: data, token }),
+      request<any>('/gallery', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('gallery');
+        return result;
+      }),
 
     createOfficial: (token: string, data: any) =>
-      request<any>('/gallery/official', { method: 'POST', body: data, token }),
+      request<any>('/gallery/official', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('gallery');
+        return result;
+      }),
 
     moderate: (token: string, id: string, status: string, feedback?: string) =>
-      request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status: status.toUpperCase(), feedback }, token }),
+      request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status: status.toUpperCase(), feedback }, token, useCache: false }).then(result => {
+        cacheManager.clear('gallery');
+        return result;
+      }),
 
     update: (token: string, id: string, description: string) =>
-      request<any>(`/gallery/${id}/update`, { method: 'PATCH', body: { description }, token }),
+      request<any>(`/gallery/${id}/update`, { method: 'PATCH', body: { description }, token, useCache: false }).then(result => {
+        cacheManager.clear('gallery');
+        return result;
+      }),
 
     delete: (token: string, id: string) =>
-      request<any>(`/gallery/${id}`, { method: 'DELETE', token }),
+      request<any>(`/gallery/${id}`, { method: 'DELETE', token, useCache: false }).then(result => {
+        cacheManager.clear('gallery');
+        return result;
+      }),
   },
 
   // ==================== GIVEAWAYS ====================

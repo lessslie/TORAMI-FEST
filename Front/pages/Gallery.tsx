@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { SectionTitle, MangaCard, Button, Badge } from '../components/UI';
-import { getGallery, getEvents, addGalleryItem } from '../services/data';
+import { getEvents, addGalleryItem } from '../services/data';
 import { Event, GalleryItem } from '../types';
 import { useAuth } from '../App';
-import { Image, Camera, X, Upload, Filter, Heart, ZoomIn, CheckCircle, Sparkles, ShieldCheck, User, Calendar } from 'lucide-react';
+import { Image, Camera, X, Upload, Filter, Heart, ZoomIn, CheckCircle, Sparkles, ShieldCheck, User, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { api } from '../services/api';
 
 export const Gallery = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [filterEvent, setFilterEvent] = useState<string>('all');
-  
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 0 });
+  const [loading, setLoading] = useState(true);
+
   // Upload Modal State
   const [showUpload, setShowUpload] = useState(false);
   const [uploadData, setUploadData] = useState({ eventId: '', description: '', url: '' });
@@ -21,10 +25,21 @@ export const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
 
   useEffect(() => {
-    // Show community photos (isOfficial=false) that are approved OR user's own pending/rejected
-    getGallery().then(data => setItems(data.filter(i => !i.isOfficial && (i.approved || (user && i.userId === user.id)))));
-    getEvents().then(setEvents);
-  }, [user]); // Re-fetch if user status changes
+    setLoading(true);
+    const status = user ? undefined : 'APPROVED';
+    const eventFilter = filterEvent === 'all' ? undefined : filterEvent;
+
+    api.gallery.getAll(page, 20, eventFilter, status, false)
+      .then(response => {
+        // Filter to show approved OR user's own items
+        const filtered = response.data.filter(i => !i.isOfficial && (i.approved || (user && i.userId === user.id)));
+        setItems(filtered);
+        setPagination(response.pagination);
+      })
+      .finally(() => setLoading(false));
+
+    api.events.getAll(undefined, 1, 100).then(response => setEvents(response.data));
+  }, [user, page, filterEvent]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -55,13 +70,9 @@ export const Gallery = () => {
         setShowUpload(false);
         setUploadData({ eventId: '', description: '', url: '' });
         setSelectedFile(null);
-        getGallery().then(data => setItems(data.filter(i => !i.isOfficial && (i.approved || (user && i.userId === user.id))))); // Refresh list
+        setPage(1); // Reset to first page to see new item
     }, 2000);
   };
-
-  const filteredItems = filterEvent === 'all' 
-    ? items 
-    : items.filter(i => i.eventId === filterEvent);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -127,11 +138,20 @@ export const Gallery = () => {
       </div>
 
       {/* Masonry Grid */}
-      <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-        {filteredItems.map(item => (
+      {loading ? (
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+            <div key={n} className="break-inside-avoid animate-pulse">
+              <div className="border-2 border-gray-300 bg-gray-100 aspect-square"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+          {items.map(item => (
             <div key={item.id} className="break-inside-avoid relative group cursor-pointer" onClick={() => setSelectedImage(item)}>
                 <div className="border-2 border-black bg-white p-1 shadow-manga hover:shadow-manga-hover transition-all">
-                    <img src={item.url} alt="Gallery Item" className="w-full h-auto object-cover" />
+                    <img src={item.url} alt="Gallery Item" className="w-full h-auto object-cover" loading="lazy" />
 
                     {/* Metadata - shown below image */}
                     <div className="p-1 space-y-0.5 text-xs">
@@ -165,8 +185,36 @@ export const Gallery = () => {
                     <ZoomIn className="text-white drop-shadow-md w-10 h-10" />
                 </div>
             </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {pagination.totalPages > 1 && (
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={20} /> Anterior
+          </Button>
+
+          <span className="text-sm font-bold">
+            Página {pagination.page} de {pagination.totalPages}
+          </span>
+
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+            disabled={page === pagination.totalPages}
+            className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Siguiente <ChevronRight size={20} />
+          </Button>
+        </div>
+      )}
 
       {/* Upload Modal */}
       {showUpload && (
