@@ -35,6 +35,8 @@ export const Giveaways = () => {
         }
     };
 
+    const activeGiveaways = giveaways.filter(g => g.status === 'Activo');
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
             <SectionTitle>
@@ -43,8 +45,20 @@ export const Giveaways = () => {
                 </span>
             </SectionTitle>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {giveaways.filter(g => g.status === 'Activo').map(g => (
+            {activeGiveaways.length === 0 ? (
+                <MangaCard className="text-center py-16 bg-gradient-to-br from-yellow-50 to-orange-50">
+                    <Gift className="w-24 h-24 mx-auto mb-6 text-gray-300" />
+                    <h3 className="font-display text-4xl md:text-5xl mb-4 text-gray-800">PRÓXIMAMENTE</h3>
+                    <p className="text-lg text-gray-600 mb-6">Estamos preparando sorteos increíbles para vos</p>
+                    <div className="flex justify-center gap-2">
+                        <Sparkles className="text-yellow-500" size={20} />
+                        <Sparkles className="text-orange-500" size={24} />
+                        <Sparkles className="text-yellow-500" size={20} />
+                    </div>
+                </MangaCard>
+            ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {activeGiveaways.map(g => (
                     <MangaCard key={g.id} className="relative overflow-hidden flex flex-col h-full group">
                         <div className="absolute top-0 right-0 bg-yellow-400 text-black font-bold text-xs px-3 py-1 z-10 border-l-2 border-b-2 border-black">
                             {g.participantIds.length} Participantes
@@ -94,7 +108,8 @@ export const Giveaways = () => {
                         )}
                     </MangaCard>
                 ))}
-            </div>
+                </div>
+            )}
 
             {giveaways.some(g => g.status === 'Finalizado') && (
                 <div className="mt-16">

@@ -52,7 +52,7 @@ export const Home = () => {
 
         <div className="max-w-7xl mx-auto px-4 py-12 md:py-16 flex flex-col items-center text-center relative z-10">
           <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-black overflow-hidden mb-4 shadow-manga animate-bounce-slow relative">
-             <img src="/torami_fest_logo_circle.png" alt="Torami Logo" className="w-full h-full object-cover" />
+             <img src="/torami_fest_logo_circle.jpg" alt="Torami Logo" className="w-full h-full object-cover" />
              <Sparkles className="absolute -top-2 -right-4 text-yellow-400 w-8 h-8 animate-pulse" fill="currentColor" />
           </div>
           

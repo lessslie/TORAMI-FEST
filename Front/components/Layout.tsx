@@ -87,7 +87,7 @@ export const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center gap-2 group">
               <div className="relative">
-                <img src="/torami_fest_logo_circle.png" alt="Torami Logo" className="w-10 h-10 rounded-full border-2 border-black overflow-hidden object-cover group-hover:scale-110 transition-transform bg-white" />
+                <img src="/torami_fest_logo_circle.jpg" alt="Torami Logo" className="w-10 h-10 rounded-full border-2 border-black overflow-hidden object-cover group-hover:scale-110 transition-transform bg-white" />
                 <Sparkles size={16} className="absolute -top-1 -right-1 text-yellow-400 animate-pulse hidden group-hover:block" />
               </div>
               <span className="font-script text-2xl tracking-tight text-torami-red leading-none">Torami Fest</span>
