@@ -168,9 +168,8 @@ export const StandForm = () => {
               <h3 className="font-bold text-lg mb-2">Información para Expositores</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-800">
                 <li>Buscamos propuestas originales de anime, gaming y cultura pop.</li>
-                <li>El espacio incluye 1 mesa y 2 sillas.</li>
+                <li>El espacio incluye 1 mesa y 1 silla.</li>
                 <li>Fecha límite para aplicar: 15 días antes del evento.</li>
-                <li>No se permite reventa de productos no oficiales sin licencia.</li>
               </ul>
             </div>
           </div>

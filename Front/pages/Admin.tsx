@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
-import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, GalleryItem, User } from '../types';
+import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import {
   getStats, getStandApplications, updateStandStatus, getConfig, updateConfig,
@@ -9,11 +9,12 @@ import {
   getGiveaways, saveGiveaway, deleteGiveaway,
   getGallery, getOfficialGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem, addOfficialGalleryItem,
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
+  getCosplayGuests, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
   getUnreadNotificationCount, markAllNotificationsAsRead,
   getAllUsers, updateUser, deleteUser
 } from '../services/data';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -215,6 +216,7 @@ export const Admin = () => {
   const [stands, setStands] = useState<StandApplication[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [cosplayers, setCosplayers] = useState<CosplayRegistration[]>([]);
+  const [cosplayGuests, setCosplayGuests] = useState<CosplayGuest[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
@@ -289,6 +291,7 @@ export const Admin = () => {
             if(updatedCos) setChatCosplay(updatedCos);
         }
     });
+    getCosplayGuests().then(setCosplayGuests);
     getEvents().then((data) => {
       console.log('📅 Events from backend:', data);
       setEvents(data);
@@ -553,37 +556,95 @@ export const Admin = () => {
     }
   };
 
-  // Gallery
+  // Gallery - OPTIMIZED with optimistic updates
   const handleGalleryApprove = async () => {
     if (selectedPhoto) {
-        await approveGalleryItem(selectedPhoto.id);
+        // 1. Update UI immediately (optimistic)
+        const updatedPhoto = { ...selectedPhoto, status: 'approved' as const, approved: true };
+        setGallery(gallery.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
+
+        // If photo is official, also add to official gallery
+        if (selectedPhoto.isOfficial) {
+            setOfficialGallery([...officialGallery, updatedPhoto]);
+        }
+
         setSelectedPhoto(null);
-        refreshData();
+
+        // 2. Send to backend in background
+        approveGalleryItem(selectedPhoto.id).catch((error) => {
+          console.error('Error aprobando foto:', error);
+          alert('Error al aprobar la foto. Recargando...');
+          refreshData();
+        });
     }
   };
-  
+
   const handleGalleryReject = async () => {
       if (selectedPhoto && rejectionReason.trim()) {
-          await rejectGalleryItem(selectedPhoto.id, rejectionReason);
+          // 1. Update UI immediately (optimistic)
+          const updatedPhoto = { ...selectedPhoto, status: 'rejected' as const, approved: false, feedback: rejectionReason };
+          setGallery(gallery.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
           setSelectedPhoto(null);
-          refreshData();
+          setIsRejecting(false);
+          setRejectionReason('');
+
+          // 2. Send to backend in background
+          rejectGalleryItem(selectedPhoto.id, rejectionReason).catch((error) => {
+              console.error('Error rechazando foto:', error);
+              alert('Error: ' + (error?.message || 'No se pudo rechazar la foto. Recargando...'));
+              refreshData();
+          });
       }
   };
 
   const handleGalleryDelete = async () => {
       if (selectedPhoto) {
-          await deleteGalleryItem(selectedPhoto.id);
+          // 1. Update UI immediately (optimistic) - remove from list
+          setGallery(gallery.filter(p => p.id !== selectedPhoto.id));
+          setOfficialGallery(officialGallery.filter(p => p.id !== selectedPhoto.id));
           setShowDeleteConfirm(false);
           setSelectedPhoto(null);
-          refreshData();
+
+          // 2. Send to backend in background
+          deleteGalleryItem(selectedPhoto.id).catch((error) => {
+              console.error('Error eliminando foto:', error);
+              alert('Error al eliminar la foto. Recargando...');
+              refreshData();
+          });
       }
   };
 
   const handleGallerySave = async (e: React.FormEvent) => {
       e.preventDefault();
       if(selectedPhoto) {
-          await updateGalleryItem(selectedPhoto);
-          refreshData();
+          // 1. Update UI immediately (optimistic)
+          setGallery(gallery.map(p => p.id === selectedPhoto.id ? selectedPhoto : p));
+          if (selectedPhoto.isOfficial) {
+              setOfficialGallery(officialGallery.map(p => p.id === selectedPhoto.id ? selectedPhoto : p));
+          }
+          setSelectedPhoto(null);
+
+          // 2. Send to backend in background
+          updateGalleryItem(selectedPhoto).catch((error) => {
+              console.error('Error actualizando foto:', error);
+              alert('Error al actualizar la foto. Recargando...');
+              refreshData();
+          });
+      }
+  }
+
+  const handleDeleteOfficialPhoto = (photoId: string) => {
+      if (confirm('¿Eliminar esta foto oficial?')) {
+          // 1. Update UI immediately (optimistic) - remove from official gallery
+          setOfficialGallery(officialGallery.filter(p => p.id !== photoId));
+          setGallery(gallery.filter(p => p.id !== photoId));
+
+          // 2. Send to backend in background
+          deleteGalleryItem(photoId).catch((error) => {
+              console.error('Error eliminando foto oficial:', error);
+              alert('Error al eliminar la foto oficial. Recargando...');
+              refreshData();
+          });
       }
   }
 
@@ -695,6 +756,7 @@ export const Admin = () => {
           <TabButton id="events" label="Eventos" icon={Calendar} />
           <TabButton id="stands" label="Stands" icon={Store} />
           <TabButton id="cosplay" label="Cosplay" icon={Trophy} />
+          <TabButton id="cosplayguest" label="🌟 Invitados" icon={Star} />
           <TabButton id="gallery" label="👥 Comunitaria" icon={Image} />
           <TabButton id="officialgallery" label="📸 Oficial" icon={Sparkles} />
           <TabButton id="giveaways" label="Sorteos" icon={Gift} />
@@ -942,6 +1004,79 @@ export const Admin = () => {
         </div>
       )}
 
+      {/* --- COSPLAY INVITADOS --- */}
+      {activeTab === 'cosplayguest' && (
+        <div className="animate-in fade-in -mx-2 sm:mx-0">
+           <div className="flex justify-between mb-4 px-2 sm:px-0">
+                <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
+                  <Star size={24} className="text-yellow-500 fill-current" />
+                  Cosplay Invitados
+                </h3>
+           </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[800px]">
+              <thead>
+                <tr className="bg-black text-white text-left">
+                  <th className="p-2 sm:p-3 whitespace-nowrap">#</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Personaje</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Participante</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Evento</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Categoría</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Estado</th>
+                  <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cosplayGuests.map(guest => (
+                  <tr key={guest.id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="p-2 sm:p-3">
+                      <div className="flex items-center justify-center w-10 h-10 bg-yellow-400 border-2 border-black font-bold text-lg">
+                        {guest.assignedNumber}
+                      </div>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                      <div className="font-bold whitespace-nowrap">{guest.characterName}</div>
+                      <div className="text-xs text-gray-500 whitespace-nowrap">{guest.seriesName}</div>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                        <div className="whitespace-nowrap">{guest.participantName}</div>
+                        <div className="text-xs text-gray-500 italic whitespace-nowrap">{guest.nickname}</div>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                      <div className="font-medium whitespace-nowrap">
+                        {events.find(e => e.id === guest.eventId)?.title || 'Sin evento'}
+                      </div>
+                    </td>
+                    <td className="p-2 sm:p-3"><Badge color="blue">{guest.category}</Badge></td>
+                    <td className="p-2 sm:p-3">
+                        <Badge color={guest.status === 'Inscripto' ? 'yellow' : guest.status === 'Confirmado' ? 'green' : 'red'}>
+                            {guest.status}
+                        </Badge>
+                    </td>
+                    <td className="p-2 sm:p-3">
+                       <button
+                          onClick={() => {
+                            // Set up modal to view guest details
+                            setViewCosplay(guest as any);
+                          }}
+                          className="bg-gray-100 text-gray-700 p-1 sm:p-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-1 text-xs font-bold whitespace-nowrap"
+                       >
+                          <Eye size={16} /> Ver
+                       </button>
+                    </td>
+                  </tr>
+                ))}
+                {cosplayGuests.length === 0 && (
+                    <tr>
+                        <td colSpan={7} className="p-4 text-center text-gray-500 italic">No hay invitados aún.</td>
+                    </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* --- GALLERY MODERATION (COMMUNITY) --- */}
       {activeTab === 'gallery' && (
           <div className="animate-in fade-in">
@@ -997,7 +1132,7 @@ export const Admin = () => {
                               Oficial
                           </div>
                           <button
-                            onClick={() => { if (confirm('¿Eliminar esta foto oficial?')) { deleteGalleryItem(img.id).then(() => refreshData()); } }}
+                            onClick={() => handleDeleteOfficialPhoto(img.id)}
                             className="absolute bottom-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Trash2 size={16} />
@@ -1497,15 +1632,26 @@ export const Admin = () => {
               <div className="space-y-6">
                  {/* Header Status */}
                  <div className="flex justify-between items-center bg-gray-50 p-3 border border-black rounded">
-                     <div>
-                        <span className="text-xs font-bold text-gray-500 uppercase">Estado</span>
-                        <div className="mt-1">
-                            <Badge color={viewCosplay.status === 'Inscripto' ? 'yellow' : viewCosplay.status === 'Confirmado' ? 'green' : 'red'}>
-                                {viewCosplay.status}
-                            </Badge>
+                     <div className="flex items-center gap-4">
+                        {/* Show assigned number if cosplay guest */}
+                        {(viewCosplay as any).assignedNumber && (
+                          <div className="flex flex-col items-center">
+                            <span className="text-xs font-bold text-gray-500 uppercase mb-1">Número</span>
+                            <div className="flex items-center justify-center w-14 h-14 bg-yellow-400 border-3 border-black font-bold text-2xl shadow-manga">
+                              {(viewCosplay as any).assignedNumber}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-xs font-bold text-gray-500 uppercase">Estado</span>
+                          <div className="mt-1">
+                              <Badge color={viewCosplay.status === 'Inscripto' ? 'yellow' : viewCosplay.status === 'Confirmado' ? 'green' : 'red'}>
+                                  {viewCosplay.status}
+                              </Badge>
+                          </div>
                         </div>
                      </div>
-                     <button 
+                     <button
                         onClick={() => { setViewCosplay(null); setChatCosplay(viewCosplay); }}
                         className="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700 flex items-center gap-2"
                      >
@@ -1546,9 +1692,23 @@ export const Admin = () => {
                  {viewCosplay.audioLink ? (
                      <div className="bg-purple-50 p-3 rounded border border-purple-200">
                         <h4 className="text-xs font-bold uppercase text-purple-800 mb-1 flex items-center gap-1"><Mic2 size={12}/> Audio / Performance</h4>
-                        <a href={viewCosplay.audioLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all text-sm">
+                        <a href={viewCosplay.audioLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all text-sm mb-2 block">
                             {viewCosplay.audioLink}
                         </a>
+                        {(viewCosplay.audioStartTime || viewCosplay.audioEndTime) && (
+                            <div className="mt-2 pt-2 border-t border-purple-200 flex items-center gap-3">
+                                <Clock size={14} className="text-purple-600" />
+                                <div className="text-sm font-bold text-purple-900">
+                                    {viewCosplay.audioStartTime && (
+                                        <span>Inicio: <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">{viewCosplay.audioStartTime}</span></span>
+                                    )}
+                                    {viewCosplay.audioStartTime && viewCosplay.audioEndTime && <span className="mx-2">→</span>}
+                                    {viewCosplay.audioEndTime && (
+                                        <span>Fin: <span className="font-mono bg-purple-100 px-2 py-0.5 rounded">{viewCosplay.audioEndTime}</span></span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                      </div>
                  ) : (
                      <p className="text-xs text-gray-500 italic">No adjuntó link de audio (Solo desfile).</p>
@@ -2015,15 +2175,38 @@ export const Admin = () => {
                       alert('⚠️ Debés seleccionar un evento y subir una foto');
                       return;
                   }
-                  try {
-                      await addOfficialGalleryItem(officialUploadData);
-                      setShowOfficialUpload(false);
-                      setOfficialUploadData({ eventId: '', description: '', url: '' });
-                      refreshData();
-                  } catch (error) {
-                      console.error('Error uploading official photo:', error);
-                      alert('❌ Error al subir la foto oficial. Intentá nuevamente.');
-                  }
+
+                  // Close modal immediately
+                  setShowOfficialUpload(false);
+                  const uploadedData = { ...officialUploadData };
+                  setOfficialUploadData({ eventId: '', description: '', url: '' });
+
+                  // 1. Optimistically add to UI (we'll get the real ID from backend)
+                  const tempPhoto = {
+                      id: 'temp-' + Date.now(),
+                      ...uploadedData,
+                      isOfficial: true,
+                      approved: true,
+                      status: 'approved' as const,
+                      userId: user?.id,
+                      user: user,
+                      event: events.find(e => e.id === uploadedData.eventId),
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString()
+                  };
+                  setOfficialGallery([tempPhoto, ...officialGallery]);
+
+                  // 2. Send to backend in background
+                  addOfficialGalleryItem(uploadedData)
+                      .then(() => {
+                          // Refresh to get real data from backend (with real ID, etc.)
+                          refreshData();
+                      })
+                      .catch((error) => {
+                          console.error('Error uploading official photo:', error);
+                          alert('❌ Error al subir la foto oficial. Recargando...');
+                          refreshData();
+                      });
               }} className="space-y-4">
                   <div>
                       <label className="block text-sm font-bold mb-1 uppercase">Evento *</label>

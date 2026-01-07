@@ -30,6 +30,14 @@ export class CreateCosplayDto {
 
   @IsOptional()
   @IsString()
+  audioStartTime?: string;
+
+  @IsOptional()
+  @IsString()
+  audioEndTime?: string;
+
+  @IsOptional()
+  @IsString()
   eventId?: string;
 
   @IsOptional()

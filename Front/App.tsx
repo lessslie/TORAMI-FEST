@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { EventsList, EventDetail } from './pages/Events';
 import { StandForm } from './pages/StandForm';
 import { CosplayContest } from './pages/CosplayContest';
+import { CosplayGuest } from './pages/CosplayGuest';
 import { Admin } from './pages/Admin';
 import { UserDashboard } from './pages/UserDashboard';
 import { Gallery } from './pages/Gallery';
@@ -139,6 +140,7 @@ export default function App() {
             <Route path="/eventos/:id" element={<EventDetail />} />
             <Route path="/quiero-un-stand" element={<StandForm />} />
             <Route path="/concursos-cosplay" element={<CosplayContest />} />
+            <Route path="/cosplay-invitados" element={<CosplayGuest />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/galeria" element={<Gallery />} />

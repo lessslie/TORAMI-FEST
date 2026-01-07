@@ -23,6 +23,7 @@ model User {
   stamps    Stamp[]
   stands    StandApplication[]
   cosplays  CosplayRegistration[]
+  cosplayGuests CosplayGuest[] @relation("UserCosplayGuests")
   giveaways GiveawayParticipant[]
   gallery   GalleryItem[]
   notifications Notification[]
@@ -88,6 +89,8 @@ model CosplayRegistration {
   category       String
   referenceImage String?
   audioLink      String?
+  audioStartTime String?
+  audioEndTime   String?
   status         CosplayStatus @default(INSCRIPTO)
   event          Event?   @relation("EventCosplays", fields: [eventId], references: [id])
   eventId        String?
@@ -97,6 +100,33 @@ model CosplayRegistration {
   updatedAt      DateTime @updatedAt
 
   @@index([status])
+}
+
+model CosplayGuest {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id], name: "UserCosplayGuests")
+  userId          String
+  participantName String
+  nickname        String
+  whatsapp        String
+  characterName   String
+  seriesName      String
+  category        String
+  referenceImage  String?
+  audioLink       String?
+  audioStartTime  String?
+  audioEndTime    String?
+  status          CosplayStatus @default(INSCRIPTO)
+  assignedNumber  Int      @unique
+  withdrawalReason String?
+  eventId         String?
+  messages        Json[]
+  notifyEmail     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([assignedNumber])
 }
 
 model Sponsor {
@@ -186,6 +216,7 @@ model AppConfig {
   donationImage String?
   donationGoal Decimal? @db.Decimal(10, 2)
   cosplayLimit Int @default(20)
+  cosplayGuestLimit Int @default(30)
 }
 
 model Donation {

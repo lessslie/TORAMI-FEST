@@ -9,6 +9,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { EventsModule } from './events/events.module';
 import { StandsModule } from './stands/stands.module';
 import { CosplayModule } from './cosplay/cosplay.module';
+import { CosplayGuestModule } from './cosplay-guest/cosplay-guest.module';
 import { GalleryModule } from './gallery/gallery.module';
 import { GiveawaysModule } from './giveaways/giveaways.module';
 import { SponsorsModule } from './sponsors/sponsors.module';
@@ -32,6 +33,7 @@ import { DonationsModule } from './donations/donations.module';
     EventsModule,
     StandsModule,
     CosplayModule,
+    CosplayGuestModule,
     GalleryModule,
     GiveawaysModule,
     SponsorsModule,

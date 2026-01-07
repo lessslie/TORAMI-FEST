@@ -132,6 +132,35 @@ export class GalleryService {
     });
   }
 
+  async update(id: string, userId: string, description: string) {
+    const item = await this.findOne(id);
+
+    // Verify the user owns this photo
+    if (item.userId !== userId) {
+      throw new NotFoundException('Gallery item not found');
+    }
+
+    return this.prisma.galleryItem.update({
+      where: { id },
+      data: {
+        description,
+        status: GalleryStatus.PENDING,
+        approved: false,
+        feedback: null, // Clear previous rejection feedback
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        event: true,
+      },
+    });
+  }
+
   async delete(id: string) {
     const item = await this.findOne(id);
     return this.prisma.galleryItem.delete({ where: { id } });

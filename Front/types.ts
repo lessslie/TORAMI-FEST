@@ -101,6 +101,33 @@ export interface CosplayRegistration {
   notifyEmail?: string; // Email para notificar si se libera cupo (opcional)
 }
 
+export interface CosplayGuest {
+  id: string;
+  userId: string; // Owner ID
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+  };
+  participantName: string; // Nombre real
+  nickname: string; // Nombre artístico
+  whatsapp: string;
+  characterName: string;
+  seriesName: string;
+  category: 'General' | 'Performance' | 'Chibi' | 'Grupal';
+  referenceImage?: string; // URL o base64
+  audioLink?: string; // Para performance
+  status: 'Inscripto' | 'Confirmado' | 'Rechazado';
+  assignedNumber: number; // Número asignado (1-30)
+  withdrawalReason?: string; // Motivo de baja (opcional)
+  eventId?: string;
+  messages: ChatMessage[];
+  notifyEmail?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Sponsor {
   id: string;
   name: string;

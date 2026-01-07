@@ -20,7 +20,8 @@
       "Bash(npm uninstall:*)",
       "Bash(npm view:*)",
       "Bash(git log:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(dir /s \"c:\\\\PROYECTOS\\\\TORAMI-FEST\\\\Front\\\\src\")"
     ]
   }
 }

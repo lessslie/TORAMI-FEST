@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead } from '../services/data';
-import { StandApplication, CosplayRegistration, GalleryItem, Giveaway } from '../types';
-import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, withdrawCosplayGuest } from '../services/data';
+import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole } from '../types';
+import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
   <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -22,11 +22,12 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 
 export const UserDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
-  
+  const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'cosplayguest'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
+
   // Data State
   const [stands, setStands] = useState<StandApplication[]>([]);
   const [cosplays, setCosplays] = useState<CosplayRegistration[]>([]);
+  const [cosplayGuests, setCosplayGuests] = useState<CosplayGuest[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [myGiveaways, setMyGiveaways] = useState<Giveaway[]>([]);
   
@@ -39,6 +40,17 @@ export const UserDashboard = () => {
   const [profileData, setProfileData] = useState({ name: '', email: '', whatsapp: '' });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Gallery Photo Modal State
+  const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
+  const [editedDescription, setEditedDescription] = useState('');
+  const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
+
+  // Cosplay Guest Withdrawal State
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawingGuest, setWithdrawingGuest] = useState<CosplayGuest | null>(null);
+  const [withdrawReason, setWithdrawReason] = useState('');
+  const [showWithdrawSuccessModal, setShowWithdrawSuccessModal] = useState(false);
 
   // Chat State
   const [activeChatStand, setActiveChatStand] = useState<StandApplication | null>(null);
@@ -72,6 +84,7 @@ export const UserDashboard = () => {
                   if (updated) setActiveChatCosplay(updated);
               }
           });
+          getUserCosplayGuests().then(setCosplayGuests);
           getUserGallery(user.id).then(setGalleryItems);
           getUserGiveaways(user.id).then(setMyGiveaways);
           getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
@@ -190,6 +203,64 @@ export const UserDashboard = () => {
       setTimeout(() => setStampMessage(null), 3000);
   };
 
+  // Gallery Photo Handlers
+  const handlePhotoClick = (photo: GalleryItem) => {
+      setSelectedPhoto(photo);
+      setEditedDescription(photo.description || '');
+  };
+
+  const handlePhotoUpdate = async () => {
+      if (!selectedPhoto) return;
+
+      try {
+          await updateUserGalleryItem(selectedPhoto.id, editedDescription);
+
+          // Update local state
+          const updatedPhoto = {
+              ...selectedPhoto,
+              description: editedDescription,
+              status: 'PENDING' as any,
+              feedback: null
+          };
+          setGalleryItems(galleryItems.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
+          setSelectedPhoto(null);
+          alert('✅ Foto reenviada para revisión');
+      } catch (error) {
+          console.error('Error updating photo:', error);
+          alert('❌ Error al actualizar la foto');
+      }
+  };
+
+  const handlePhotoDelete = async () => {
+      if (!selectedPhoto) return;
+
+      try {
+          await deleteGalleryItem(selectedPhoto.id);
+          setGalleryItems(galleryItems.filter(p => p.id !== selectedPhoto.id));
+          setSelectedPhoto(null);
+          setShowDeletePhotoConfirm(false);
+      } catch (error) {
+          console.error('Error deleting photo:', error);
+          alert('❌ Error al eliminar la foto');
+      }
+  };
+
+  const handleWithdrawGuest = async () => {
+      if (!withdrawingGuest) return;
+
+      try {
+          await withdrawCosplayGuest(withdrawingGuest.id, withdrawReason || undefined);
+          setCosplayGuests(cosplayGuests.filter(g => g.id !== withdrawingGuest.id));
+          setWithdrawingGuest(null);
+          setShowWithdrawModal(false);
+          setWithdrawReason('');
+          setShowWithdrawSuccessModal(true);
+      } catch (error) {
+          console.error('Error withdrawing from cosplay guest:', error);
+          alert('❌ Error al darse de baja');
+      }
+  };
+
   const StatusIcon = ({ status }: { status: string }) => {
       if (status === 'Aprobada' || status === 'Confirmado' || status === 'approved') return <CheckCircle className="text-green-600" />;
       if (status === 'Rechazada' || status === 'Rechazado' || status === 'rejected') return <XCircle className="text-red-600" />;
@@ -241,6 +312,11 @@ export const UserDashboard = () => {
 
   if (!user) return <div className="p-10 text-center">Inicia sesión para ver tu panel.</div>;
 
+  // Redirect admins to admin panel
+  if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+    return <Navigate to="/admin" replace />;
+  }
+
   const ticketLabel = user.ticketType || 'Entrada General';
   const isAuthorized = Boolean(user.entryAuthorized);
   const qrPayload = encodeURIComponent(JSON.stringify({ uid: user.id, ticket: ticketLabel, authorized: isAuthorized }));
@@ -278,6 +354,7 @@ export const UserDashboard = () => {
             <TabButton id="profile" label="Perfil" icon={UserIcon} />
             <TabButton id="stands" label="Stands" icon={Store} badge={getStandUnreadCount()} />
             <TabButton id="cosplay" label="Cosplay" icon={Trophy} badge={getCosplayUnreadCount()} />
+            <TabButton id="cosplayguest" label="Invitados" icon={Star} />
             <TabButton id="gallery" label="Fotos" icon={Image} />
             <TabButton id="giveaways" label="Sorteos" icon={Gift} />
          </div>
@@ -535,6 +612,71 @@ export const UserDashboard = () => {
               </div>
           )}
 
+          {/* COSPLAY GUEST TAB */}
+          {activeTab === 'cosplayguest' && (
+              <div className="space-y-4 animate-in fade-in">
+                  {cosplayGuests.length === 0 && (
+                      <MangaCard className="text-center py-10 bg-gray-50">
+                          <Star size={48} className="mx-auto text-yellow-400 fill-current mb-4" />
+                          <p className="text-gray-500 mb-4">No te has inscripto como Cosplay Invitado.</p>
+                          <Link to="/cosplay-invitados">
+                              <Button className="bg-purple-600 hover:bg-purple-700 border-purple-800">
+                                <Star size={18} className="mr-2 inline" /> ¡Inscribirse!
+                              </Button>
+                          </Link>
+                      </MangaCard>
+                  )}
+                  {cosplayGuests.map(guest => (
+                      <MangaCard key={guest.id} className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-600">
+                           <div className="flex flex-col gap-4">
+                              {/* Content Row */}
+                              <div className="flex items-center gap-3 sm:gap-4 w-full overflow-hidden">
+                                 {/* Assigned Number Display - Prominent */}
+                                 <div className="flex flex-col items-center bg-white border-3 border-black p-2 sm:p-3 shadow-manga flex-shrink-0">
+                                   <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-1">Número</span>
+                                   <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-yellow-400 border-3 border-black font-display text-2xl sm:text-3xl font-bold">
+                                     {guest.assignedNumber}
+                                   </div>
+                                 </div>
+
+                                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 border border-black overflow-hidden flex items-center justify-center flex-shrink-0">
+                                     {guest.referenceImage ? (
+                                         <img src={guest.referenceImage} className="w-full h-full object-cover" alt="Ref" />
+                                     ) : (
+                                         <Star className="text-yellow-400 fill-current" />
+                                     )}
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                     <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                         <h3 className="font-bold text-base sm:text-lg truncate">{guest.characterName}</h3>
+                                         <Badge color={guest.status === 'Inscripto' ? 'yellow' : guest.status === 'Confirmado' ? 'green' : 'red'}>
+                                             {guest.status}
+                                         </Badge>
+                                     </div>
+                                     <p className="text-xs sm:text-sm text-gray-600 truncate">{guest.seriesName} <span className="text-gray-400">•</span> {guest.category}</p>
+                                     <p className="text-xs text-purple-600 font-bold mt-1">🌟 Cosplay Invitado Oficial</p>
+                                 </div>
+                              </div>
+                              {/* Button Row - Full width on mobile */}
+                              <div className="w-full pt-2 border-t border-purple-200">
+                                <Button
+                                  onClick={() => {
+                                    setWithdrawingGuest(guest);
+                                    setShowWithdrawModal(true);
+                                  }}
+                                  variant="outline"
+                                  className="w-full flex items-center justify-center gap-2 text-red-600 border-red-600 hover:bg-red-50"
+                                >
+                                  <XCircle size={16} className="flex-shrink-0" />
+                                  <span className="text-sm font-bold">DARME DE BAJA</span>
+                                </Button>
+                              </div>
+                           </div>
+                      </MangaCard>
+                  ))}
+              </div>
+          )}
+
           {/* GALLERY TAB */}
           {activeTab === 'gallery' && (
               <div className="animate-in fade-in">
@@ -549,7 +691,11 @@ export const UserDashboard = () => {
                   )}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {galleryItems.map(item => (
-                          <MangaCard key={item.id} className="p-2 relative group">
+                          <MangaCard
+                              key={item.id}
+                              className="p-2 relative group cursor-pointer hover:shadow-manga-hover transition-all"
+                              onClick={() => handlePhotoClick(item)}
+                          >
                               <div className="aspect-square bg-gray-100 overflow-hidden border border-black mb-2">
                                   <img src={item.url} alt="User gallery" className="w-full h-full object-cover" />
                               </div>
@@ -733,6 +879,224 @@ export const UserDashboard = () => {
                       </div>
                       <h3 className="font-display text-2xl uppercase mb-2">¡Perfecto!</h3>
                       <p className="text-gray-700 font-bold">Perfil actualizado correctamente</p>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* PHOTO EDIT MODAL */}
+      {selectedPhoto && (
+          <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4 backdrop-blur-md" onClick={() => setSelectedPhoto(null)}>
+              <div className="bg-white border-4 border-black shadow-manga w-full max-w-3xl max-h-[95vh] overflow-y-auto animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                  {/* Header */}
+                  <div className="bg-black text-white p-4 flex justify-between items-center sticky top-0 z-10">
+                      <h3 className="font-display text-xl flex items-center gap-2">
+                          <Camera size={20} /> Mi Foto
+                      </h3>
+                      <button onClick={() => setSelectedPhoto(null)} className="hover:text-torami-red transition-colors">
+                          <X size={24} />
+                      </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 space-y-4">
+                      {/* Image */}
+                      <div className="border-4 border-black">
+                          <img src={selectedPhoto.url} alt="Photo" className="w-full h-auto" />
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="flex items-center gap-2">
+                          <span className="font-bold">Estado:</span>
+                          {(selectedPhoto.status === 'approved' || selectedPhoto.status === 'APPROVED') && (
+                              <Badge className="bg-green-100 text-green-700 border-green-700">
+                                  <CheckCircle size={14} className="mr-1" /> Aprobada
+                              </Badge>
+                          )}
+                          {(selectedPhoto.status === 'pending' || selectedPhoto.status === 'PENDING') && (
+                              <Badge className="bg-blue-100 text-blue-700 border-blue-700">
+                                  <Clock size={14} className="mr-1" /> En Revisión
+                              </Badge>
+                          )}
+                          {(selectedPhoto.status === 'rejected' || selectedPhoto.status === 'REJECTED') && (
+                              <Badge className="bg-red-100 text-red-700 border-red-700">
+                                  <XCircle size={14} className="mr-1" /> Rechazada
+                              </Badge>
+                          )}
+                      </div>
+
+                      {/* Rejection Feedback */}
+                      {selectedPhoto.feedback && (
+                          <div className="bg-red-50 border-2 border-red-300 p-4">
+                              <div className="flex items-start gap-2 mb-2">
+                                  <AlertTriangle className="text-red-600 flex-shrink-0" size={20} />
+                                  <div>
+                                      <p className="font-bold text-red-800 mb-1">Motivo del rechazo:</p>
+                                      <p className="text-red-700">{selectedPhoto.feedback}</p>
+                                  </div>
+                              </div>
+                              <p className="text-sm text-red-600 mt-2">💡 Podés editar la descripción y reenviarla para una nueva revisión</p>
+                          </div>
+                      )}
+
+                      {/* Description Editor */}
+                      <div>
+                          <label className="block font-bold mb-2 uppercase text-sm">Descripción</label>
+                          <textarea
+                              key={selectedPhoto.id}
+                              value={editedDescription}
+                              onChange={(e) => setEditedDescription(e.target.value)}
+                              className="w-full border-2 border-black p-3 min-h-[100px] font-bold resize-none"
+                              placeholder="Descripción de la foto..."
+                              rows={4}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Editá la descripción y guardá los cambios para reenviar la foto a revisión</p>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                          {(selectedPhoto.status === 'rejected' || selectedPhoto.status === 'REJECTED') && (
+                              <Button
+                                  onClick={handlePhotoUpdate}
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                              >
+                                  <RefreshCw size={18} className="mr-2" /> Reenviar para Revisión
+                              </Button>
+                          )}
+                          {(selectedPhoto.status === 'pending' || selectedPhoto.status === 'PENDING') && (
+                              <Button
+                                  onClick={handlePhotoUpdate}
+                                  className="flex-1 bg-green-600 hover:bg-green-700"
+                              >
+                                  <Save size={18} className="mr-2" /> Guardar Cambios
+                              </Button>
+                          )}
+                          <button
+                              onClick={() => setShowDeletePhotoConfirm(true)}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white font-bold uppercase border-2 border-black shadow-manga hover:shadow-manga-hover transition-all flex items-center justify-center gap-2"
+                          >
+                              <Trash2 size={18} /> Eliminar Foto
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* DELETE PHOTO CONFIRMATION MODAL */}
+      {showDeletePhotoConfirm && selectedPhoto && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4 backdrop-blur-md">
+              <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+                  <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+                      <AlertTriangle size={24} />
+                      <h3 className="font-display text-xl">¿Eliminar Foto?</h3>
+                  </div>
+                  <div className="p-6">
+                      <p className="text-lg font-bold mb-3">¿Estás seguro de eliminar esta foto?</p>
+                      <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+
+                      {/* Preview */}
+                      <div className="my-4 border-2 border-black">
+                          <img src={selectedPhoto.url} alt="Preview" className="w-full h-32 object-cover" />
+                      </div>
+
+                      <div className="flex gap-3">
+                          <button
+                              onClick={() => setShowDeletePhotoConfirm(false)}
+                              className="flex-1 px-4 py-2 bg-gray-200 text-black font-bold uppercase border-2 border-black shadow-manga hover:shadow-manga-hover transition-all"
+                          >
+                              Cancelar
+                          </button>
+                          <button
+                              onClick={handlePhotoDelete}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white font-bold uppercase border-2 border-black shadow-manga hover:shadow-manga-hover transition-all flex items-center justify-center gap-2"
+                          >
+                              <Trash2 size={18} /> Eliminar
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Cosplay Guest Withdrawal Modal */}
+      {showWithdrawModal && withdrawingGuest && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4 backdrop-blur-md">
+              <div className="bg-white border-4 border-purple-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+                  <div className="bg-purple-600 text-white p-4 flex items-center gap-3">
+                      <AlertTriangle size={24} />
+                      <h3 className="font-display text-xl">¿Darte de Baja?</h3>
+                  </div>
+                  <div className="p-6">
+                      <p className="text-lg font-bold mb-3">¿Estás seguro de darte de baja como Cosplay Invitado?</p>
+                      <p className="text-gray-700 mb-4">
+                        Te darás de baja de: <span className="font-bold">{withdrawingGuest.characterName}</span> ({withdrawingGuest.seriesName})
+                      </p>
+
+                      {/* Show assigned number */}
+                      <div className="flex items-center justify-center gap-3 mb-4 p-4 bg-yellow-50 border-2 border-yellow-400">
+                        <span className="text-sm text-gray-600">Tu número asignado:</span>
+                        <div className="flex items-center justify-center w-12 h-12 bg-yellow-400 border-2 border-black font-display text-2xl font-bold">
+                          {withdrawingGuest.assignedNumber}
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-600 mb-4">Este número quedará disponible para otros participantes.</p>
+
+                      {/* Optional reason */}
+                      <label className="block text-sm font-bold mb-2 text-gray-700">
+                        Motivo (opcional)
+                      </label>
+                      <textarea
+                        value={withdrawReason}
+                        onChange={(e) => setWithdrawReason(e.target.value)}
+                        className="w-full border-2 border-black p-3 mb-4 font-bold resize-none focus:outline-none focus:border-purple-600"
+                        rows={3}
+                        placeholder="Ej: No voy a poder asistir al evento..."
+                      />
+
+                      <div className="flex gap-3">
+                          <button
+                              onClick={() => {
+                                setShowWithdrawModal(false);
+                                setWithdrawingGuest(null);
+                                setWithdrawReason('');
+                              }}
+                              className="flex-1 px-4 py-2 bg-gray-200 text-black font-bold uppercase border-2 border-black shadow-manga hover:shadow-manga-hover transition-all"
+                          >
+                              Cancelar
+                          </button>
+                          <button
+                              onClick={handleWithdrawGuest}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white font-bold uppercase border-2 border-black shadow-manga hover:shadow-manga-hover transition-all flex items-center justify-center gap-2"
+                          >
+                              <XCircle size={18} /> Darme de Baja
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Success Modal for Withdrawal */}
+      {showWithdrawSuccessModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[70] p-4 backdrop-blur-md">
+              <div className="bg-white border-4 border-green-500 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+                  <div className="bg-green-500 text-white p-6 flex flex-col items-center justify-center gap-3">
+                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
+                          <CheckCircle size={48} className="text-green-500" />
+                      </div>
+                      <h3 className="font-display text-2xl text-center">¡Baja Exitosa!</h3>
+                  </div>
+                  <div className="p-6 text-center">
+                      <p className="text-lg font-bold mb-2">Te has dado de baja exitosamente</p>
+                      <p className="text-gray-600 mb-6">Tu número asignado ahora está disponible para otros participantes.</p>
+                      <button
+                          onClick={() => setShowWithdrawSuccessModal(false)}
+                          className="w-full px-6 py-3 bg-green-500 text-white font-bold uppercase border-2 border-black shadow-manga hover:shadow-manga-hover transition-all"
+                      >
+                          OK
+                      </button>
                   </div>
               </div>
           </div>

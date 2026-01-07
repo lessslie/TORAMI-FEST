@@ -157,11 +157,39 @@ export const addToWaitingList = (data: any) => {
   return api.cosplay.addToWaitingList(token || '', data);
 };
 
+// Cosplay Guest
+export const getCosplayGuests = () => api.cosplayGuest.getAll();
+export const getUserCosplayGuests = () => {
+  const { token } = getAuth();
+  return api.cosplayGuest.getByUser(token || '');
+};
+export const addCosplayGuestRegistration = (data: any) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.create(token || '', data);
+};
+export const withdrawCosplayGuest = (id: string, withdrawalReason?: string) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.withdraw(token || '', id, withdrawalReason);
+};
+export const updateCosplayGuestStatus = (id: string, status: 'Confirmado' | 'Rechazado') => {
+  const { token } = getAuth();
+  return api.cosplayGuest.updateStatus(token || '', id, status);
+};
+export const addCosplayGuestMessage = (guestId: string, text: string, sender: 'ADMIN' | 'USER', imageUrl?: string) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.sendMessage(token || '', guestId, { text, sender, imageUrl });
+};
+export const getCosplayGuestAvailableSlots = () => api.cosplayGuest.getAvailableSlots();
+export const deleteCosplayGuest = (id: string) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.delete(token || '', id);
+};
+
 // Gallery
 export const getGallery = (userId?: string, approved?: boolean) => api.gallery.getAll(userId, approved, undefined);
 export const getOfficialGallery = () => api.gallery.getAll(undefined, true, true);
 export const getCommunityGallery = () => api.gallery.getAll(undefined, true, false);
-export const getUserGallery = () => api.gallery.getAll(undefined, undefined, undefined);
+export const getUserGallery = (userId: string) => api.gallery.getAll(userId, undefined, undefined);
 export const addGalleryItem = (data: any) => {
   const { token } = getAuth();
   return api.gallery.create(token || '', data);
@@ -188,6 +216,10 @@ export const updateGalleryItem = (item: any) => {
     return api.gallery.moderate(token || '', item.id, item.status, item.feedback);
   }
   return Promise.resolve(item);
+};
+export const updateUserGalleryItem = (id: string, description: string) => {
+  const { token } = getAuth();
+  return api.gallery.update(token || '', id, description);
 };
 
 // User profile

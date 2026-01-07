@@ -68,6 +68,13 @@ export class GalleryController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
+  @Patch(':id/update')
+  update(@Request() req, @Param('id') id: string, @Body() body: { description: string }) {
+    return this.galleryService.update(id, req.user.userId, body.description);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.galleryService.delete(id);

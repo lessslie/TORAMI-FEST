@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Heart, User as UserIcon, LogOut, Home, Calendar, Image, Store, Gift, MessageCircle, DollarSign, Ghost, Sparkles, ShieldCheck, ArrowUp, Trophy, UserCog, LogIn, Bell } from 'lucide-react';
+import { Menu, X, Heart, User as UserIcon, LogOut, Home, Calendar, Image, Store, Gift, MessageCircle, DollarSign, Ghost, Sparkles, ShieldCheck, ArrowUp, Trophy, UserCog, LogIn, Bell, Star } from 'lucide-react';
 import { useAuth } from '../App';
 import { UserRole, Notification } from '../types';
 import { ToramiBot } from './ToramiBot';
@@ -100,6 +100,9 @@ export const Navbar = () => {
             <Link to="/proximos-eventos" className={isActive('/proximos-eventos')}>Eventos</Link>
             <Link to="/quiero-un-stand" className={isActive('/quiero-un-stand')}>Stands</Link>
             <Link to="/concursos-cosplay" className={isActive('/concursos-cosplay')}>Concursos</Link>
+            <Link to="/cosplay-invitados" className={`${isActive('/cosplay-invitados')} flex items-center gap-1`}>
+              <Star size={16} className="text-yellow-500 fill-current" /> Invitados
+            </Link>
             <Link to="/galeria-oficial" className={isActive('/galeria-oficial')}>📸 Oficial</Link>
             <Link to="/galeria" className={isActive('/galeria')}>👥 Comunitaria</Link>
             <Link to="/sorteos" className={isActive('/sorteos')}>Sorteos</Link>
@@ -212,6 +215,7 @@ export const Navbar = () => {
             <NavLink to="/" icon={Home}>Inicio</NavLink>
             <NavLink to="/proximos-eventos" icon={Calendar}>Próximos Eventos</NavLink>
             <NavLink to="/concursos-cosplay" icon={Trophy}>Concursos Cosplay</NavLink>
+            <NavLink to="/cosplay-invitados" icon={Star}>🌟 Cosplay Invitados</NavLink>
             <NavLink to="/quiero-un-stand" icon={Store}>Quiero un Stand</NavLink>
             <NavLink to="/galeria-oficial" icon={Sparkles}>📸 Galería Oficial</NavLink>
             <NavLink to="/galeria" icon={Image}>👥 Galería Comunitaria</NavLink>
@@ -263,9 +267,9 @@ export const Footer = () => (
 
       {/* Col 2: Credits (Centered) */}
       <div className="text-center flex justify-center order-last md:order-none">
-        <p className="text-gray-500 text-xs flex items-center gap-1 bg-gray-900 md:bg-transparent px-3 py-1 rounded-full border border-gray-800 md:border-none">
-          Hecho por <a href="https://portfolio-agata.vercel.app/" target="_blank" rel="noreferrer" className="text-torami-red font-bold hover:text-white hover:underline transition-colors">Les</a> con amor
-          <Heart size={12} className="text-pink-500 fill-current animate-pulse" />
+        <p className="text-gray-300 text-base flex items-center gap-2 bg-gray-900 md:bg-transparent px-4 py-2 md:px-3 md:py-1 rounded-full border border-gray-800 md:border-none">
+          Plataforma Desarrollada por <a href="https://portfolio-agata.vercel.app/" target="_blank" rel="noreferrer" className="text-torami-red font-bold text-lg hover:text-white hover:underline transition-colors">Les</a>
+          <Heart size={16} className="text-pink-500 fill-current animate-pulse" />
         </p>
       </div>
 

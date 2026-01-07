@@ -107,6 +107,33 @@ export const api = {
       request<any>('/cosplay/waiting-list', { method: 'POST', body: data, token }),
   },
 
+  // ==================== COSPLAY GUEST ====================
+  cosplayGuest: {
+    getAll: () =>
+      request<any[]>('/cosplay-guest'),
+
+    getByUser: (token: string) =>
+      request<any[]>('/cosplay-guest/user/me', { token }),
+
+    create: (token: string, data: any) =>
+      request<any>('/cosplay-guest', { method: 'POST', body: data, token }),
+
+    withdraw: (token: string, id: string, withdrawalReason?: string) =>
+      request<any>(`/cosplay-guest/${id}/withdraw`, { method: 'DELETE', body: { withdrawalReason }, token }),
+
+    updateStatus: (token: string, id: string, status: string) =>
+      request<any>(`/cosplay-guest/${id}/status`, { method: 'PATCH', body: { status }, token }),
+
+    sendMessage: (token: string, id: string, message: any) =>
+      request<any>(`/cosplay-guest/${id}/message`, { method: 'POST', body: { message }, token }),
+
+    getAvailableSlots: () =>
+      request<{ available: number; limit: number; occupied: number }>('/cosplay-guest/slots'),
+
+    delete: (token: string, id: string) =>
+      request<any>(`/cosplay-guest/${id}`, { method: 'DELETE', token }),
+  },
+
   // ==================== GALLERY ====================
   gallery: {
     getAll: (userId?: string, approved?: boolean, isOfficial?: boolean) => {
@@ -128,6 +155,9 @@ export const api = {
 
     moderate: (token: string, id: string, status: string, feedback?: string) =>
       request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status: status.toUpperCase(), feedback }, token }),
+
+    update: (token: string, id: string, description: string) =>
+      request<any>(`/gallery/${id}/update`, { method: 'PATCH', body: { description }, token }),
 
     delete: (token: string, id: string) =>
       request<any>(`/gallery/${id}`, { method: 'DELETE', token }),
