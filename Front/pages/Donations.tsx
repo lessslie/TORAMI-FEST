@@ -9,6 +9,8 @@ export const Donations = () => {
   const [stats, setStats] = useState<DonationStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [copiedCBU, setCopiedCBU] = useState(false);
+  const [copiedAlias, setCopiedAlias] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -28,6 +30,18 @@ export const Donations = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const handleCopyCBU = () => {
+    navigator.clipboard.writeText('4530000800012291620067');
+    setCopiedCBU(true);
+    setTimeout(() => setCopiedCBU(false), 2000);
+  };
+
+  const handleCopyAliasFixed = () => {
+    navigator.clipboard.writeText('toramifest.nx');
+    setCopiedAlias(true);
+    setTimeout(() => setCopiedAlias(false), 2000);
   };
 
   if (loading) {
@@ -141,61 +155,81 @@ export const Donations = () => {
             Formas de Donar
           </h3>
 
-          <div className="space-y-4">
-            {config.paymentLink && (
-              <div>
-                <p className="text-sm font-bold mb-2 text-gray-600">Opción 1: MercadoPago</p>
-                <a href={config.paymentLink} target="_blank" rel="noreferrer">
-                  <Button className="w-full bg-pink-600 hover:bg-pink-700 flex items-center justify-center gap-2">
-                    <Heart size={18} className="fill-current" /> Donar con MercadoPago
-                    <ExternalLink size={16} />
-                  </Button>
-                </a>
-              </div>
-            )}
-
-            {config.aliasCbu && (
-              <div>
-                <p className="text-sm font-bold mb-2 text-gray-600">Opción 2: Transferencia Bancaria</p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <a
-                    href={`https://www.mercadopago.com.ar/money-transfer?alias=${encodeURIComponent(config.aliasCbu)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-grow"
-                  >
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2">
-                      Transferir a {config.aliasCbu}
-                      <ExternalLink size={16} />
-                    </Button>
-                  </a>
-                  <button
-                    onClick={handleCopyAlias}
-                    className="px-4 py-3 bg-gray-800 text-white hover:bg-gray-700 border-2 border-black rounded flex items-center justify-center gap-2"
-                    title="Copiar alias"
-                  >
-                    {copied ? <Check size={18} /> : <Copy size={18} />}
-                    <span className="text-sm hidden sm:inline">Copiar</span>
-                  </button>
+          <div className="space-y-6">
+            {/* Datos bancarios fijos */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Columna izquierda: Datos bancarios */}
+              <div className="space-y-3">
+                <div
+                  className="bg-gray-50 p-4 border-2 border-gray-300 rounded cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-all group relative"
+                  onClick={handleCopyCBU}
+                  title="Click para copiar"
+                >
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center justify-between">
+                    <span>CBU</span>
+                    {copiedCBU ? (
+                      <Check size={14} className="text-green-600" />
+                    ) : (
+                      <Copy size={14} className="text-gray-400 group-hover:text-gray-600" />
+                    )}
+                  </p>
+                  <p className="font-mono text-sm font-bold">{copiedCBU ? '¡Copiado!' : '4530000800012291620067'}</p>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Alias/CBU: <span className="font-mono font-bold">{config.aliasCbu}</span>
-                </p>
-              </div>
-            )}
 
-            {config.qrImage && (
-              <div>
-                <p className="text-sm font-bold mb-2 text-gray-600">Opción 3: Código QR</p>
-                <div className="flex justify-center bg-white p-4 border-2 border-black">
+                <div
+                  className="bg-gray-50 p-4 border-2 border-gray-300 rounded cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-all group relative"
+                  onClick={handleCopyAliasFixed}
+                  title="Click para copiar"
+                >
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-1 flex items-center justify-between">
+                    <span>Alias</span>
+                    {copiedAlias ? (
+                      <Check size={14} className="text-green-600" />
+                    ) : (
+                      <Copy size={14} className="text-gray-400 group-hover:text-gray-600" />
+                    )}
+                  </p>
+                  <p className="font-mono text-lg font-bold text-torami-red">{copiedAlias ? '¡Copiado!' : 'toramifest.nx'}</p>
+                </div>
+
+                <div className="bg-gray-50 p-4 border-2 border-gray-300 rounded">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-1">Caja de ahorro en pesos</p>
+                  <p className="font-mono text-sm font-bold">1229162006</p>
+                </div>
+
+                <div className="bg-gray-50 p-4 border-2 border-gray-300 rounded">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-1">Titular</p>
+                  <p className="text-sm font-bold">Alexis Sebastian Falcon</p>
+                </div>
+
+                <div className="bg-gray-50 p-4 border-2 border-gray-300 rounded">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-1">CUIL</p>
+                  <p className="font-mono text-sm font-bold">20351190052</p>
+                </div>
+
+                <div className="bg-purple-100 p-4 border-2 border-purple-400 rounded">
+                  <p className="text-sm font-bold text-purple-700 flex items-center gap-2">
+                    <Heart size={16} className="fill-current" />
+                    Naranja X
+                  </p>
+                </div>
+              </div>
+
+              {/* Columna derecha: Código QR */}
+              <div className="flex flex-col items-center justify-center">
+                <p className="text-sm font-bold mb-3 text-gray-600">Escaneá el código QR</p>
+                <div className="bg-white p-4 border-2 border-black shadow-manga">
                   <img
-                    src={config.qrImage}
+                    src="/donacionQR.png"
                     alt="Código QR para donaciones"
-                    className="w-48 h-48 object-contain"
+                    className="w-64 h-64 object-contain"
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Escaneá con tu app de banco o MercadoPago
+                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
 

@@ -43,7 +43,7 @@ export const Home = () => {
   return (
     <div className="pb-12">
       {/* Hero Section */}
-      <section className="relative bg-white border-b-2 border-black overflow-hidden">
+      <section className="relative bg-white/85 backdrop-blur-sm border-b-2 border-black overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/halftone.png')]"></div>
         
         {/* Kawaii Decorative Elements */}

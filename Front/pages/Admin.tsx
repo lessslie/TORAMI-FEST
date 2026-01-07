@@ -1398,30 +1398,15 @@ export const Admin = () => {
                     </div>
                   )}
 
+                  <div className="bg-blue-50 border-l-4 border-l-blue-500 p-4 mb-6 text-sm">
+                    <p className="font-bold text-blue-800 mb-2">ℹ️ Datos Bancarios Fijos</p>
+                    <p className="text-blue-700 text-xs">
+                      Los datos bancarios (CBU, Alias, QR) están configurados de forma fija en el código.
+                      Aquí solo podrás editar el mensaje y la causa de la campaña actual.
+                    </p>
+                  </div>
+
                   <div className="space-y-4">
-                      <Input
-                        label="Link de MercadoPago (Botón)"
-                        name="paymentLink"
-                        value={config.paymentLink}
-                        onChange={handleConfigChange}
-                        placeholder="https://link.mercadopago.com.ar/..."
-                      />
-                      <Input
-                        label="Alias / CBU (Texto)"
-                        name="aliasCbu"
-                        value={config.aliasCbu}
-                        onChange={handleConfigChange}
-                        placeholder="Ej: torami.fest.mp"
-                      />
-                      <Input
-                        label="URL Imagen QR"
-                        name="qrImage"
-                        value={config.qrImage}
-                        onChange={handleConfigChange}
-                      />
-
-                      <hr className="my-6 border-gray-300" />
-
                       <div className="space-y-1 mb-4">
                         <h4 className="font-bold text-md">Campaña de Donación Actual</h4>
                         <p className="text-xs text-gray-600">

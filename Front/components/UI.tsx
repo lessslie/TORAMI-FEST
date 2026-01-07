@@ -9,9 +9,9 @@ interface CardProps {
 }
 
 export const MangaCard = ({ children, className = '', onClick }: CardProps) => (
-  <div 
+  <div
     onClick={onClick}
-    className={`bg-white border-2 border-black shadow-manga hover:shadow-manga-hover hover:-translate-y-1 hover:-translate-x-1 transition-all duration-200 p-4 ${onClick ? 'cursor-pointer' : ''} ${className}`}
+    className={`bg-white/30 backdrop-blur-sm border-2 border-black shadow-manga hover:shadow-manga-hover hover:-translate-y-1 hover:-translate-x-1 transition-all duration-200 p-4 ${onClick ? 'cursor-pointer' : ''} ${className}`}
   >
     {children}
   </div>

@@ -81,7 +81,7 @@ export const Navbar = () => {
   );
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b-2 border-black shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white/30 backdrop-blur-md border-b-2 border-black shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -210,7 +210,7 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white border-t-2 border-black animate-in slide-in-from-top-2">
+        <div className="md:hidden bg-white/30 backdrop-blur-md border-t-2 border-black animate-in slide-in-from-top-2">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <NavLink to="/" icon={Home}>Inicio</NavLink>
             <NavLink to="/proximos-eventos" icon={Calendar}>Próximos Eventos</NavLink>
@@ -299,9 +299,25 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-halftone">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Background Images with Transparency */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        {/* Mobile Background */}
+        <div
+          className="absolute inset-0 md:hidden bg-cover bg-center bg-no-repeat opacity-70"
+          style={{ backgroundImage: 'url(/fondoCelu.jpg)' }}
+        />
+        {/* Desktop Background */}
+        <div
+          className="hidden md:block absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
+          style={{ backgroundImage: 'url(/fondoWeb.jpg)' }}
+        />
+        {/* Halftone overlay */}
+        <div className="absolute inset-0 bg-halftone opacity-20" />
+      </div>
+
       <Navbar />
-      <main className="flex-grow">
+      <main className="flex-grow relative">
         {children}
       </main>
       

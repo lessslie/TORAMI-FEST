@@ -66,4 +66,10 @@ export class UpdateConfigDto {
   @IsInt()
   @Min(1)
   cosplayLimit?: number;
+
+  @ApiProperty({ required: false, description: 'Límite de cupos para cosplay invitados' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  cosplayGuestLimit?: number;
 }
