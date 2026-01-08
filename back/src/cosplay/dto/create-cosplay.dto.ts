@@ -11,6 +11,14 @@ export class CreateCosplayDto {
   @IsString()
   whatsapp!: string;
 
+  @IsOptional()
+  @IsString()
+  instagram?: string;
+
+  @IsOptional()
+  @IsString()
+  website?: string;
+
   @IsString()
   characterName!: string;
 

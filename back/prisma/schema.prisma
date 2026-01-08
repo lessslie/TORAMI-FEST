@@ -51,6 +51,7 @@ model Event {
   gallery     GalleryItem[]
   stands      StandApplication[] @relation("EventStands")
   cosplays    CosplayRegistration[] @relation("EventCosplays")
+  cosplayGuests CosplayGuest[] @relation("EventCosplayGuests")
   giveaways   Giveaway[] @relation("EventGiveaways")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -84,6 +85,8 @@ model CosplayRegistration {
   participantName String
   nickname       String
   whatsapp       String
+  instagram      String?
+  website        String?
   characterName  String
   seriesName     String
   category       String
@@ -109,14 +112,19 @@ model CosplayGuest {
   participantName String
   nickname        String
   whatsapp        String
+  instagram       String?
+  website         String?
   characterName   String
   seriesName      String
   category        String
   referenceImage  String?
   audioLink       String?
+  audioStartTime  String?
+  audioEndTime    String?
   status          CosplayStatus @default(INSCRIPTO)
   assignedNumber  Int      @unique
   withdrawalReason String?
+  event           Event?   @relation("EventCosplayGuests", fields: [eventId], references: [id])
   eventId         String?
   messages        Json[]
   notifyEmail     String?

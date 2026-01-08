@@ -25,6 +25,7 @@ export class CosplayGuestService {
             avatar: true,
           },
         },
+        event: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -44,6 +45,7 @@ export class CosplayGuestService {
             avatar: true,
           },
         },
+        event: true,
       },
     });
 
@@ -57,6 +59,9 @@ export class CosplayGuestService {
   async findByUser(userId: string) {
     return this.prisma.cosplayGuest.findMany({
       where: { userId },
+      include: {
+        event: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -81,13 +86,9 @@ export class CosplayGuestService {
 
   // Find the next available number (1-30)
   private async findNextAvailableNumber(): Promise<number> {
-    // Get all assigned numbers
+    // Get ALL assigned numbers (including RECHAZADO) since assignedNumber has @unique constraint
+    // This prevents trying to assign a number that's already taken by a rejected guest
     const assignedGuests = await this.prisma.cosplayGuest.findMany({
-      where: {
-        status: {
-          in: [CosplayStatus.INSCRIPTO, CosplayStatus.CONFIRMADO],
-        },
-      },
       select: {
         assignedNumber: true,
       },
@@ -153,6 +154,16 @@ export class CosplayGuestService {
   }
 
   async updateStatus(id: string, status: CosplayStatus) {
+    // If rejecting, delete the guest to free up the number
+    if (status === CosplayStatus.RECHAZADO) {
+      const guest = await this.findOne(id);
+      await this.prisma.cosplayGuest.delete({
+        where: { id },
+      });
+      return guest; // Return the guest data before deletion
+    }
+
+    // Otherwise, just update the status (for CONFIRMADO)
     return this.prisma.cosplayGuest.update({
       where: { id },
       data: { status },
@@ -165,6 +176,7 @@ export class CosplayGuestService {
             avatar: true,
           },
         },
+        event: true,
       },
     });
   }

@@ -14,10 +14,14 @@ export const CosplayGuest = () => {
     participantName: '',
     nickname: '',
     whatsapp: '',
+    instagram: '',
+    website: '',
     characterName: '',
     seriesName: '',
     category: 'General',
     audioLink: '',
+    audioStartTime: '',
+    audioEndTime: '',
     referenceImage: '',
     eventId: ''
   });
@@ -90,6 +94,8 @@ export const CosplayGuest = () => {
         participantName: formData.participantName,
         nickname: formData.nickname,
         whatsapp: formData.whatsapp,
+        instagram: formData.instagram,
+        website: formData.website,
         characterName: formData.characterName,
         seriesName: formData.seriesName,
         category: formData.category,
@@ -238,13 +244,28 @@ export const CosplayGuest = () => {
                 <Input name="nickname" label="Nombre Artístico / Nick" onChange={handleChange} />
             </div>
             
-            <Input 
-                name="whatsapp" 
-                label="Número de WhatsApp (Obligatorio)" 
-                required 
-                onChange={handleChange} 
-                placeholder="Para avisos del concurso" 
+            <Input
+                name="whatsapp"
+                label="Número de WhatsApp (Obligatorio)"
+                required
+                onChange={handleChange}
+                placeholder="Para avisos del concurso"
             />
+
+            <div className="grid md:grid-cols-2 gap-6">
+                <Input
+                    name="instagram"
+                    label="Instagram (Opcional)"
+                    onChange={handleChange}
+                    placeholder="@tuusuario"
+                />
+                <Input
+                    name="website"
+                    label="Sitio Web / Red Social (Opcional)"
+                    onChange={handleChange}
+                    placeholder="https://..."
+                />
+            </div>
 
             <h3 className="font-display text-xl border-b-2 border-black pb-2 mb-4 mt-8">Datos del Personaje</h3>
 

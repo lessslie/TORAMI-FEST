@@ -23,7 +23,10 @@
       "Bash(wc:*)",
       "Bash(dir /s \"c:\\\\PROYECTOS\\\\TORAMI-FEST\\\\Front\\\\src\")",
       "Bash(dir:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npx prisma db execute:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)"
     ]
   }
 }

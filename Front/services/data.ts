@@ -100,7 +100,9 @@ export const getStandApplications = async () => {
 };
 export const updateStandStatus = (id: string, status: 'Aprobada' | 'Rechazada') => {
   const { token } = getAuth();
-  return api.stands.updateStatus(token || '', id, status);
+  // Convert to uppercase for backend enum
+  const statusUpperCase = status.toUpperCase() as 'APROBADA' | 'RECHAZADA';
+  return api.stands.updateStatus(token || '', id, statusUpperCase);
 };
 export const addStandMessage = (standId: string, text: string, sender: 'ADMIN' | 'USER', imageUrl?: string) => {
   const { token } = getAuth();
@@ -147,7 +149,9 @@ export const getUserCosplays = (userId: string) => {
 };
 export const updateCosplayStatus = (id: string, status: 'Confirmado' | 'Rechazado') => {
   const { token } = getAuth();
-  return api.cosplay.updateStatus(token || '', id, status);
+  // Convert to uppercase for backend enum
+  const statusUpperCase = status.toUpperCase() as 'CONFIRMADO' | 'RECHAZADO';
+  return api.cosplay.updateStatus(token || '', id, statusUpperCase);
 };
 export const addCosplayMessage = (cosplayId: string, text: string, sender: 'ADMIN' | 'USER', imageUrl?: string) => {
   const { token } = getAuth();
@@ -181,7 +185,9 @@ export const withdrawCosplayGuest = (id: string, withdrawalReason?: string) => {
 };
 export const updateCosplayGuestStatus = (id: string, status: 'Confirmado' | 'Rechazado') => {
   const { token } = getAuth();
-  return api.cosplayGuest.updateStatus(token || '', id, status);
+  // Convert to uppercase for backend enum
+  const statusUpperCase = status.toUpperCase() as 'CONFIRMADO' | 'RECHAZADO';
+  return api.cosplayGuest.updateStatus(token || '', id, statusUpperCase);
 };
 export const addCosplayGuestMessage = (guestId: string, text: string, sender: 'ADMIN' | 'USER', imageUrl?: string) => {
   const { token } = getAuth();

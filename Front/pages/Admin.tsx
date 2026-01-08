@@ -14,7 +14,7 @@ import {
   getAllUsers, updateUser, deleteUser
 } from '../services/data';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock, Instagram, Globe } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -510,7 +510,15 @@ export const Admin = () => {
 
   // Cosplay
   const handleCosplayStatus = async (id: string, status: 'Confirmado') => {
-    await updateCosplayStatus(id, status);
+    // Detect if it's a guest (has assignedNumber)
+    const isGuest = viewCosplay && (viewCosplay as any).assignedNumber !== undefined;
+
+    if (isGuest) {
+      await updateCosplayGuestStatus(id, status);
+    } else {
+      await updateCosplayStatus(id, status);
+    }
+
     refreshCurrentTab();
     if (viewCosplay && viewCosplay.id === id) setViewCosplay(null); // Close modal if modifying current
   };
@@ -518,20 +526,32 @@ export const Admin = () => {
   const handleExecuteCosplayRejection = async () => {
       if (!viewCosplay) return;
 
+      // Detect if it's a guest (has assignedNumber)
+      const isGuest = (viewCosplay as any).assignedNumber !== undefined;
+
       // 1. Update status
-      await updateCosplayStatus(viewCosplay.id, 'Rechazado');
-      
+      if (isGuest) {
+        await updateCosplayGuestStatus(viewCosplay.id, 'Rechazado');
+      } else {
+        await updateCosplayStatus(viewCosplay.id, 'Rechazado');
+      }
+
       // 2. Send Chat Message if reason is provided
       if (cosplayRejectionReason.trim()) {
           const reasonMsg = `⚠️ TU INSCRIPCIÓN FUE RECHAZADA.\n\nMotivo: ${cosplayRejectionReason}\n\nPor favor, corregí lo necesario y avisanos por este chat.`;
-          await addCosplayMessage(viewCosplay.id, reasonMsg, 'ADMIN');
+
+          if (isGuest) {
+            await addCosplayGuestMessage(viewCosplay.id, reasonMsg, 'ADMIN');
+          } else {
+            await addCosplayMessage(viewCosplay.id, reasonMsg, 'ADMIN');
+          }
       }
 
       // 3. Cleanup and refresh
       setIsRejectingCosplay(false);
       setCosplayRejectionReason('');
       refreshCurrentTab();
-      
+
       // 4. Close modal
       setViewCosplay(null);
   };
@@ -1192,7 +1212,7 @@ export const Admin = () => {
                      {/* Evento, categoría y estado en una fila */}
                      <div className="flex flex-wrap gap-2 items-center mb-3 text-sm">
                        <span className="text-gray-700">
-                         📅 {events.find(e => e.id === guest.eventId)?.title || 'Sin evento'}
+                         📅 {guest.event?.title || 'Sin evento'}
                        </span>
                        <Badge color="blue">{guest.category}</Badge>
                        <Badge color={guest.status === 'Inscripto' ? 'yellow' : guest.status === 'Confirmado' ? 'green' : 'red'}>
@@ -1817,7 +1837,29 @@ export const Admin = () => {
                     <h4 className="text-xs font-bold uppercase text-green-800 mb-1 flex items-center gap-1"><MessageCircle size={12}/> WhatsApp</h4>
                     <p className="font-mono text-lg">{viewCosplay.whatsapp}</p>
                  </div>
-                 
+
+                 {/* Instagram y Website */}
+                 {(viewCosplay.instagram || viewCosplay.website) && (
+                   <div className="grid grid-cols-2 gap-4">
+                     {viewCosplay.instagram && (
+                       <div className="bg-pink-50 p-3 rounded border border-pink-200">
+                         <h4 className="text-xs font-bold uppercase text-pink-800 mb-1 flex items-center gap-1"><Instagram size={12}/> Instagram</h4>
+                         <a href={`https://instagram.com/${viewCosplay.instagram.replace('@', '')}`} target="_blank" rel="noreferrer" className="text-pink-600 hover:underline text-sm">
+                           {viewCosplay.instagram}
+                         </a>
+                       </div>
+                     )}
+                     {viewCosplay.website && (
+                       <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                         <h4 className="text-xs font-bold uppercase text-blue-800 mb-1 flex items-center gap-1"><Globe size={12}/> Website</h4>
+                         <a href={viewCosplay.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-sm break-all">
+                           {viewCosplay.website}
+                         </a>
+                       </div>
+                     )}
+                   </div>
+                 )}
+
                  {viewCosplay.audioLink ? (
                      <div className="bg-purple-50 p-3 rounded border border-purple-200">
                         <h4 className="text-xs font-bold uppercase text-purple-800 mb-1 flex items-center gap-1"><Mic2 size={12}/> Audio / Performance</h4>

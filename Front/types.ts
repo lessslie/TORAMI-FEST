@@ -89,6 +89,8 @@ export interface CosplayRegistration {
   participantName: string; // Nombre real
   nickname: string; // Nombre artístico
   whatsapp: string;
+  instagram?: string;
+  website?: string;
   characterName: string;
   seriesName: string;
   category: 'General' | 'Performance' | 'Chibi' | 'Grupal';
@@ -113,15 +115,20 @@ export interface CosplayGuest {
   participantName: string; // Nombre real
   nickname: string; // Nombre artístico
   whatsapp: string;
+  instagram?: string;
+  website?: string;
   characterName: string;
   seriesName: string;
   category: 'General' | 'Performance' | 'Chibi' | 'Grupal';
   referenceImage?: string; // URL o base64
   audioLink?: string; // Para performance
+  audioStartTime?: string;
+  audioEndTime?: string;
   status: 'Inscripto' | 'Confirmado' | 'Rechazado';
   assignedNumber: number; // Número asignado (1-30)
   withdrawalReason?: string; // Motivo de baja (opcional)
   eventId?: string;
+  event?: Event; // Populated event data
   messages: ChatMessage[];
   notifyEmail?: string;
   createdAt: string;

@@ -17,6 +17,16 @@ export class CreateCosplayGuestDto {
   @IsNotEmpty()
   whatsapp!: string;
 
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  instagram?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  website?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
