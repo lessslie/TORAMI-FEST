@@ -119,13 +119,13 @@ export const EventsList = () => {
 };
 
 const TransportCard = ({ icon: Icon, title, description, colorClass }: { icon: any, title: string, description: string, colorClass: string }) => (
-  <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 flex items-center gap-4 hover:border-torami-red transition-colors shadow-sm">
-      <div className={`p-2 rounded-lg bg-neutral-800 ${colorClass}`}>
-          <Icon size={24} />
+  <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 flex items-start md:items-center gap-3 md:gap-4 hover:border-torami-red transition-colors shadow-sm">
+      <div className={`p-1.5 md:p-2 rounded-lg bg-neutral-800 ${colorClass} flex-shrink-0`}>
+          <Icon size={20} className="md:w-6 md:h-6" />
       </div>
-      <div>
-          <h4 className="text-white font-bold text-lg">{title}</h4>
-          <p className="text-gray-300 text-sm leading-tight">{description}</p>
+      <div className="flex-grow min-w-0">
+          <h4 className="text-white font-bold text-base md:text-lg">{title}</h4>
+          <p className="text-gray-300 text-xs md:text-sm leading-tight break-words">{description}</p>
       </div>
   </div>
 );
@@ -180,27 +180,27 @@ export const EventDetail = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="mb-6 flex justify-between items-center">
-        <Link to="/proximos-eventos" className="text-sm underline hover:text-torami-red">← Volver a eventos</Link>
+      <div className="mb-4 md:mb-6 flex justify-between items-center gap-2">
+        <Link to="/proximos-eventos" className="text-xs md:text-sm underline hover:text-torami-red flex-shrink-0">← Volver</Link>
         <div className="flex gap-2">
-            <button 
+            <button
                 onClick={handleShare}
-                className="flex items-center gap-2 px-3 py-1 bg-white border border-black hover:bg-gray-100 text-sm font-bold rounded"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 bg-white border border-black hover:bg-gray-100 text-xs md:text-sm font-bold rounded"
             >
-                <Share2 size={16} /> <span className="hidden sm:inline">Compartir</span>
+                <Share2 size={14} className="md:w-4 md:h-4" /> <span className="hidden sm:inline">Compartir</span>
             </button>
         </div>
       </div>
       
-      <div className="relative h-64 md:h-96 lg:h-[500px] w-full mb-8 border-2 border-black shadow-manga">
+      <div className="relative h-64 md:h-96 lg:h-[500px] w-full mb-8 border-2 border-black shadow-manga overflow-hidden">
         <ImageCarousel
           images={event.images}
           autoPlayInterval={5000}
           className="h-full"
         />
-        <div className="absolute bottom-0 left-0 bg-black text-white px-6 py-2 font-display text-xl uppercase skew-x-12 ml-4 mb-4 border-2 border-white z-10">
-          <span className="-skew-x-12 block flex items-center gap-2">
-            <Calendar size={18} /> {new Date(event.date).toLocaleDateString()}
+        <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-black text-white px-3 md:px-6 py-1 md:py-2 font-display text-sm md:text-xl uppercase skew-x-6 md:skew-x-12 border-2 border-white z-10">
+          <span className="-skew-x-6 md:-skew-x-12 block flex items-center gap-1 md:gap-2">
+            <Calendar size={14} className="md:w-[18px] md:h-[18px]" /> {new Date(event.date).toLocaleDateString()}
           </span>
         </div>
       </div>
@@ -208,23 +208,23 @@ export const EventDetail = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
         <div className="flex-grow">
-          <h1 className="font-display text-4xl md:text-5xl mb-4 text-stroke-sm bg-white/70 backdrop-blur-sm px-4 py-3 border-2 border-black shadow-md inline-block">{event.title}</h1>
+          <h1 className="font-display text-3xl md:text-4xl lg:text-5xl mb-4 text-stroke-sm bg-white/70 backdrop-blur-sm px-3 md:px-4 py-2 md:py-3 border-2 border-black shadow-md break-words">{event.title}</h1>
 
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6 flex-wrap">
             {event.tags.map(tag => (
                <Badge key={tag} color="blue">{tag}</Badge>
             ))}
           </div>
 
-          <p className="text-lg leading-relaxed mb-8 bg-white/60 backdrop-blur-sm p-4 border border-black/20 shadow-sm">{event.description}</p>
+          <p className="text-base md:text-lg leading-relaxed mb-8 bg-white/60 backdrop-blur-sm p-3 md:p-4 border border-black/20 shadow-sm">{event.description}</p>
 
-          <div className="bg-blue-50/90 backdrop-blur-sm p-4 border border-black mb-6 relative overflow-hidden shadow-md">
-            <CloudRain className="absolute -right-4 -bottom-4 text-blue-100 w-24 h-24" />
-            <h3 className="font-bold mb-2 flex items-center gap-2 relative z-10">
-               {event.rainCheck ? <Umbrella size={20} className="text-blue-500"/> : <Sparkles size={20} className="text-yellow-500"/>}
+          <div className="bg-blue-50/90 backdrop-blur-sm p-3 md:p-4 border border-black mb-6 relative overflow-hidden shadow-md">
+            <CloudRain className="absolute -right-2 md:-right-4 -bottom-2 md:-bottom-4 text-blue-100 w-16 h-16 md:w-24 md:h-24" />
+            <h3 className="font-bold mb-2 flex items-center gap-2 relative z-10 text-sm md:text-base">
+               {event.rainCheck ? <Umbrella size={18} className="text-blue-500 md:w-5 md:h-5"/> : <Sparkles size={18} className="text-yellow-500 md:w-5 md:h-5"/>}
                Información Climática
             </h3>
-            <p className="text-sm relative z-10">
+            <p className="text-xs md:text-sm relative z-10">
               {event.rainCheck
                 ? "Este evento SE SUSPENDE por lluvia. Atentos a redes sociales."
                 : "NO se suspende por lluvia."}
@@ -236,55 +236,55 @@ export const EventDetail = () => {
         <div className="lg:w-96 flex-shrink-0 space-y-6">
            {/* Action Buttons for Date */}
            <a href={createCalendarLink()} target="_blank" rel="noreferrer" className="block">
-                <Button variant="outline" className="w-full flex items-center justify-center gap-2 mb-4 bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:text-torami-red hover:border-torami-red shadow-md">
-                    <CalendarPlus size={20} /> Agendar en Google Calendar
+                <Button variant="outline" className="w-full flex items-center justify-center gap-1 md:gap-2 mb-4 bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:text-torami-red hover:border-torami-red shadow-md text-xs md:text-sm py-2 md:py-3">
+                    <CalendarPlus size={16} className="md:w-5 md:h-5" /> <span className="break-words">Agendar en Google Calendar</span>
                 </Button>
            </a>
 
            {/* Precio de entrada */}
            <MangaCard className={`border-t-4 ${event.isFree ? 'border-t-green-500' : 'border-t-yellow-500'} bg-white/85 backdrop-blur-sm shadow-lg`}>
               <div className="flex items-start justify-between mb-4">
-                 <div>
-                    <h3 className="font-display text-2xl uppercase">Entrada</h3>
+                 <div className="flex-grow min-w-0">
+                    <h3 className="font-display text-xl md:text-2xl uppercase">Entrada</h3>
                     {event.isFree ? (
-                      <p className="text-2xl font-black text-green-600">GRATIS</p>
+                      <p className="text-xl md:text-2xl font-black text-green-600">GRATIS</p>
                     ) : (
-                      <p className="text-2xl font-black text-gray-900">${event.ticketPrice?.toLocaleString('es-AR')}</p>
+                      <p className="text-xl md:text-2xl font-black text-gray-900 break-words">${event.ticketPrice?.toLocaleString('es-AR')}</p>
                     )}
                  </div>
-                 <Ticket className={`${event.isFree ? 'text-green-500' : 'text-yellow-500'} w-8 h-8`} />
+                 <Ticket className={`${event.isFree ? 'text-green-500' : 'text-yellow-500'} w-6 h-6 md:w-8 md:h-8 flex-shrink-0`} />
               </div>
 
               {!event.isFree && event.ticketLink && (
                 <a href={event.ticketLink} target="_blank" rel="noreferrer">
-                  <Button className="w-full text-sm flex items-center justify-center gap-2 py-3">
-                    <Ticket size={18} /> Comprar Entrada
+                  <Button className="w-full text-xs md:text-sm flex items-center justify-center gap-2 py-2 md:py-3">
+                    <Ticket size={16} className="md:w-[18px] md:h-[18px]" /> Comprar Entrada
                   </Button>
                 </a>
               )}
            </MangaCard>
 
            <MangaCard className="border-t-4 border-t-torami-red bg-white/85 backdrop-blur-sm shadow-lg">
-              <div className="flex items-start justify-between mb-4">
-                 <div>
-                    <h3 className="font-display text-2xl uppercase">Ubicación</h3>
-                    <p className="text-sm text-gray-500 font-bold">{event.location}</p>
+              <div className="flex items-start justify-between mb-4 gap-2">
+                 <div className="flex-grow min-w-0">
+                    <h3 className="font-display text-xl md:text-2xl uppercase">Ubicación</h3>
+                    <p className="text-xs md:text-sm text-gray-500 font-bold break-words">{event.location}</p>
                  </div>
-                 <MapPin className="text-torami-red w-8 h-8" />
+                 <MapPin className="text-torami-red w-6 h-6 md:w-8 md:h-8 flex-shrink-0" />
               </div>
 
               <a href={mapsUrl} target="_blank" rel="noreferrer">
-                <Button className="w-full text-sm flex items-center justify-center gap-2 py-3 bg-black text-white hover:bg-gray-800">
-                  <Navigation size={18} /> Cómo llegar (Google Maps)
+                <Button className="w-full text-xs md:text-sm flex items-center justify-center gap-2 py-2 md:py-3 bg-black text-white hover:bg-gray-800">
+                  <Navigation size={16} className="md:w-[18px] md:h-[18px]" /> Cómo llegar (Google Maps)
                 </Button>
               </a>
            </MangaCard>
 
            {/* Transport Section - Dark Cards Style */}
            {(event.transport?.subway || event.transport?.bus || event.transport?.train) && (
-             <div className="bg-black/90 backdrop-blur-sm p-4 rounded-xl border-2 border-black shadow-manga">
-                <h3 className="text-white font-display text-xl mb-4 flex items-center gap-2 border-b border-gray-700 pb-2">
-                  <span className="text-torami-red">Medios de Transporte</span>
+             <div className="bg-black/90 backdrop-blur-sm p-3 md:p-4 rounded-xl border-2 border-black shadow-manga">
+                <h3 className="text-white font-display text-lg md:text-xl mb-3 md:mb-4 flex items-center gap-2 border-b border-gray-700 pb-2">
+                  <span className="text-torami-red break-words">Medios de Transporte</span>
                 </h3>
                 
                 <div className="space-y-3">
