@@ -132,15 +132,15 @@ export const api = {
       if (status) params.append('status', status);
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/stands?${params.toString()}`,
-        { token, useCache: true }
+        { token, useCache: false }
       );
     },
 
     getOne: (token: string, id: string) =>
-      request<any>(`/stands/${id}`, { token, useCache: true }),
+      request<any>(`/stands/${id}`, { token, useCache: false }),
 
     getByUser: (token: string, userId: string) =>
-      request<any[]>(`/stands/user/${userId}`, { token, useCache: true }),
+      request<any[]>(`/stands/user/${userId}`, { token, useCache: false }),
 
     create: (token: string, data: any) =>
       request<any>('/stands', { method: 'POST', body: data, token, useCache: false }).then(result => {
@@ -170,15 +170,15 @@ export const api = {
       if (status) params.append('status', status);
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/cosplay?${params.toString()}`,
-        { token, useCache: true }
+        { token, useCache: false }
       );
     },
 
     getOne: (token: string, id: string) =>
-      request<any>(`/cosplay/${id}`, { token, useCache: true }),
+      request<any>(`/cosplay/${id}`, { token, useCache: false }),
 
     getByUser: (token: string, userId: string) =>
-      request<any[]>(`/cosplay/user/${userId}`, { token, useCache: true }),
+      request<any[]>(`/cosplay/user/${userId}`, { token, useCache: false }),
 
     create: (token: string, data: any) =>
       request<any>('/cosplay', { method: 'POST', body: data, token, useCache: false }).then(result => {
@@ -211,10 +211,10 @@ export const api = {
   // ==================== COSPLAY GUEST ====================
   cosplayGuest: {
     getAll: () =>
-      request<any[]>('/cosplay-guest'),
+      request<any[]>('/cosplay-guest', { useCache: false }),
 
     getByUser: (token: string) =>
-      request<any[]>('/cosplay-guest/user/me', { token }),
+      request<any[]>('/cosplay-guest/user/me', { token, useCache: false }),
 
     create: (token: string, data: any) =>
       request<any>('/cosplay-guest', { method: 'POST', body: data, token }),
