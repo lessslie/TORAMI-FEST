@@ -7,6 +7,8 @@ export class CosplayEntity implements CosplayRegistration {
   participantName!: string;
   nickname!: string;
   whatsapp!: string;
+  instagram!: string | null;
+  website!: string | null;
   characterName!: string;
   seriesName!: string;
   category!: string;
