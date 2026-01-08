@@ -197,22 +197,22 @@ export const Home = () => {
                           </div>
                         )}
                      </div>
-                     <h3 className="font-display text-xl mb-2">{event.title}</h3>
-                     <div className="space-y-2 text-sm flex-grow">
-                        <div className="flex items-center gap-2">
-                          <Calendar size={16} className="text-torami-red" />
-                          <span>{new Date(event.date).toLocaleDateString()} • {event.time}</span>
+                     <h3 className="font-display text-lg md:text-xl mb-2 break-words">{event.title}</h3>
+                     <div className="space-y-2 text-xs md:text-sm flex-grow">
+                        <div className="flex items-start gap-2">
+                          <Calendar size={14} className="text-torami-red flex-shrink-0 md:w-4 md:h-4 mt-0.5" />
+                          <span className="break-words">{new Date(event.date).toLocaleDateString()} • {event.time}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin size={16} className="text-torami-red" />
-                          <span className="truncate">{event.location}</span>
+                        <div className="flex items-start gap-2">
+                          <MapPin size={14} className="text-torami-red flex-shrink-0 md:w-4 md:h-4 mt-0.5" />
+                          <span className="break-words line-clamp-2">{event.location}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Ticket size={16} className="text-torami-red" />
+                        <div className="flex items-start gap-2">
+                          <Ticket size={14} className="text-torami-red flex-shrink-0 md:w-4 md:h-4 mt-0.5" />
                           {event.isFree ? (
                             <span className="font-bold text-green-600">GRATIS</span>
                           ) : (
-                            <span className="font-bold">${event.ticketPrice?.toLocaleString('es-AR')}</span>
+                            <span className="font-bold break-words">${event.ticketPrice?.toLocaleString('es-AR')}</span>
                           )}
                         </div>
                      </div>
