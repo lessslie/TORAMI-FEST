@@ -5,6 +5,7 @@ interface CacheEntry<T> {
 
 class CacheManager {
   private cache: Map<string, CacheEntry<any>> = new Map();
+  private pendingRequests: Map<string, Promise<any>> = new Map();
   private defaultTTL: number = 5 * 60 * 1000; // 5 minutos
 
   /**
@@ -15,17 +16,22 @@ class CacheManager {
    */
   get<T>(key: string, ttl?: number): T | null {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {
+      console.log('🔴 Cache MISS:', key);
+      return null;
+    }
 
     const now = Date.now();
     const maxAge = ttl ?? this.defaultTTL;
     const isExpired = now - entry.timestamp > maxAge;
 
     if (isExpired) {
+      console.log('⏰ Cache EXPIRED:', key);
       this.cache.delete(key);
       return null;
     }
 
+    console.log('🟢 Cache HIT:', key);
     return entry.data as T;
   }
 
@@ -35,10 +41,45 @@ class CacheManager {
    * @param data Data to cache
    */
   set<T>(key: string, data: T): void {
+    console.log('💾 Cache SET:', key);
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
     });
+  }
+
+  /**
+   * Check if there's a pending request for this key
+   * @param key Cache key
+   * @returns Pending promise or null
+   */
+  getPendingRequest<T>(key: string): Promise<T> | null {
+    const pending = this.pendingRequests.get(key);
+    if (pending) {
+      console.log('⏳ Request in progress, waiting:', key);
+      return pending;
+    }
+    return null;
+  }
+
+  /**
+   * Register a pending request
+   * @param key Cache key
+   * @param promise Promise to track
+   */
+  setPendingRequest<T>(key: string, promise: Promise<T>): Promise<T> {
+    this.pendingRequests.set(key, promise);
+
+    // Auto-cleanup cuando termine (success o error)
+    promise
+      .then(() => {
+        this.pendingRequests.delete(key);
+      })
+      .catch(() => {
+        this.pendingRequests.delete(key);
+      });
+
+    return promise;
   }
 
   /**
@@ -48,6 +89,7 @@ class CacheManager {
   clear(prefix?: string): void {
     if (!prefix) {
       this.cache.clear();
+      this.pendingRequests.clear();
       return;
     }
 
@@ -58,7 +100,10 @@ class CacheManager {
       }
     });
 
-    keysToDelete.forEach(key => this.cache.delete(key));
+    keysToDelete.forEach(key => {
+      this.cache.delete(key);
+      this.pendingRequests.delete(key);
+    });
   }
 
   /**
@@ -68,6 +113,8 @@ class CacheManager {
     return {
       size: this.cache.size,
       keys: Array.from(this.cache.keys()),
+      pendingRequests: this.pendingRequests.size,
+      pendingKeys: Array.from(this.pendingRequests.keys()),
     };
   }
 }

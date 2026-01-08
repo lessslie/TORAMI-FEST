@@ -85,7 +85,10 @@ export const UserDashboard = () => {
               }
           });
           getUserCosplayGuests().then(setCosplayGuests);
-          getUserGallery(user.id).then(setGalleryItems);
+          getUserGallery(user.id).then((response) => {
+              // getUserGallery devuelve { data: [], pagination: {} }
+              setGalleryItems(response.data || []);
+          });
           getUserGiveaways(user.id).then(setMyGiveaways);
           getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
           setProfileData({ name: user.name, email: user.email, whatsapp: user.whatsapp || '' });

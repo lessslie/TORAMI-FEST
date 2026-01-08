@@ -290,19 +290,30 @@ export const Gallery = () => {
           </div>
       )}
 
-      {/* Lightbox Modal */}
+      {/* Lightbox Modal - Fondo lindo con blur */}
       {selectedImage && (
-          <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4 backdrop-blur-md" onClick={() => setSelectedImage(null)}>
-              <button className="absolute top-4 right-4 text-white hover:text-torami-red">
-                  <X size={32} />
+          <div className="fixed inset-0 bg-white/20 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-in fade-in" onClick={() => setSelectedImage(null)}>
+              <button className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full border-2 border-black shadow-manga hover:bg-torami-red hover:text-white transition-all z-10">
+                  <X size={24} />
               </button>
-              <div className="max-w-4xl max-h-screen relative" onClick={(e) => e.stopPropagation()}>
-                  <img src={selectedImage.url} alt="Full size" className="max-w-full max-h-[85vh] border-4 border-white shadow-2xl" />
-                  <div className="bg-white p-4 mt-2 border-2 border-black shadow-manga">
+              <div className="max-w-5xl w-full flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+                  {/* Imagen centrada con borde bonito */}
+                  <div className="relative mb-4">
+                    <img
+                      src={selectedImage.url}
+                      alt="Full size"
+                      className="max-w-full max-h-[70vh] w-auto h-auto object-contain border-4 border-white shadow-2xl rounded-sm"
+                    />
+                  </div>
+
+                  {/* Card de información debajo */}
+                  <div className="bg-white/95 backdrop-blur-sm p-4 md:p-6 border-2 border-black shadow-manga w-full max-w-2xl">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <p className="font-bold text-lg mb-2">{selectedImage.description}</p>
-                          <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                          {selectedImage.description && (
+                            <p className="font-bold text-base md:text-lg mb-3">{selectedImage.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-3 text-xs md:text-sm text-gray-600">
                             {selectedImage.user && (
                               <div className="flex items-center gap-1">
                                 <User size={14} />
@@ -322,12 +333,14 @@ export const Gallery = () => {
                             )}
                           </div>
                           {selectedImage.feedback && (
-                              <p className="text-xs text-red-600 font-bold mt-2 bg-red-50 p-2 border border-red-200 inline-block">
+                              <p className="text-xs text-red-600 font-bold mt-2 bg-red-50 p-2 border border-red-200 inline-block rounded">
                                   Rechazada: {selectedImage.feedback}
                               </p>
                           )}
                         </div>
-                        <button className="text-red-500 hover:scale-110 transition-transform flex-shrink-0"><Heart fill="currentColor" /></button>
+                        <button className="text-torami-red hover:scale-110 transition-transform flex-shrink-0">
+                          <Heart fill="currentColor" size={24} />
+                        </button>
                       </div>
                   </div>
               </div>

@@ -13,6 +13,19 @@ export class MailService {
     const subject = `Bienvenido a ${appName}`;
     const safeName = name || 'Hola!';
 
+    // Verificar configuración SMTP
+    const smtpHost = this.config.get<string>('SMTP_HOST');
+    const smtpUser = this.config.get<string>('SMTP_USER');
+    const smtpPass = this.config.get<string>('SMTP_PASSWORD');
+
+    if (!smtpHost || !smtpUser || !smtpPass) {
+      this.logger.error('❌ Configuración SMTP incompleta. Revisa las variables de entorno SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
+      return;
+    }
+
+    this.logger.log(`📧 Intentando enviar email de bienvenida a ${to}`);
+    this.logger.debug(`SMTP Config: Host=${smtpHost}, User=${smtpUser}`);
+
     const html = `
       <div style="font-family: 'Trebuchet MS', Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 0; background: #050914; color: #e9ecf5;">
         <div style="background: linear-gradient(120deg, #ff4d6d 0%, #7c3aed 45%, #22d3ee 100%); height: 10px; border-radius: 12px 12px 0 0;"></div>
@@ -26,10 +39,10 @@ export class MailService {
             ${safeName}, gracias por unirte a ${appName}.
           </p>
           <p style="margin: 0 0 14px; font-size: 15px; line-height: 1.6; color: #c8d4ff;">
-            Ya est\u00e1s dentro. Explora eventos, stands, cosplay y todas las actividades del festival desde tu cuenta.
+            Ya estás dentro. Explora eventos, stands, cosplay y todas las actividades del festival desde tu cuenta.
           </p>
           <div style="margin: 18px 0; padding: 14px 16px; background: linear-gradient(135deg, rgba(34,211,238,0.12), rgba(124,58,237,0.12)); border: 1px solid rgba(124,58,237,0.35); border-radius: 10px; color: #dbeafe;">
-            <strong style="color: #7dd3fc;">Tip r\u00e1pido:</strong> Guarda este correo y completa tu perfil para recibir avisos y recompensas.
+            <strong style="color: #7dd3fc;">Tip rápido:</strong> Guarda este correo y completa tu perfil para recibir avisos y recompensas.
           </div>
           <a href="#" style="display: inline-block; margin: 4px 0 10px; padding: 12px 16px; background: linear-gradient(120deg, #ff4d6d, #f97316 45%, #22d3ee); color: #0b1327; font-weight: 700; text-decoration: none; border-radius: 10px; box-shadow: 0 10px 25px rgba(255,77,109,0.35);">
             Explorar Torami Fest
@@ -45,10 +58,23 @@ export class MailService {
         subject,
         html,
       });
+      this.logger.log(`✅ Email de bienvenida enviado exitosamente a ${to}`);
     } catch (error) {
       // No bloqueamos el registro por fallos de email, solo lo registramos
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`No se pudo enviar email de bienvenida a ${to}: ${message}`);
+      const stack = error instanceof Error ? error.stack : '';
+
+      this.logger.error(`❌ Error enviando email de bienvenida a ${to}`);
+      this.logger.error(`Mensaje: ${message}`);
+      if (stack) {
+        this.logger.debug(`Stack: ${stack}`);
+      }
+
+      // Si es error de autenticación, dar más detalles
+      if (message.includes('Authentication') || message.includes('auth') || message.includes('535')) {
+        this.logger.error('🔑 Error de autenticación SMTP. Verifica que el API key de SendGrid sea válido.');
+        this.logger.error('💡 Genera un nuevo API key en: https://app.sendgrid.com/settings/api_keys');
+      }
     }
   }
 }

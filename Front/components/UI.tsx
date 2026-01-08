@@ -54,16 +54,22 @@ export const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   </h2>
 );
 
-export const Input = ({ label, error, ...props }: any) => (
-  <div className="mb-4">
-    <label className="block text-sm font-bold mb-1 uppercase">{label}</label>
-    <input 
-      className="w-full border-2 border-black p-3 focus:outline-none focus:shadow-manga transition-shadow"
-      {...props}
-    />
-    {error && <p className="text-red-600 text-xs mt-1 font-bold">{error}</p>}
-  </div>
-);
+export const Input = ({ label, error, ...props }: any) => {
+  // Convert null to empty string to avoid React warning
+  const value = props.value === null ? '' : props.value;
+  const restProps = { ...props, value };
+
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-bold mb-1 uppercase">{label}</label>
+      <input
+        className="w-full border-2 border-black p-3 focus:outline-none focus:shadow-manga transition-shadow"
+        {...restProps}
+      />
+      {error && <p className="text-red-600 text-xs mt-1 font-bold">{error}</p>}
+    </div>
+  );
+};
 
 export const Countdown = ({ targetDate }: { targetDate: string }) => {
   const [timeLeft, setTimeLeft] = useState<{days: number, hours: number, minutes: number, seconds: number} | null>(null);

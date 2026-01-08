@@ -14,12 +14,31 @@ async function request<T = any>(path: string, options: RequestOptions = {}): Pro
   // Check cache for GET requests
   if ((!options.method || options.method === 'GET') && options.useCache !== false) {
     const cacheKey = `${path}`;
+
+    // 1. Check if data is in cache
     const cached = cacheManager.get<T>(cacheKey, options.cacheTTL);
     if (cached !== null) {
       return cached;
     }
+
+    // 2. Check if there's a pending request for this key
+    const pending = cacheManager.getPendingRequest<T>(cacheKey);
+    if (pending !== null) {
+      return pending;
+    }
+
+    // 3. Create new request and register it as pending
+    const requestPromise = executeRequest<T>(path, options);
+    cacheManager.setPendingRequest(cacheKey, requestPromise);
+
+    return requestPromise;
   }
 
+  // Non-cacheable requests (POST, PUT, DELETE, etc.)
+  return executeRequest<T>(path, options);
+}
+
+async function executeRequest<T = any>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };

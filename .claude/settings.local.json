@@ -22,7 +22,8 @@
       "Bash(git log:*)",
       "Bash(wc:*)",
       "Bash(dir /s \"c:\\\\PROYECTOS\\\\TORAMI-FEST\\\\Front\\\\src\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

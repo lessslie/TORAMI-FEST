@@ -267,7 +267,91 @@ export const Admin = () => {
   const [showOfficialUpload, setShowOfficialUpload] = useState(false);
   const [officialUploadData, setOfficialUploadData] = useState({ eventId: '', description: '', url: '' });
 
+  // Carga datos específicos del tab activo (optimizado para reducir requests innecesarios)
+  const loadTabData = (tab: string, updateOpenChat = false) => {
+    console.log('🔄 Loading data for tab:', tab);
+
+    switch (tab) {
+      case 'dashboard':
+        // Dashboard necesita stats y notificaciones
+        getStats().then((data) => {
+          console.log('📊 Stats from backend:', data);
+          setStats(data);
+        }).catch((err) => {
+          console.error('Error fetching stats:', err);
+          setStats({ users: { total: 0 }, events: { total: 0 }, stands: { pending: 0 }, giveaways: { active: 0 } });
+        });
+        getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
+        break;
+
+      case 'events':
+        getEvents().then((data) => {
+          console.log('📅 Events from backend:', data);
+          setEvents(data);
+        });
+        break;
+
+      case 'stands':
+        getStandApplications().then((data) => {
+          setStands(data);
+          if (updateOpenChat && chatStandRef.current) {
+            const updatedStand = data.find(s => s.id === chatStandRef.current!.id);
+            if (updatedStand) setChatStand(updatedStand);
+          }
+        });
+        break;
+
+      case 'cosplay':
+        getCosplayRegistrations().then((data) => {
+          setCosplayers(data);
+          if (updateOpenChat && chatCosplayRef.current) {
+            const updatedCos = data.find(c => c.id === chatCosplayRef.current!.id);
+            if (updatedCos) setChatCosplay(updatedCos);
+          }
+        });
+        break;
+
+      case 'cosplayguest':
+        getCosplayGuests().then(setCosplayGuests);
+        break;
+
+      case 'gallery':
+        getGallery().then(setGallery);
+        break;
+
+      case 'officialgallery':
+        getOfficialGallery().then(setOfficialGallery);
+        break;
+
+      case 'giveaways':
+        getGiveaways().then(setGiveaways);
+        break;
+
+      case 'sponsors':
+        getSponsors().then(setSponsors);
+        break;
+
+      case 'users':
+        getAllUsers().then((data: User[]) => setUsers(data));
+        break;
+
+      case 'config':
+        getConfig().then(setConfig);
+        break;
+
+      default:
+        console.warn('Unknown tab:', tab);
+    }
+  };
+
+  // Helper: Recarga solo el tab actual (optimizado)
+  const refreshCurrentTab = (updateOpenChat = false) => {
+    loadTabData(activeTab, updateOpenChat);
+  };
+
+  // Función legacy para refresh manual (cuando se necesite recargar todo)
   const refreshData = (updateOpenChat = false) => {
+    console.log('⚠️ refreshData() - Loading ALL data (use loadTabData() instead)');
     getStats().then((data) => {
       console.log('📊 Stats from backend:', data);
       setStats(data);
@@ -277,7 +361,6 @@ export const Admin = () => {
     });
     getStandApplications().then((data) => {
         setStands(data);
-        // Only update active chat if explicitly requested AND chat is currently open
         if (updateOpenChat && chatStandRef.current) {
             const updatedStand = data.find(s => s.id === chatStandRef.current!.id);
             if (updatedStand) setChatStand(updatedStand);
@@ -285,7 +368,6 @@ export const Admin = () => {
     });
     getCosplayRegistrations().then((data) => {
         setCosplayers(data);
-        // Only update active chat if explicitly requested AND chat is currently open
         if (updateOpenChat && chatCosplayRef.current) {
             const updatedCos = data.find(c => c.id === chatCosplayRef.current!.id);
             if(updatedCos) setChatCosplay(updatedCos);
@@ -305,8 +387,9 @@ export const Admin = () => {
     getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
   };
 
+  // ✅ Solo carga datos del tab activo (optimizado)
   useEffect(() => {
-    refreshData();
+    loadTabData(activeTab);
   }, [activeTab]);
 
   // Sync refs with state
@@ -315,11 +398,11 @@ export const Admin = () => {
     chatCosplayRef.current = chatCosplay;
   }, [chatStand, chatCosplay]);
 
-  // Auto-refresh notifications every 10 seconds
+  // Auto-refresh notifications every 5 MINUTES (reduced from 10 seconds to save bandwidth)
   useEffect(() => {
     const intervalId = setInterval(() => {
       getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
-    }, 10000); // Check every 10 seconds
+    }, 5 * 60 * 1000); // Check every 5 MINUTES (was 10 seconds - too aggressive!)
 
     return () => clearInterval(intervalId);
   }, []);
@@ -333,17 +416,20 @@ export const Admin = () => {
     }
   }, [chatStand?.id, chatCosplay?.id]);
 
-  // Auto-refresh chat messages every 5 seconds when chat is open
+  // Auto-refresh chat messages every 5 MINUTES when chat is open (reduced from 5 seconds to save bandwidth)
   useEffect(() => {
     if (!chatStand && !chatCosplay) return;
 
+    // Determine which tab data to refresh based on open chat
+    const tabToRefresh = chatStand ? 'stands' : 'cosplay';
+
     // Initial refresh with chat update enabled
-    refreshData(true);
+    loadTabData(tabToRefresh, true);
 
     // Set up polling interval with chat update enabled
     const intervalId = setInterval(() => {
-      refreshData(true);
-    }, 5000); // Refresh every 5 seconds
+      loadTabData(tabToRefresh, true);
+    }, 5 * 60 * 1000); // Refresh every 5 MINUTES (was 5 seconds - too aggressive!)
 
     // Cleanup on unmount or when chat closes
     return () => clearInterval(intervalId);
@@ -380,7 +466,7 @@ export const Admin = () => {
   // Stands
   const handleStandStatus = async (id: string, status: 'Aprobada' | 'Rechazada') => {
     await updateStandStatus(id, status);
-    refreshData();
+    refreshCurrentTab();
     if(viewStand && viewStand.id === id) setViewStand(null);
   };
 
@@ -399,14 +485,14 @@ export const Admin = () => {
       // 3. Cleanup
       setIsRejectingStand(false);
       setStandRejectionReason('');
-      refreshData();
+      refreshCurrentTab();
       setViewStand(null);
   };
 
   // Cosplay
   const handleCosplayStatus = async (id: string, status: 'Confirmado') => {
     await updateCosplayStatus(id, status);
-    refreshData();
+    refreshCurrentTab();
     if (viewCosplay && viewCosplay.id === id) setViewCosplay(null); // Close modal if modifying current
   };
 
@@ -425,7 +511,7 @@ export const Admin = () => {
       // 3. Cleanup and refresh
       setIsRejectingCosplay(false);
       setCosplayRejectionReason('');
-      refreshData();
+      refreshCurrentTab();
       
       // 4. Close modal
       setViewCosplay(null);
@@ -454,7 +540,7 @@ export const Admin = () => {
 
       setChatMessage('');
       setChatImage(null);
-      refreshData(true);
+      refreshCurrentTab(true);
   };
 
   // Events
@@ -502,7 +588,7 @@ export const Admin = () => {
             }
 
             setEditingEvent(null);
-            refreshData();
+            refreshCurrentTab();
         } catch (error: any) {
             console.error('Error al guardar evento:', error);
             const errorMsg = error?.message || JSON.stringify(error) || 'Error desconocido';
@@ -513,7 +599,7 @@ export const Admin = () => {
   const handleDeleteEvent = async (id: string) => {
     if (window.confirm('¿Eliminar evento permanentemente?')) {
         await deleteEvent(id);
-        refreshData();
+        refreshCurrentTab();
     }
   };
 
@@ -523,12 +609,12 @@ export const Admin = () => {
     if (editingSponsor) {
         await saveSponsor(editingSponsor as Sponsor);
         setEditingSponsor(null);
-        refreshData();
+        refreshCurrentTab();
     }
   };
   const handleDeleteSponsor = async (id: string) => {
     if (window.confirm('¿Eliminar sponsor?')) await deleteSponsor(id);
-    refreshData();
+    refreshCurrentTab();
   };
 
   // Giveaways
@@ -537,12 +623,12 @@ export const Admin = () => {
     if (editingGiveaway) {
         await saveGiveaway(editingGiveaway as Giveaway);
         setEditingGiveaway(null);
-        refreshData();
+        refreshCurrentTab();
     }
   };
   const handleDeleteGiveaway = async (id: string) => {
       if (window.confirm('¿Eliminar sorteo?')) await deleteGiveaway(id);
-      refreshData();
+      refreshCurrentTab();
   };
 
   // Users
@@ -552,7 +638,7 @@ export const Admin = () => {
         const { id, createdAt, ...updateData } = editingUser;
         await updateUser(id, updateData);
         setEditingUser(null);
-        refreshData();
+        refreshCurrentTab();
     }
   };
 
@@ -574,7 +660,7 @@ export const Admin = () => {
         approveGalleryItem(selectedPhoto.id).catch((error) => {
           console.error('Error aprobando foto:', error);
           alert('Error al aprobar la foto. Recargando...');
-          refreshData();
+          refreshCurrentTab();
         });
     }
   };
@@ -592,7 +678,7 @@ export const Admin = () => {
           rejectGalleryItem(selectedPhoto.id, rejectionReason).catch((error) => {
               console.error('Error rechazando foto:', error);
               alert('Error: ' + (error?.message || 'No se pudo rechazar la foto. Recargando...'));
-              refreshData();
+              refreshCurrentTab();
           });
       }
   };
@@ -609,7 +695,7 @@ export const Admin = () => {
           deleteGalleryItem(selectedPhoto.id).catch((error) => {
               console.error('Error eliminando foto:', error);
               alert('Error al eliminar la foto. Recargando...');
-              refreshData();
+              refreshCurrentTab();
           });
       }
   };
@@ -628,7 +714,7 @@ export const Admin = () => {
           updateGalleryItem(selectedPhoto).catch((error) => {
               console.error('Error actualizando foto:', error);
               alert('Error al actualizar la foto. Recargando...');
-              refreshData();
+              refreshCurrentTab();
           });
       }
   }
@@ -643,7 +729,7 @@ export const Admin = () => {
           deleteGalleryItem(photoId).catch((error) => {
               console.error('Error eliminando foto oficial:', error);
               alert('Error al eliminar la foto oficial. Recargando...');
-              refreshData();
+              refreshCurrentTab();
           });
       }
   }
@@ -826,13 +912,15 @@ export const Admin = () => {
                 </div>
              </MangaCard>
            </div>
-           <div className="bg-white p-4 border-2 border-black h-80 shadow-manga">
+           <div className="bg-white p-4 border-2 border-black shadow-manga flex flex-col">
               <h3 className="font-bold mb-4 uppercase">Asistencia por Evento</h3>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{name: 'Summer Ed.', as: 1200}, {name: 'Retro', as: 850}, {name: 'Winter', as: 1500}]}>
-                  <XAxis dataKey="name" /> <YAxis /> <Tooltip /> <Bar dataKey="as" fill="#D70000" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="flex-grow min-h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={[{name: 'Summer Ed.', as: 1200}, {name: 'Retro', as: 850}, {name: 'Winter', as: 1500}]}>
+                    <XAxis dataKey="name" /> <YAxis /> <Tooltip /> <Bar dataKey="as" fill="#D70000" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
            </div>
         </div>
       )}
@@ -1278,7 +1366,7 @@ export const Admin = () => {
                             </button>
                             <button
                               onClick={() => {
-                                updateUser(u.id, { entryAuthorized: !u.entryAuthorized }).then(() => refreshData());
+                                updateUser(u.id, { entryAuthorized: !u.entryAuthorized }).then(() => refreshCurrentTab());
                               }}
                               className={`p-1 sm:p-2 rounded border ${u.entryAuthorized ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}
                               title={u.entryAuthorized ? 'Revocar entrada' : 'Autorizar entrada'}
@@ -1289,7 +1377,7 @@ export const Admin = () => {
                               <button
                                 onClick={() => {
                                   if (confirm(`¿Eliminar usuario ${u.name}? Esta acción no se puede deshacer.`)) {
-                                    deleteUser(u.id).then(() => refreshData());
+                                    deleteUser(u.id).then(() => refreshCurrentTab());
                                   }
                                 }}
                                 className="bg-red-50 text-red-600 p-1 sm:p-2 rounded hover:bg-red-100 border border-red-200"
@@ -2189,12 +2277,12 @@ export const Admin = () => {
                   addOfficialGalleryItem(uploadedData)
                       .then(() => {
                           // Refresh to get real data from backend (with real ID, etc.)
-                          refreshData();
+                          refreshCurrentTab();
                       })
                       .catch((error) => {
                           console.error('Error uploading official photo:', error);
                           alert('❌ Error al subir la foto oficial. Recargando...');
-                          refreshData();
+                          refreshCurrentTab();
                       });
               }} className="space-y-4">
                   <div>
