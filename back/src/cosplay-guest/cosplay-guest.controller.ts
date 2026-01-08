@@ -80,10 +80,9 @@ export class CosplayGuestController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard)
   @Post(':id/message')
-  addMessage(@Param('id') id: string, @Body() body: { message: any }) {
-    return this.cosplayGuestService.addMessage(id, body.message);
+  addMessage(@Param('id') id: string, @Body() message: any) {
+    return this.cosplayGuestService.addMessage(id, message);
   }
 }

@@ -226,7 +226,10 @@ export const api = {
       request<any>(`/cosplay-guest/${id}/status`, { method: 'PATCH', body: { status }, token }),
 
     sendMessage: (token: string, id: string, message: any) =>
-      request<any>(`/cosplay-guest/${id}/message`, { method: 'POST', body: { message }, token }),
+      request<any>(`/cosplay-guest/${id}/message`, { method: 'POST', body: message, token, useCache: false }).then(result => {
+        cacheManager.clear('/cosplay-guest');
+        return result;
+      }),
 
     getAvailableSlots: () =>
       request<{ available: number; limit: number; occupied: number }>('/cosplay-guest/slots'),

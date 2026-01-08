@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, withdrawCosplayGuest } from '../services/data';
+import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, withdrawCosplayGuest } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole } from '../types';
 import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
@@ -80,11 +80,25 @@ export const UserDashboard = () => {
               setCosplays(data);
               // Only update active chat if explicitly requested AND chat is currently open
               if (updateOpenChat && chatCosplayRef.current) {
-                  const updated = data.find(c => c.id === chatCosplayRef.current!.id);
-                  if (updated) setActiveChatCosplay(updated);
+                  // Only update if it's NOT a guest (guests are updated below)
+                  const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
+                  if (!isGuest) {
+                      const updated = data.find(c => c.id === chatCosplayRef.current!.id);
+                      if (updated) setActiveChatCosplay(updated);
+                  }
               }
           });
-          getUserCosplayGuests().then(setCosplayGuests);
+          getUserCosplayGuests().then(data => {
+              setCosplayGuests(data);
+              // Update active chat if it's a guest
+              if (updateOpenChat && chatCosplayRef.current) {
+                  const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
+                  if (isGuest) {
+                      const updated = data.find(c => c.id === chatCosplayRef.current!.id);
+                      if (updated) setActiveChatCosplay(updated as any);
+                  }
+              }
+          });
           getUserGallery(user.id).then((response) => {
               // getUserGallery devuelve { data: [], pagination: {} }
               setGalleryItems(response.data || []);
@@ -128,22 +142,49 @@ export const UserDashboard = () => {
     }
   }, [activeChatStand?.id, activeChatCosplay?.id]);
 
-  // Auto-refresh chat messages every 5 seconds when chat is open
+  // Auto-refresh ONLY chat messages every 5 seconds when chat is open (optimized to not load all data)
   useEffect(() => {
     const chatIsOpen = activeChatStand !== null || activeChatCosplay !== null;
-    if (!chatIsOpen) return;
+    if (!chatIsOpen || !user) return;
 
-    // Initial refresh with chat update enabled
-    refreshData(true);
+    // Function to refresh only the active chat
+    const refreshActiveChat = () => {
+      if (activeChatStand) {
+        getUserStands(user.id).then(data => {
+          const updated = data.find(s => s.id === activeChatStand.id);
+          if (updated) setActiveChatStand(updated);
+        });
+      } else if (activeChatCosplay) {
+        // Detect if this is a cosplay guest (has assignedNumber) or normal registration
+        const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
 
-    // Set up polling interval with chat update enabled
+        if (isGuest) {
+          // Refresh from cosplay guests
+          getUserCosplayGuests().then(data => {
+            const updated = data.find(c => c.id === activeChatCosplay.id);
+            if (updated) setActiveChatCosplay(updated as any);
+          });
+        } else {
+          // Refresh from normal cosplay registrations
+          getUserCosplays(user.id).then(data => {
+            const updated = data.find(c => c.id === activeChatCosplay.id);
+            if (updated) setActiveChatCosplay(updated);
+          });
+        }
+      }
+    };
+
+    // Initial refresh
+    refreshActiveChat();
+
+    // Set up polling interval
     const intervalId = setInterval(() => {
-      refreshData(true);
+      refreshActiveChat();
     }, 5000); // Refresh every 5 seconds
 
     // Cleanup on unmount or when chat closes
     return () => clearInterval(intervalId);
-  }, [activeChatStand !== null, activeChatCosplay !== null]);
+  }, [activeChatStand?.id, activeChatCosplay?.id, user?.id]);
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -158,7 +199,14 @@ export const UserDashboard = () => {
       if (activeChatStand) {
           await addStandMessage(activeChatStand.id, chatMessage, 'USER');
       } else if (activeChatCosplay) {
-          await addCosplayMessage(activeChatCosplay.id, chatMessage, 'USER');
+          // Detect if this is a cosplay guest (has assignedNumber) or normal registration
+          const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
+
+          if (isGuest) {
+              await addCosplayGuestMessage(activeChatCosplay.id, chatMessage, 'USER');
+          } else {
+              await addCosplayMessage(activeChatCosplay.id, chatMessage, 'USER');
+          }
       }
       setChatMessage('');
       refreshData(true);
@@ -661,14 +709,21 @@ export const UserDashboard = () => {
                                  </div>
                               </div>
                               {/* Button Row - Full width on mobile */}
-                              <div className="w-full pt-2 border-t border-purple-200">
+                              <div className="w-full pt-2 border-t border-purple-200 flex gap-2">
+                                <Button
+                                  onClick={() => setActiveChatCosplay(guest as any)}
+                                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 border-blue-800"
+                                >
+                                  <MessageCircle size={16} className="flex-shrink-0" />
+                                  <span className="text-sm font-bold">CHAT</span>
+                                </Button>
                                 <Button
                                   onClick={() => {
                                     setWithdrawingGuest(guest);
                                     setShowWithdrawModal(true);
                                   }}
                                   variant="outline"
-                                  className="w-full flex items-center justify-center gap-2 text-red-600 border-red-600 hover:bg-red-50"
+                                  className="flex-1 flex items-center justify-center gap-2 text-red-600 border-red-600 hover:bg-red-50"
                                 >
                                   <XCircle size={16} className="flex-shrink-0" />
                                   <span className="text-sm font-bold">DARME DE BAJA</span>

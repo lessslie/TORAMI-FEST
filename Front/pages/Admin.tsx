@@ -312,7 +312,17 @@ export const Admin = () => {
         break;
 
       case 'cosplayguest':
-        getCosplayGuests().then(setCosplayGuests);
+        getCosplayGuests().then((data) => {
+          setCosplayGuests(data);
+          if (updateOpenChat && chatCosplayRef.current) {
+            // Check if the active chat is a guest (has assignedNumber)
+            const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
+            if (isGuest) {
+              const updatedGuest = data.find(g => g.id === chatCosplayRef.current!.id);
+              if (updatedGuest) setChatCosplay(updatedGuest as any);
+            }
+          }
+        });
         break;
 
       case 'gallery':
@@ -416,12 +426,21 @@ export const Admin = () => {
     }
   }, [chatStand?.id, chatCosplay?.id]);
 
-  // Auto-refresh chat messages every 5 MINUTES when chat is open (reduced from 5 seconds to save bandwidth)
+  // Auto-refresh chat messages every 10 SECONDS when chat is open (chat needs faster updates)
   useEffect(() => {
     if (!chatStand && !chatCosplay) return;
 
     // Determine which tab data to refresh based on open chat
-    const tabToRefresh = chatStand ? 'stands' : 'cosplay';
+    let tabToRefresh: string;
+    if (chatStand) {
+      tabToRefresh = 'stands';
+    } else if (chatCosplay) {
+      // Check if it's a cosplay guest (has assignedNumber) or normal registration
+      const isGuest = (chatCosplay as any).assignedNumber !== undefined;
+      tabToRefresh = isGuest ? 'cosplayguest' : 'cosplay';
+    } else {
+      return; // Should never happen, but TypeScript safety
+    }
 
     // Initial refresh with chat update enabled
     loadTabData(tabToRefresh, true);
@@ -429,7 +448,7 @@ export const Admin = () => {
     // Set up polling interval with chat update enabled
     const intervalId = setInterval(() => {
       loadTabData(tabToRefresh, true);
-    }, 5 * 60 * 1000); // Refresh every 5 MINUTES (was 5 seconds - too aggressive!)
+    }, 10 * 1000); // Refresh every 10 SECONDS (chat needs real-time updates)
 
     // Cleanup on unmount or when chat closes
     return () => clearInterval(intervalId);
@@ -531,11 +550,18 @@ export const Admin = () => {
   const handleSendChatMessage = async (e: React.FormEvent) => {
       e.preventDefault();
       if ((!chatStand && !chatCosplay) || (!chatMessage.trim() && !chatImage)) return;
-      
+
       if (chatStand) {
           await addStandMessage(chatStand.id, chatMessage, 'ADMIN', chatImage || undefined);
       } else if (chatCosplay) {
-          await addCosplayMessage(chatCosplay.id, chatMessage, 'ADMIN', chatImage || undefined);
+          // Detect if this is a cosplay guest (has assignedNumber) or normal registration
+          const isGuest = (chatCosplay as any).assignedNumber !== undefined;
+
+          if (isGuest) {
+              await addCosplayGuestMessage(chatCosplay.id, chatMessage, 'ADMIN', chatImage || undefined);
+          } else {
+              await addCosplayMessage(chatCosplay.id, chatMessage, 'ADMIN', chatImage || undefined);
+          }
       }
 
       setChatMessage('');
