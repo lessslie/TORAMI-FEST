@@ -654,10 +654,11 @@ export const Admin = () => {
     try {
       const newStatus = !config.donationsEnabled;
       // Eliminar campos que no deben enviarse al backend (id, createdAt, updatedAt)
-      const { id, ...configWithoutId } = config as any;
+      const { id, createdAt, updatedAt, ...configWithoutId } = config as any;
       const configToSave = { ...configWithoutId, donationsEnabled: newStatus };
-      await updateConfig(configToSave);
-      setConfig({ ...config, donationsEnabled: newStatus });
+      const result = await updateConfig(configToSave);
+      // Actualizar con el resultado del servidor
+      setConfig(result);
     } catch (error) {
       console.error('Error al cambiar estado de donaciones:', error);
       setConfigNotice({ type: 'error', text: 'No se pudo cambiar el estado de las donaciones.' });
@@ -667,8 +668,9 @@ export const Admin = () => {
     }
   };
   
-  const handleConfigChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig({ ...config, [e.target.name]: e.target.value });
+  const handleConfigChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.type === 'number' ? (e.target.value === '' ? undefined : Number(e.target.value)) : e.target.value;
+    setConfig({ ...config, [e.target.name]: value });
   };
   
   const handleSaveConfig = async () => {
@@ -681,7 +683,9 @@ export const Admin = () => {
         fullConfig: configToSave
       });
 
-      await updateConfig(configToSave);
+      const result = await updateConfig(configToSave);
+      // Actualizar el estado local con el resultado del servidor
+      setConfig(result);
       setConfigNotice({ type: 'success', text: 'Configuración guardada correctamente.' });
     } catch (error) {
       console.error('❌ Error guardando config:', error);

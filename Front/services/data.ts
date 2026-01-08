@@ -56,9 +56,15 @@ export const markNotificationRead = async (id: string) => {
 };
 
 // Events
-export const getUpcomingEvents = () => api.events.getAll(true);
+export const getUpcomingEvents = async () => {
+  const response = await api.events.getAll(true, 1, 100);
+  return response.data;
+};
 export const getEventById = (id: string) => api.events.getOne(id);
-export const getEvents = () => api.events.getAll();
+export const getEvents = async () => {
+  const response = await api.events.getAll(undefined, 1, 100);
+  return response.data;
+};
 export const saveEvent = (data: any) => {
   const { token } = getAuth();
   if (data.id) {
@@ -87,9 +93,10 @@ export const deleteSponsor = (id: string) => {
 };
 
 // Stands
-export const getStandApplications = () => {
+export const getStandApplications = async () => {
   const { token } = getAuth();
-  return api.stands.getAll(token || '');
+  const response = await api.stands.getAll(token || '', 1, 100);
+  return response.data;
 };
 export const updateStandStatus = (id: string, status: 'Aprobada' | 'Rechazada') => {
   const { token } = getAuth();
@@ -129,9 +136,10 @@ export const deleteGiveaway = (id: string) => {
 };
 
 // Cosplay
-export const getCosplayRegistrations = () => {
+export const getCosplayRegistrations = async () => {
   const { token } = getAuth();
-  return api.cosplay.getAll(token || '');
+  const response = await api.cosplay.getAll(token || '', 1, 100);
+  return response.data;
 };
 export const getUserCosplays = (userId: string) => {
   const { token } = getAuth();
@@ -186,10 +194,14 @@ export const deleteCosplayGuest = (id: string) => {
 };
 
 // Gallery
-export const getGallery = (page: number = 1, limit: number = 20, eventId?: string, status?: string) =>
-  api.gallery.getAll(page, limit, eventId, status, undefined);
-export const getOfficialGallery = (page: number = 1, limit: number = 20) =>
-  api.gallery.getAll(page, limit, undefined, 'APPROVED', true);
+export const getGallery = async (page: number = 1, limit: number = 100, eventId?: string, status?: string) => {
+  const response = await api.gallery.getAll(page, limit, eventId, status, undefined);
+  return response.data;
+};
+export const getOfficialGallery = async (page: number = 1, limit: number = 100) => {
+  const response = await api.gallery.getAll(page, limit, undefined, 'APPROVED', true);
+  return response.data;
+};
 export const getCommunityGallery = (page: number = 1, limit: number = 20) =>
   api.gallery.getAll(page, limit, undefined, 'APPROVED', false);
 export const getUserGallery = (userId: string, page: number = 1, limit: number = 20) =>

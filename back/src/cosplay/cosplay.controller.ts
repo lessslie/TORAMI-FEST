@@ -28,6 +28,21 @@ export class CosplayController {
     return this.cosplayService.findAll(pageNum, limitNum, status);
   }
 
+  /**
+   * Get available slots for cosplay registration
+   * IMPORTANT: Must be before :id route to avoid matching as an ID
+   */
+  @Get('available-slots')
+  async getAvailableSlots() {
+    const available = await this.cosplayService.getAvailableSlots();
+    const limit = await this.cosplayService.getCosplayLimit();
+    return {
+      available,
+      limit,
+      occupied: limit - available,
+    };
+  }
+
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
@@ -64,20 +79,6 @@ export class CosplayController {
   @Post(':id/messages')
   addMessage(@Param('id') id: string, @Req() req: any, @Body() dto: CosplayAddMessageDto) {
     return this.cosplayService.addMessage(id, dto, req.user.userId, req.user.role);
-  }
-
-  /**
-   * Get available slots for cosplay registration
-   */
-  @Get('available-slots')
-  async getAvailableSlots() {
-    const available = await this.cosplayService.getAvailableSlots();
-    const limit = await this.cosplayService.getCosplayLimit();
-    return {
-      available,
-      limit,
-      occupied: limit - available,
-    };
   }
 
   /**

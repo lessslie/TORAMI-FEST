@@ -208,25 +208,25 @@ export const EventDetail = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
         <div className="flex-grow">
-          <h1 className="font-display text-4xl md:text-5xl mb-4 text-stroke-sm">{event.title}</h1>
-          
+          <h1 className="font-display text-4xl md:text-5xl mb-4 text-stroke-sm bg-white/70 backdrop-blur-sm px-4 py-3 border-2 border-black shadow-md inline-block">{event.title}</h1>
+
           <div className="flex gap-2 mb-6">
             {event.tags.map(tag => (
                <Badge key={tag} color="blue">{tag}</Badge>
             ))}
           </div>
 
-          <p className="text-lg leading-relaxed mb-8">{event.description}</p>
+          <p className="text-lg leading-relaxed mb-8 bg-white/60 backdrop-blur-sm p-4 border border-black/20 shadow-sm">{event.description}</p>
 
-          <div className="bg-blue-50 p-4 border border-black mb-6 relative overflow-hidden">
+          <div className="bg-blue-50/90 backdrop-blur-sm p-4 border border-black mb-6 relative overflow-hidden shadow-md">
             <CloudRain className="absolute -right-4 -bottom-4 text-blue-100 w-24 h-24" />
             <h3 className="font-bold mb-2 flex items-center gap-2 relative z-10">
                {event.rainCheck ? <Umbrella size={20} className="text-blue-500"/> : <Sparkles size={20} className="text-yellow-500"/>}
                Información Climática
             </h3>
             <p className="text-sm relative z-10">
-              {event.rainCheck 
-                ? "Este evento SE SUSPENDE por lluvia. Atentos a redes sociales." 
+              {event.rainCheck
+                ? "Este evento SE SUSPENDE por lluvia. Atentos a redes sociales."
                 : "NO se suspende por lluvia."}
             </p>
           </div>
@@ -236,13 +236,13 @@ export const EventDetail = () => {
         <div className="lg:w-96 flex-shrink-0 space-y-6">
            {/* Action Buttons for Date */}
            <a href={createCalendarLink()} target="_blank" rel="noreferrer" className="block">
-                <Button variant="outline" className="w-full flex items-center justify-center gap-2 mb-4 bg-white hover:bg-red-50 hover:text-torami-red hover:border-torami-red">
+                <Button variant="outline" className="w-full flex items-center justify-center gap-2 mb-4 bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:text-torami-red hover:border-torami-red shadow-md">
                     <CalendarPlus size={20} /> Agendar en Google Calendar
                 </Button>
            </a>
 
            {/* Precio de entrada */}
-           <MangaCard className={`border-t-4 ${event.isFree ? 'border-t-green-500' : 'border-t-yellow-500'}`}>
+           <MangaCard className={`border-t-4 ${event.isFree ? 'border-t-green-500' : 'border-t-yellow-500'} bg-white/85 backdrop-blur-sm shadow-lg`}>
               <div className="flex items-start justify-between mb-4">
                  <div>
                     <h3 className="font-display text-2xl uppercase">Entrada</h3>
@@ -264,7 +264,7 @@ export const EventDetail = () => {
               )}
            </MangaCard>
 
-           <MangaCard className="border-t-4 border-t-torami-red">
+           <MangaCard className="border-t-4 border-t-torami-red bg-white/85 backdrop-blur-sm shadow-lg">
               <div className="flex items-start justify-between mb-4">
                  <div>
                     <h3 className="font-display text-2xl uppercase">Ubicación</h3>
@@ -272,7 +272,7 @@ export const EventDetail = () => {
                  </div>
                  <MapPin className="text-torami-red w-8 h-8" />
               </div>
-              
+
               <a href={mapsUrl} target="_blank" rel="noreferrer">
                 <Button className="w-full text-sm flex items-center justify-center gap-2 py-3 bg-black text-white hover:bg-gray-800">
                   <Navigation size={18} /> Cómo llegar (Google Maps)
@@ -282,7 +282,7 @@ export const EventDetail = () => {
 
            {/* Transport Section - Dark Cards Style */}
            {(event.transport?.subway || event.transport?.bus || event.transport?.train) && (
-             <div className="bg-black p-4 rounded-xl border-2 border-black shadow-manga">
+             <div className="bg-black/90 backdrop-blur-sm p-4 rounded-xl border-2 border-black shadow-manga">
                 <h3 className="text-white font-display text-xl mb-4 flex items-center gap-2 border-b border-gray-700 pb-2">
                   <span className="text-torami-red">Medios de Transporte</span>
                 </h3>

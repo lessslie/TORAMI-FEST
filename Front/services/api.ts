@@ -87,19 +87,19 @@ export const api = {
 
     create: (token: string, data: any) =>
       request<any>('/events', { method: 'POST', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('events');
+        cacheManager.clear('/events');
         return result;
       }),
 
     update: (token: string, id: string, data: any) =>
       request<any>(`/events/${id}`, { method: 'PUT', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('events');
+        cacheManager.clear('/events');
         return result;
       }),
 
     delete: (token: string, id: string) =>
       request<any>(`/events/${id}`, { method: 'DELETE', token, useCache: false }).then(result => {
-        cacheManager.clear('events');
+        cacheManager.clear('/events');
         return result;
       }),
   },
@@ -125,19 +125,19 @@ export const api = {
 
     create: (token: string, data: any) =>
       request<any>('/stands', { method: 'POST', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('stands');
+        cacheManager.clear('/stands');
         return result;
       }),
 
     updateStatus: (token: string, id: string, status: string) =>
       request<any>(`/stands/${id}/status`, { method: 'PATCH', body: { status }, token, useCache: false }).then(result => {
-        cacheManager.clear('stands');
+        cacheManager.clear('/stands');
         return result;
       }),
 
     sendMessage: (token: string, id: string, message: any) =>
       request<any>(`/stands/${id}/messages`, { method: 'POST', body: message, token, useCache: false }).then(result => {
-        cacheManager.clear('stands');
+        cacheManager.clear('/stands');
         return result;
       }),
   },
@@ -163,19 +163,19 @@ export const api = {
 
     create: (token: string, data: any) =>
       request<any>('/cosplay', { method: 'POST', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('cosplay');
+        cacheManager.clear('/cosplay');
         return result;
       }),
 
     updateStatus: (token: string, id: string, status: string) =>
       request<any>(`/cosplay/${id}/status`, { method: 'PATCH', body: { status }, token, useCache: false }).then(result => {
-        cacheManager.clear('cosplay');
+        cacheManager.clear('/cosplay');
         return result;
       }),
 
     sendMessage: (token: string, id: string, message: any) =>
       request<any>(`/cosplay/${id}/messages`, { method: 'POST', body: message, token, useCache: false }).then(result => {
-        cacheManager.clear('cosplay');
+        cacheManager.clear('/cosplay');
         return result;
       }),
 
@@ -184,7 +184,7 @@ export const api = {
 
     addToWaitingList: (token: string, data: any) =>
       request<any>('/cosplay/waiting-list', { method: 'POST', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('cosplay');
+        cacheManager.clear('/cosplay');
         return result;
       }),
   },
@@ -236,31 +236,31 @@ export const api = {
 
     create: (token: string, data: any) =>
       request<any>('/gallery', { method: 'POST', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('gallery');
+        cacheManager.clear('/gallery');
         return result;
       }),
 
     createOfficial: (token: string, data: any) =>
       request<any>('/gallery/official', { method: 'POST', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('gallery');
+        cacheManager.clear('/gallery');
         return result;
       }),
 
     moderate: (token: string, id: string, status: string, feedback?: string) =>
       request<any>(`/gallery/${id}`, { method: 'PATCH', body: { status: status.toUpperCase(), feedback }, token, useCache: false }).then(result => {
-        cacheManager.clear('gallery');
+        cacheManager.clear('/gallery');
         return result;
       }),
 
     update: (token: string, id: string, description: string) =>
       request<any>(`/gallery/${id}/update`, { method: 'PATCH', body: { description }, token, useCache: false }).then(result => {
-        cacheManager.clear('gallery');
+        cacheManager.clear('/gallery');
         return result;
       }),
 
     delete: (token: string, id: string) =>
       request<any>(`/gallery/${id}`, { method: 'DELETE', token, useCache: false }).then(result => {
-        cacheManager.clear('gallery');
+        cacheManager.clear('/gallery');
         return result;
       }),
   },
@@ -371,13 +371,19 @@ export const api = {
   // ==================== CONFIG ====================
   config: {
     get: () =>
-      request<any>('/config'),
+      request<any>('/config', { useCache: true }),
 
     update: (token: string, data: any) =>
-      request<any>('/config', { method: 'PUT', body: data, token }),
+      request<any>('/config', { method: 'PUT', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('config');
+        return result;
+      }),
 
     reset: (token: string) =>
-      request<any>('/config/reset', { method: 'POST', token }),
+      request<any>('/config/reset', { method: 'POST', token, useCache: false }).then(result => {
+        cacheManager.clear('config');
+        return result;
+      }),
   },
 
   // ==================== UPLOADS ====================

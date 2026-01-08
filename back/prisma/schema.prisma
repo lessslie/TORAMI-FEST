@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+ 
 }
 
 model User {
@@ -114,8 +114,6 @@ model CosplayGuest {
   category        String
   referenceImage  String?
   audioLink       String?
-  audioStartTime  String?
-  audioEndTime    String?
   status          CosplayStatus @default(INSCRIPTO)
   assignedNumber  Int      @unique
   withdrawalReason String?
