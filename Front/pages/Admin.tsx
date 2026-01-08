@@ -209,7 +209,7 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
 
 export const Admin = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'officialgallery'|'config'|'cosplay'|'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'officialgallery'|'config'|'cosplay'|'cosplayguest'|'users'>('dashboard');
 
   // Data State
   const [stats, setStats] = useState<any>(null);
@@ -857,6 +857,7 @@ export const Admin = () => {
             <option value="events">Eventos</option>
             <option value="stands">Stands</option>
             <option value="cosplay">Cosplay</option>
+            <option value="cosplayguest">🌟 Cosplay Invitados</option>
             <option value="gallery">Galería Comunitaria</option>
             <option value="officialgallery">📸 Galería Oficial</option>
             <option value="giveaways">Sorteos</option>
@@ -997,201 +998,226 @@ export const Admin = () => {
 
       {/* --- STANDS LIST --- */}
       {activeTab === 'stands' && (
-        <div className="animate-in fade-in -mx-2 sm:mx-0">
-          <div className="overflow-x-auto">
-            <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[800px]">
-              <thead>
-                <tr className="bg-black text-white text-left">
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Marca</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Tipo</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Evento</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Contacto</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">WhatsApp</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Estado</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stands.map(stand => (
-                  <tr key={stand.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="p-2 sm:p-3 font-bold whitespace-nowrap">{stand.brandName}</td>
-                    <td className="p-2 sm:p-3 whitespace-nowrap">{stand.type}</td>
-                    <td className="p-2 sm:p-3">
-                      {stand.event ? (
-                        <div>
-                          <div className="font-medium whitespace-nowrap">{stand.event.title}</div>
-                          <div className="text-xs text-gray-500 whitespace-nowrap">{new Date(stand.event.date).toLocaleDateString('es-AR')}</div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-red-500 italic whitespace-nowrap">Sin evento asignado</span>
-                      )}
-                    </td>
-                    <td className="p-2 sm:p-3">
-                      <div className="whitespace-nowrap">{stand.contactName}</div>
-                      <div className="text-xs text-gray-500 whitespace-nowrap">{stand.email}</div>
-                    </td>
-                    <td className="p-2 sm:p-3 font-mono whitespace-nowrap">{stand.phone}</td>
-                    <td className="p-2 sm:p-3">
-                      <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'red' : 'purple'}>
-                        {stand.status}
-                      </Badge>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                      <div className="flex gap-1 sm:gap-2 items-center whitespace-nowrap">
-                        <button onClick={() => setViewStand(stand)} className="bg-gray-100 text-gray-700 p-1 sm:p-2 rounded hover:bg-gray-200 border border-gray-300" title="Ver Detalle"><Eye size={16} /></button>
-                        <button onClick={() => setChatStand(stand)} className="bg-blue-50 text-blue-600 p-1 sm:p-2 rounded hover:bg-blue-100 border border-blue-200" title="Chat"><MessageCircle size={16} /></button>
-                        {stand.status === 'Pendiente' && (
-                          <>
-                            <button onClick={() => handleStandStatus(stand.id, 'Aprobada')} className="text-green-600 bg-green-50 p-1 rounded hover:bg-green-100"><Check size={16}/></button>
-                            <button onClick={() => { setViewStand(stand); setIsRejectingStand(true); }} className="text-red-600 bg-red-50 p-1 rounded hover:bg-red-100"><X size={16}/></button>
-                          </>
-                        )}
+        <div className="animate-in fade-in">
+          {/* Cards para móvil y desktop */}
+          <div className="space-y-3">
+            {stands.map(stand => (
+              <div key={stand.id} className="border-2 border-black bg-white shadow-manga p-4">
+                <div className="flex flex-col gap-3">
+                  {/* Header con marca y badge de estado */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-lg truncate">{stand.brandName}</h4>
+                      <p className="text-sm text-gray-600">{stand.type}</p>
+                    </div>
+                    <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'red' : 'purple'}>
+                      {stand.status}
+                    </Badge>
+                  </div>
+
+                  {/* Info del evento */}
+                  <div className="text-sm">
+                    {stand.event ? (
+                      <div>
+                        <span className="font-medium">📅 {stand.event.title}</span>
+                        <span className="text-gray-500 ml-2">
+                          {new Date(stand.event.date).toLocaleDateString('es-AR')}
+                        </span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    ) : (
+                      <span className="text-red-500 italic">Sin evento asignado</span>
+                    )}
+                  </div>
+
+                  {/* Contacto */}
+                  <div className="text-sm">
+                    <p className="font-medium">{stand.contactName}</p>
+                    <p className="text-gray-600 text-xs">{stand.email}</p>
+                    <p className="font-mono text-xs text-gray-600">{stand.phone}</p>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                    <button
+                      onClick={() => setViewStand(stand)}
+                      className="flex-1 sm:flex-none bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
+                    >
+                      <Eye size={16} /> Ver Detalle
+                    </button>
+                    <button
+                      onClick={() => setChatStand(stand)}
+                      className="flex-1 sm:flex-none bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-2 text-sm font-bold"
+                    >
+                      <MessageCircle size={16} /> Chat
+                    </button>
+                    {stand.status === 'Pendiente' && (
+                      <>
+                        <button
+                          onClick={() => handleStandStatus(stand.id, 'Aprobada')}
+                          className="text-green-600 bg-green-50 px-3 py-2 rounded hover:bg-green-100 border border-green-200 flex items-center gap-1 text-sm font-bold"
+                        >
+                          <Check size={16}/> Aprobar
+                        </button>
+                        <button
+                          onClick={() => { setViewStand(stand); setIsRejectingStand(true); }}
+                          className="text-red-600 bg-red-50 px-3 py-2 rounded hover:bg-red-100 border border-red-200 flex items-center gap-1 text-sm font-bold"
+                        >
+                          <X size={16}/> Rechazar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {stands.length === 0 && (
+              <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500 italic">
+                No hay solicitudes de stands aún.
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* --- COSPLAY LIST --- */}
       {activeTab === 'cosplay' && (
-        <div className="animate-in fade-in -mx-2 sm:mx-0">
-           <div className="flex justify-between mb-4 px-2 sm:px-0">
-                <h3 className="font-display text-xl sm:text-2xl">Inscriptos Cosplay</h3>
+        <div className="animate-in fade-in">
+           <div className="flex justify-between mb-4">
+                <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
+                  <Trophy size={24} className="text-purple-600" />
+                  Inscriptos Cosplay
+                </h3>
            </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[800px]">
-              <thead>
-                <tr className="bg-black text-white text-left">
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Personaje</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Participante</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Evento</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Categoría</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Estado</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cosplayers.map(cos => (
-                  <tr key={cos.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="p-2 sm:p-3">
-                      <div className="font-bold whitespace-nowrap">{cos.characterName}</div>
-                      <div className="text-xs text-gray-500 whitespace-nowrap">{cos.seriesName}</div>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                        <div className="whitespace-nowrap">{cos.participantName}</div>
-                        <div className="text-xs text-gray-500 italic whitespace-nowrap">{cos.nickname}</div>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                      {cos.event ? (
-                        <div>
-                          <div className="font-medium whitespace-nowrap">{cos.event.title}</div>
-                          <div className="text-xs text-gray-500 whitespace-nowrap">{new Date(cos.event.date).toLocaleDateString('es-AR')}</div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-red-500 italic whitespace-nowrap">Sin evento</span>
-                      )}
-                    </td>
-                    <td className="p-2 sm:p-3"><Badge color="blue">{cos.category}</Badge></td>
-                    <td className="p-2 sm:p-3">
-                        <Badge color={cos.status === 'Inscripto' ? 'yellow' : cos.status === 'Confirmado' ? 'green' : 'red'}>
-                            {cos.status}
-                        </Badge>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                       <button
-                          onClick={() => setViewCosplay(cos)}
-                          className="bg-gray-100 text-gray-700 p-1 sm:p-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-1 text-xs font-bold whitespace-nowrap"
-                       >
-                          <Eye size={16} /> Ver
-                       </button>
-                    </td>
-                  </tr>
-                ))}
-                {cosplayers.length === 0 && (
-                    <tr>
-                        <td colSpan={6} className="p-4 text-center text-gray-500 italic">No hay inscriptos aún.</td>
-                    </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+           {/* Cards para móvil y desktop */}
+           <div className="space-y-3">
+             {cosplayers.map(cos => (
+               <div key={cos.id} className="border-2 border-black bg-white shadow-manga p-4">
+                 <div className="flex flex-col gap-3">
+                   {/* Personaje y Serie */}
+                   <div>
+                     <h4 className="font-bold text-lg truncate">{cos.characterName}</h4>
+                     <p className="text-sm text-gray-600 truncate">{cos.seriesName}</p>
+                   </div>
+
+                   {/* Info del participante */}
+                   <div className="text-sm">
+                     <p className="font-medium">{cos.participantName}</p>
+                     {cos.nickname && (
+                       <p className="text-xs text-gray-500 italic">"{cos.nickname}"</p>
+                     )}
+                   </div>
+
+                   {/* Evento */}
+                   <div className="text-sm">
+                     {cos.event ? (
+                       <div>
+                         <span className="font-medium">📅 {cos.event.title}</span>
+                         <span className="text-gray-500 ml-2">
+                           {new Date(cos.event.date).toLocaleDateString('es-AR')}
+                         </span>
+                       </div>
+                     ) : (
+                       <span className="text-red-500 italic">Sin evento</span>
+                     )}
+                   </div>
+
+                   {/* Categoría y Estado */}
+                   <div className="flex flex-wrap gap-2 items-center">
+                     <Badge color="blue">{cos.category}</Badge>
+                     <Badge color={cos.status === 'Inscripto' ? 'yellow' : cos.status === 'Confirmado' ? 'green' : 'red'}>
+                       {cos.status}
+                     </Badge>
+                   </div>
+
+                   {/* Botón de ver detalles */}
+                   <button
+                     onClick={() => setViewCosplay(cos)}
+                     className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
+                   >
+                     <Eye size={16} /> Ver Detalles
+                   </button>
+                 </div>
+               </div>
+             ))}
+
+             {cosplayers.length === 0 && (
+               <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500 italic">
+                 No hay inscriptos de cosplay aún.
+               </div>
+             )}
+           </div>
         </div>
       )}
 
       {/* --- COSPLAY INVITADOS --- */}
       {activeTab === 'cosplayguest' && (
-        <div className="animate-in fade-in -mx-2 sm:mx-0">
-           <div className="flex justify-between mb-4 px-2 sm:px-0">
+        <div className="animate-in fade-in">
+           <div className="flex justify-between mb-4">
                 <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
                   <Star size={24} className="text-yellow-500 fill-current" />
                   Cosplay Invitados
                 </h3>
            </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[800px]">
-              <thead>
-                <tr className="bg-black text-white text-left">
-                  <th className="p-2 sm:p-3 whitespace-nowrap">#</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Personaje</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Participante</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Evento</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Categoría</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Estado</th>
-                  <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cosplayGuests.map(guest => (
-                  <tr key={guest.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="p-2 sm:p-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-yellow-400 border-2 border-black font-bold text-lg">
-                        {guest.assignedNumber}
-                      </div>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                      <div className="font-bold whitespace-nowrap">{guest.characterName}</div>
-                      <div className="text-xs text-gray-500 whitespace-nowrap">{guest.seriesName}</div>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                        <div className="whitespace-nowrap">{guest.participantName}</div>
-                        <div className="text-xs text-gray-500 italic whitespace-nowrap">{guest.nickname}</div>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                      <div className="font-medium whitespace-nowrap">
-                        {events.find(e => e.id === guest.eventId)?.title || 'Sin evento'}
-                      </div>
-                    </td>
-                    <td className="p-2 sm:p-3"><Badge color="blue">{guest.category}</Badge></td>
-                    <td className="p-2 sm:p-3">
-                        <Badge color={guest.status === 'Inscripto' ? 'yellow' : guest.status === 'Confirmado' ? 'green' : 'red'}>
-                            {guest.status}
-                        </Badge>
-                    </td>
-                    <td className="p-2 sm:p-3">
-                       <button
-                          onClick={() => {
-                            // Set up modal to view guest details
-                            setViewCosplay(guest as any);
-                          }}
-                          className="bg-gray-100 text-gray-700 p-1 sm:p-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-1 text-xs font-bold whitespace-nowrap"
-                       >
-                          <Eye size={16} /> Ver
-                       </button>
-                    </td>
-                  </tr>
-                ))}
-                {cosplayGuests.length === 0 && (
-                    <tr>
-                        <td colSpan={7} className="p-4 text-center text-gray-500 italic">No hay invitados aún.</td>
-                    </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+           {/* Cards para móvil y desktop */}
+           <div className="space-y-3">
+             {cosplayGuests.map(guest => (
+               <div key={guest.id} className="border-2 border-black bg-white shadow-manga p-4">
+                 <div className="flex gap-4">
+                   {/* Número asignado - destacado */}
+                   <div className="flex-shrink-0">
+                     <div className="flex items-center justify-center w-14 h-14 bg-yellow-400 border-2 border-black font-bold text-2xl">
+                       {guest.assignedNumber}
+                     </div>
+                   </div>
+
+                   {/* Contenido principal */}
+                   <div className="flex-1 min-w-0">
+                     {/* Personaje y Serie */}
+                     <div className="mb-2">
+                       <h4 className="font-bold text-lg truncate">{guest.characterName}</h4>
+                       <p className="text-sm text-gray-600 truncate">{guest.seriesName}</p>
+                     </div>
+
+                     {/* Info del participante */}
+                     <div className="mb-2">
+                       <p className="text-sm font-medium">{guest.participantName}</p>
+                       {guest.nickname && (
+                         <p className="text-xs text-gray-500 italic">"{guest.nickname}"</p>
+                       )}
+                     </div>
+
+                     {/* Evento, categoría y estado en una fila */}
+                     <div className="flex flex-wrap gap-2 items-center mb-3 text-sm">
+                       <span className="text-gray-700">
+                         📅 {events.find(e => e.id === guest.eventId)?.title || 'Sin evento'}
+                       </span>
+                       <Badge color="blue">{guest.category}</Badge>
+                       <Badge color={guest.status === 'Inscripto' ? 'yellow' : guest.status === 'Confirmado' ? 'green' : 'red'}>
+                         {guest.status}
+                       </Badge>
+                     </div>
+
+                     {/* Botón de ver detalles */}
+                     <button
+                       onClick={() => setViewCosplay(guest as any)}
+                       className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
+                     >
+                       <Eye size={16} /> Ver Detalles
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             ))}
+
+             {cosplayGuests.length === 0 && (
+               <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500 italic">
+                 No hay invitados especiales registrados aún.
+               </div>
+             )}
+           </div>
         </div>
       )}
 
