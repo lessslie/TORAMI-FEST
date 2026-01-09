@@ -25,9 +25,18 @@ export class StandsService {
           status: true,
           contactName: true,
           email: true,
+          phone: true,
           createdAt: true,
           eventId: true,
-          // NO incluir messages ni images hasta que se abra el detalle
+          messages: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+            }
+          },
+          // NO incluir images en la lista (solo en detalle)
         },
         orderBy: { createdAt: 'desc' }
       }),
