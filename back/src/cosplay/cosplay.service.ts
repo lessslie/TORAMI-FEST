@@ -26,6 +26,7 @@ export class CosplayService {
           id: true,
           participantName: true,
           nickname: true,
+          whatsapp: true,
           characterName: true,
           seriesName: true,
           category: true,
@@ -33,6 +34,7 @@ export class CosplayService {
           createdAt: true,
           eventId: true,
           userId: true,
+          messages: true,
           event: {
             select: {
               id: true,
@@ -40,7 +42,7 @@ export class CosplayService {
               date: true,
             }
           },
-          // NO incluir messages, referenceImage, audioLink en la lista (solo en detalle)
+          // NO incluir referenceImage, audioLink, instagram, website en la lista (solo en detalle)
         },
         orderBy: { createdAt: 'desc' }
       }),
