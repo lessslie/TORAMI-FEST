@@ -715,41 +715,43 @@ export const Admin = () => {
   // Gallery - OPTIMIZED with optimistic updates
   const handleGalleryApprove = async () => {
     if (selectedPhoto) {
-        // 1. Update UI immediately (optimistic)
-        const updatedPhoto = { ...selectedPhoto, status: 'approved' as const, approved: true };
-        setGallery(gallery.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
+        try {
+          // 1. Send to backend and wait for response with admin info
+          const updatedPhoto = await approveGalleryItem(selectedPhoto.id);
 
-        // If photo is official, also add to official gallery
-        if (selectedPhoto.isOfficial) {
-            setOfficialGallery([...officialGallery, updatedPhoto]);
-        }
+          // 2. Update UI with real data from backend (includes approvedBy, approvedByName, approvedAt)
+          setGallery(gallery.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
 
-        setSelectedPhoto(null);
+          // If photo is official, also add to official gallery
+          if (selectedPhoto.isOfficial) {
+              setOfficialGallery([...officialGallery, updatedPhoto]);
+          }
 
-        // 2. Send to backend in background
-        approveGalleryItem(selectedPhoto.id).catch((error) => {
+          setSelectedPhoto(null);
+        } catch (error) {
           console.error('Error aprobando foto:', error);
           alert('Error al aprobar la foto. Recargando...');
           refreshCurrentTab();
-        });
+        }
     }
   };
 
   const handleGalleryReject = async () => {
       if (selectedPhoto && rejectionReason.trim()) {
-          // 1. Update UI immediately (optimistic)
-          const updatedPhoto = { ...selectedPhoto, status: 'rejected' as const, approved: false, feedback: rejectionReason };
-          setGallery(gallery.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
-          setSelectedPhoto(null);
-          setIsRejecting(false);
-          setRejectionReason('');
+          try {
+            // 1. Send to backend and wait for response with admin info
+            const updatedPhoto = await rejectGalleryItem(selectedPhoto.id, rejectionReason);
 
-          // 2. Send to backend in background
-          rejectGalleryItem(selectedPhoto.id, rejectionReason).catch((error) => {
+            // 2. Update UI with real data from backend (includes approvedBy, approvedByName, approvedAt)
+            setGallery(gallery.map(p => p.id === selectedPhoto.id ? updatedPhoto : p));
+            setSelectedPhoto(null);
+            setIsRejecting(false);
+            setRejectionReason('');
+          } catch (error) {
               console.error('Error rechazando foto:', error);
               alert('Error: ' + (error?.message || 'No se pudo rechazar la foto. Recargando...'));
               refreshCurrentTab();
-          });
+          }
       }
   };
 
@@ -1054,7 +1056,7 @@ export const Admin = () => {
                       <h4 className="font-bold text-lg truncate">{stand.brandName}</h4>
                       <p className="text-sm text-gray-600">{stand.type}</p>
                     </div>
-                    <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'red' : 'purple'}>
+                    <Badge color={stand.status === 'PENDIENTE' ? 'blue' : stand.status === 'APROBADA' ? 'red' : 'purple'}>
                       {stand.status}
                     </Badge>
                   </div>
@@ -1098,10 +1100,10 @@ export const Admin = () => {
                     >
                       <MessageCircle size={16} /> Chat
                     </button>
-                    {stand.status === 'Pendiente' && (
+                    {stand.status === 'PENDIENTE' && (
                       <>
                         <button
-                          onClick={() => handleStandStatus(stand.id, 'Aprobada')}
+                          onClick={() => handleStandStatus(stand.id, 'APROBADA')}
                           className="text-green-600 bg-green-50 px-3 py-2 rounded hover:bg-green-100 border border-green-200 flex items-center gap-1 text-sm font-bold"
                         >
                           <Check size={16}/> Aprobar
@@ -1279,8 +1281,8 @@ export const Admin = () => {
                         key={img.id}
                         onClick={() => setSelectedPhoto(img)}
                         className={`relative group border-2 ${
-                            img.status === 'approved' ? 'border-green-500' :
-                            img.status === 'rejected' ? 'border-red-500' : 'border-yellow-400'
+                            img.status === 'APPROVED' ? 'border-green-500' :
+                            img.status === 'REJECTED' ? 'border-red-500' : 'border-yellow-400'
                         } p-1 cursor-pointer hover:shadow-manga transition-all`}
                       >
                           <img src={img.url} alt="Gallery" className="w-full h-40 object-cover" />
@@ -1288,10 +1290,10 @@ export const Admin = () => {
                                <ZoomIn className="text-white w-8 h-8 drop-shadow-lg" />
                           </div>
                           <div className={`absolute top-2 right-2 px-2 py-1 text-xs font-bold text-white ${
-                              img.status === 'approved' ? 'bg-green-600' :
-                              img.status === 'rejected' ? 'bg-red-600' : 'bg-yellow-600'
+                              img.status === 'APPROVED' ? 'bg-green-600' :
+                              img.status === 'REJECTED' ? 'bg-red-600' : 'bg-yellow-600'
                           }`}>
-                              {img.status === 'approved' ? 'Aprobada' : img.status === 'rejected' ? 'Rechazada' : 'Pendiente'}
+                              {img.status === 'APPROVED' ? 'Aprobada' : img.status === 'REJECTED' ? 'Rechazada' : 'Pendiente'}
                           </div>
                           {img.feedback && (
                               <div className="absolute bottom-2 left-2 right-2 bg-red-100 text-red-800 text-xs p-1 border border-red-300 truncate">
@@ -1731,7 +1733,7 @@ export const Admin = () => {
                         <h4 className="text-xs font-bold uppercase text-gray-500">Info Stand</h4>
                         <p><span className="font-bold">Tipo:</span> {viewStand.type}</p>
                         <p className="text-sm text-blue-600">{viewStand.socials}</p>
-                        <Badge color={viewStand.status === 'Pendiente' ? 'blue' : viewStand.status === 'Aprobada' ? 'red' : 'purple'}>
+                        <Badge color={viewStand.status === 'PENDIENTE' ? 'blue' : viewStand.status === 'APROBADA' ? 'red' : 'purple'}>
                             {viewStand.status}
                         </Badge>
                     </div>
@@ -1781,15 +1783,15 @@ export const Admin = () => {
                  </div>
 
                  {/* REJECTION LOGIC FOR STANDS */}
-                 {viewStand.status !== 'Aprobada' && (
+                 {viewStand.status !== 'APROBADA' && (
                      <div className="pt-4 border-t border-gray-200">
                         {isRejectingStand ? (
                             <div className="animate-in fade-in slide-in-from-bottom-2 bg-red-50 p-4 border border-red-200 rounded">
                                 <label className="flex text-sm font-bold mb-2 uppercase text-red-600 items-center gap-2">
                                     <AlertTriangle size={16} /> Motivo del Rechazo (Se enviará al chat)
                                 </label>
-                                <textarea 
-                                    className="w-full border-2 border-red-300 p-2 mb-3 bg-white focus:outline-none focus:border-red-600" 
+                                <textarea
+                                    className="w-full border-2 border-red-300 p-2 mb-3 bg-white focus:outline-none focus:border-red-600"
                                     rows={3}
                                     placeholder="Ej: No se permite la venta de bebidas alcohólicas en este evento."
                                     value={standRejectionReason}
@@ -1806,12 +1808,12 @@ export const Admin = () => {
                             </div>
                         ) : (
                             <div className="flex gap-4">
-                                {viewStand.status === 'Pendiente' && (
-                                    <Button onClick={() => handleStandStatus(viewStand.id, 'Aprobada')} className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-800">
+                                {viewStand.status === 'PENDIENTE' && (
+                                    <Button onClick={() => handleStandStatus(viewStand.id, 'APROBADA')} className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-800">
                                         Aprobar Stand
                                     </Button>
                                 )}
-                                {viewStand.status !== 'Rechazada' && (
+                                {viewStand.status !== 'RECHAZADA' && (
                                     <Button onClick={() => setIsRejectingStand(true)} variant="outline" className="flex-1 text-red-600 border-red-600 hover:bg-red-50">
                                         Rechazar
                                     </Button>
@@ -2093,13 +2095,21 @@ export const Admin = () => {
                         Subida: {new Date(selectedPhoto.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
                     )}
+                    {selectedPhoto.approvedByName && selectedPhoto.approvedAt && (
+                      <div className="text-xs text-gray-600 pt-2 border-t border-gray-300">
+                        <span className="font-semibold">{selectedPhoto.status === 'APPROVED' ? 'Aprobada' : 'Moderada'} por:</span> {selectedPhoto.approvedByName}
+                        <div className="text-gray-500 mt-1">
+                          {new Date(selectedPhoto.approvedAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-6 flex justify-between items-start">
                     <div>
                       <h4 className="font-bold text-sm text-gray-500 uppercase mb-2">Estado Actual</h4>
-                      <Badge color={selectedPhoto.status === 'approved' ? 'green' : selectedPhoto.status === 'rejected' ? 'red' : 'yellow'}>
-                        {selectedPhoto.status === 'approved' ? 'Aprobada' : selectedPhoto.status === 'rejected' ? 'Rechazada' : 'Pendiente'}
+                      <Badge color={selectedPhoto.status === 'APPROVED' ? 'green' : selectedPhoto.status === 'REJECTED' ? 'red' : 'yellow'}>
+                        {selectedPhoto.status === 'APPROVED' ? 'Aprobada' : selectedPhoto.status === 'REJECTED' ? 'Rechazada' : 'Pendiente'}
                       </Badge>
                     </div>
                   </div>
@@ -2149,7 +2159,7 @@ export const Admin = () => {
                           </div>
                       ) : (
                           <div className="space-y-3">
-                              {selectedPhoto.status !== 'approved' && (
+                              {selectedPhoto.status !== 'APPROVED' && (
                                   <Button onClick={handleGalleryApprove} className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2">
                                       <Check size={20} /> Aprobar y Publicar
                                   </Button>

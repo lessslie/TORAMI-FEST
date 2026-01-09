@@ -25,7 +25,7 @@ export class AuthService {
     this.mailService.sendWelcomeEmail(user.email, user.name).catch((err) => {
       console.error('Error enviando email de bienvenida:', err.message);
     });
-    const token = this.signToken(user.id, user.email, user.role);
+    const token = this.signToken(user.id, user.email, user.role, user.name);
     return { user: this.sanitize(user), token };
   }
 
@@ -34,12 +34,12 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid credentials');
     const match = await bcrypt.compare(dto.password, user.password);
     if (!match) throw new UnauthorizedException('Invalid credentials');
-    const token = this.signToken(user.id, user.email, user.role);
+    const token = this.signToken(user.id, user.email, user.role, user.name);
     return { user: this.sanitize(user), token };
   }
 
-  private signToken(userId: string, email: string, role: string) {
-    const payload: JwtPayload = { sub: userId, email, role };
+  private signToken(userId: string, email: string, role: string, name: string) {
+    const payload: JwtPayload = { sub: userId, email, role, name };
     return this.jwtService.sign(payload);
   }
 

@@ -169,6 +169,9 @@ export interface GalleryItem {
   description: string;
   feedback?: string; // Reason for rejection
   isOfficial?: boolean; // True for admin-uploaded official photos
+  approvedBy?: string; // ID del admin que aprobó/rechazó
+  approvedByName?: string; // Nombre del admin que aprobó/rechazó
+  approvedAt?: string; // Fecha y hora de aprobación/rechazo
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
   user?: {

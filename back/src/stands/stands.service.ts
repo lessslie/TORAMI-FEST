@@ -21,6 +21,11 @@ export class StandsService {
       contactName: true,
       email: true,
       phone: true,
+      socials: true,
+      description: true,
+      needs: true,
+      images: true,
+      userId: true,
       createdAt: true,
       eventId: true,
       event: true, // Always include event information
@@ -29,7 +34,6 @@ export class StandsService {
     // Include messages if requested (for admin chat)
     if (includeMessages) {
       selectFields.messages = true;
-      selectFields.images = true;
     }
 
     const [stands, total] = await Promise.all([

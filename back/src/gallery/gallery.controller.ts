@@ -80,8 +80,10 @@ export class GalleryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Patch(':id')
-  moderate(@Param('id') id: string, @Body() dto: ModerateGalleryItemDto) {
-    return this.galleryService.moderate(id, dto);
+  moderate(@Request() req, @Param('id') id: string, @Body() dto: ModerateGalleryItemDto) {
+    console.log('🔍 Gallery moderate - req.user:', req.user);
+    console.log('🔍 Admin ID:', req.user.userId, 'Admin Name:', req.user.name);
+    return this.galleryService.moderate(id, dto, req.user.userId, req.user.name);
   }
 
   @ApiBearerAuth()

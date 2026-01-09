@@ -39,6 +39,9 @@ export class GalleryService {
           createdAt: true,
           eventId: true,
           userId: true,
+          approvedBy: true,
+          approvedByName: true,
+          approvedAt: true,
           user: {
             select: {
               id: true,
@@ -176,7 +179,7 @@ export class GalleryService {
     });
   }
 
-  async moderate(id: string, data: ModerateGalleryItemDto) {
+  async moderate(id: string, data: ModerateGalleryItemDto, adminId: string, adminName: string) {
     const item = await this.findOne(id);
 
     return this.prisma.galleryItem.update({
@@ -185,6 +188,9 @@ export class GalleryService {
         status: data.status,
         approved: data.status === GalleryStatus.APPROVED,
         feedback: data.feedback,
+        approvedBy: adminId,
+        approvedByName: adminName,
+        approvedAt: new Date(),
       },
       include: {
         user: {
