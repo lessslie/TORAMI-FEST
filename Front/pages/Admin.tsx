@@ -1384,93 +1384,114 @@ export const Admin = () => {
             <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
                 <h3 className="font-display text-xl sm:text-2xl">Gestión de Usuarios</h3>
             </div>
-            <div className="animate-in fade-in -mx-2 sm:mx-0">
-              <div className="overflow-x-auto">
-                <table className="w-full border-2 border-black bg-white text-sm shadow-manga min-w-[900px]">
-                  <thead>
-                    <tr className="bg-black text-white text-left">
-                      <th className="p-2 sm:p-3 whitespace-nowrap">Nombre</th>
-                      <th className="p-2 sm:p-3 whitespace-nowrap">Email</th>
-                      <th className="p-2 sm:p-3 whitespace-nowrap">WhatsApp</th>
-                      <th className="p-2 sm:p-3 whitespace-nowrap">Rol</th>
-                      <th className="p-2 sm:p-3 whitespace-nowrap">Entrada</th>
-                      <th className="p-2 sm:p-3 whitespace-nowrap">Fecha</th>
-                      <th className="p-2 sm:p-3 whitespace-nowrap">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(u => (
-                      <tr key={u.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="p-2 sm:p-3 font-bold whitespace-nowrap">{u.name}</td>
-                        <td className="p-2 sm:p-3 whitespace-nowrap text-xs">{u.email}</td>
-                        <td className="p-2 sm:p-3 whitespace-nowrap font-mono text-xs">
-                          {u.whatsapp ? (
-                            <a href={`https://wa.me/${u.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700 flex items-center gap-1">
-                              <Phone size={12} />
-                              {u.whatsapp}
-                            </a>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                        <td className="p-2 sm:p-3">
-                          <Badge color={u.role === 'SUPER_ADMIN' ? 'red' : u.role === 'ADMIN' ? 'blue' : 'purple'}>
-                            {u.role}
-                          </Badge>
-                        </td>
-                        <td className="p-2 sm:p-3 text-center">
-                          {u.entryAuthorized ? (
-                            <Check size={18} className="text-green-600 mx-auto" />
-                          ) : (
-                            <X size={18} className="text-gray-400 mx-auto" />
-                          )}
-                        </td>
-                        <td className="p-2 sm:p-3 whitespace-nowrap text-xs text-gray-500">
-                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-AR') : '-'}
-                        </td>
-                        <td className="p-2 sm:p-3">
-                          <div className="flex gap-1 sm:gap-2 items-center whitespace-nowrap">
-                            <button
-                              onClick={() => setEditingUser(u)}
-                              className="bg-blue-50 text-blue-600 p-1 sm:p-2 rounded hover:bg-blue-100 border border-blue-200"
-                              title="Editar usuario"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                updateUser(u.id, { entryAuthorized: !u.entryAuthorized }).then(() => refreshCurrentTab());
-                              }}
-                              className={`p-1 sm:p-2 rounded border ${u.entryAuthorized ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}
-                              title={u.entryAuthorized ? 'Revocar entrada' : 'Autorizar entrada'}
-                            >
-                              {u.entryAuthorized ? <X size={16} /> : <Check size={16} />}
-                            </button>
-                            {user?.role === 'SUPER_ADMIN' && u.id !== user.id && (
-                              <button
-                                onClick={() => {
-                                  if (confirm(`¿Eliminar usuario ${u.name}? Esta acción no se puede deshacer.`)) {
-                                    deleteUser(u.id).then(() => refreshCurrentTab());
-                                  }
-                                }}
-                                className="bg-red-50 text-red-600 p-1 sm:p-2 rounded hover:bg-red-100 border border-red-200"
-                                title="Eliminar usuario"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {users.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="p-4 text-center text-gray-500 italic">Cargando usuarios...</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+
+            {users.length === 0 && (
+              <div className="text-center py-10 text-gray-500 italic">
+                Cargando usuarios...
               </div>
+            )}
+
+            <div className="space-y-3">
+              {users.map(u => (
+                <div key={u.id} className="border-2 border-black bg-white shadow-manga p-4">
+                  <div className="flex gap-4">
+                    {/* Avatar/Icon */}
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-torami-red to-red-700 border-2 border-black text-white font-bold text-xl rounded-full">
+                        {u.name.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-2">
+                        <h4 className="font-bold text-lg truncate">{u.name}</h4>
+                        <p className="text-sm text-gray-600 truncate">{u.email}</p>
+                      </div>
+
+                      {/* Info Row */}
+                      <div className="flex flex-wrap gap-2 items-center mb-3 text-sm">
+                        <Badge color={u.role === 'SUPER_ADMIN' ? 'red' : u.role === 'ADMIN' ? 'blue' : 'purple'}>
+                          {u.role}
+                        </Badge>
+
+                        {u.entryAuthorized ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
+                            <Check size={12} /> Entrada Autorizada
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded">
+                            <X size={12} /> Sin Autorización
+                          </span>
+                        )}
+
+                        <span className="text-xs text-gray-500">
+                          📅 {u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-AR') : '-'}
+                        </span>
+                      </div>
+
+                      {/* WhatsApp */}
+                      {u.whatsapp && (
+                        <div className="mb-3">
+                          <a
+                            href={`https://wa.me/${u.whatsapp.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 text-sm font-medium"
+                          >
+                            <Phone size={14} />
+                            {u.whatsapp}
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setEditingUser(u)}
+                          className="flex-1 sm:flex-none bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-2 text-sm font-bold"
+                        >
+                          <Edit size={16} /> Editar
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            updateUser(u.id, { entryAuthorized: !u.entryAuthorized }).then(() => refreshCurrentTab());
+                          }}
+                          className={`flex-1 sm:flex-none px-4 py-2 rounded border flex items-center justify-center gap-2 text-sm font-bold ${
+                            u.entryAuthorized
+                              ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                              : 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100'
+                          }`}
+                        >
+                          {u.entryAuthorized ? (
+                            <>
+                              <X size={16} /> Revocar
+                            </>
+                          ) : (
+                            <>
+                              <Check size={16} /> Autorizar
+                            </>
+                          )}
+                        </button>
+
+                        {user?.role === 'SUPER_ADMIN' && u.id !== user.id && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`¿Eliminar usuario ${u.name}? Esta acción no se puede deshacer.`)) {
+                                deleteUser(u.id).then(() => refreshCurrentTab());
+                              }
+                            }}
+                            className="flex-1 sm:flex-none bg-red-50 text-red-600 px-4 py-2 rounded hover:bg-red-100 border border-red-200 flex items-center justify-center gap-2 text-sm font-bold"
+                          >
+                            <Trash2 size={16} /> Eliminar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
       )}
