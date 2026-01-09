@@ -13,28 +13,37 @@ export class CosplayService {
     private readonly emailService: EmailService,
   ) {}
 
-  async findAll(page: number = 1, limit: number = 20, status?: string) {
+  async findAll(page: number = 1, limit: number = 20, status?: string, includeMessages: boolean = false) {
     const skip = (page - 1) * limit;
     const where = status ? { status: status as CosplayStatus } : {};
+
+    const selectFields: any = {
+      id: true,
+      participantName: true,
+      nickname: true,
+      whatsapp: true,
+      characterName: true,
+      seriesName: true,
+      category: true,
+      status: true,
+      createdAt: true,
+      eventId: true,
+      userId: true,
+      event: true, // Always include event information
+    };
+
+    // Include messages if requested (for admin chat)
+    if (includeMessages) {
+      selectFields.messages = true;
+      selectFields.referenceImage = true;
+    }
 
     const [registrations, total] = await Promise.all([
       this.prisma.cosplayRegistration.findMany({
         take: limit,
         skip,
         where,
-        select: {
-          id: true,
-          participantName: true,
-          nickname: true,
-          characterName: true,
-          seriesName: true,
-          category: true,
-          status: true,
-          createdAt: true,
-          eventId: true,
-          userId: true,
-          // NO incluir messages hasta el detalle
-        },
+        select: selectFields,
         orderBy: { createdAt: 'desc' }
       }),
       this.prisma.cosplayRegistration.count({ where })

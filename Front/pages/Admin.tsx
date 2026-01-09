@@ -20,11 +20,11 @@ import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, Doll
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
   <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-sm">
     <div className="bg-white border-2 border-black shadow-manga w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
-      <div className="flex justify-between items-center bg-black text-white p-3 sm:p-4 sticky top-0 z-10 flex-shrink-0">
+      <div className="flex justify-between items-center bg-black text-white p-3 sm:p-4 sticky top-0 z-10 shrink-0">
         <h3 className="font-display text-lg sm:text-xl">{title}</h3>
         <button onClick={onClose}><X size={20} className="sm:w-6 sm:h-6" /></button>
       </div>
-      <div className="p-4 sm:p-6 flex-grow overflow-y-auto">
+      <div className="p-4 sm:p-6 grow overflow-y-auto">
         {children}
       </div>
     </div>
@@ -35,11 +35,11 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 const PhotoModal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-2 sm:p-4 backdrop-blur-md">
       <div className="bg-white border-2 border-black shadow-manga w-full max-w-4xl max-h-[95vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
-        <div className="flex justify-between items-center bg-black text-white p-3 sm:p-4 sticky top-0 z-10 flex-shrink-0">
+        <div className="flex justify-between items-center bg-black text-white p-3 sm:p-4 sticky top-0 z-10 shrink-0">
           <h3 className="font-display text-lg sm:text-xl">{title}</h3>
           <button onClick={onClose}><X size={20} className="sm:w-6 sm:h-6" /></button>
         </div>
-        <div className="flex-grow overflow-y-auto p-0 flex flex-col md:flex-row">
+        <div className="grow overflow-y-auto p-0 flex flex-col md:flex-row">
           {children}
         </div>
       </div>
@@ -194,7 +194,7 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
           <div className="flex gap-2 animate-in fade-in slide-in-from-top-1">
               <input 
                  type="text" 
-                 className="flex-grow border-2 border-black p-2 text-sm focus:outline-none" 
+                 className="grow border-2 border-black p-2 text-sm focus:outline-none" 
                  placeholder="Pegar URL de video o imagen..."
                  value={urlInput}
                  onChange={(e) => setUrlInput(e.target.value)}
@@ -256,6 +256,7 @@ export const Admin = () => {
   const chatFileRef = useRef<HTMLInputElement>(null);
   const chatStandRef = useRef<StandApplication | null>(null);
   const chatCosplayRef = useRef<CosplayRegistration | null>(null);
+  const chatClosedByUserRef = useRef(false);
 
   // Gallery Moderation State
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
@@ -429,7 +430,14 @@ export const Admin = () => {
 
   // Auto-refresh chat messages every 10 SECONDS when chat is open (chat needs faster updates)
   useEffect(() => {
-    if (!chatStand && !chatCosplay) return;
+    const chatIsOpen = chatStand !== null || chatCosplay !== null;
+
+    // Reset the manual close flag when chat opens
+    if (chatIsOpen) {
+      chatClosedByUserRef.current = false;
+    }
+
+    if (!chatIsOpen || chatClosedByUserRef.current) return;
 
     // Determine which tab data to refresh based on open chat
     let tabToRefresh: string;
@@ -443,12 +451,11 @@ export const Admin = () => {
       return; // Should never happen, but TypeScript safety
     }
 
-    // Initial refresh with chat update enabled
-    loadTabData(tabToRefresh, true);
-
-    // Set up polling interval with chat update enabled
+    // Set up polling interval with chat update enabled (without initial refresh)
     const intervalId = setInterval(() => {
-      loadTabData(tabToRefresh, true);
+      if (!chatClosedByUserRef.current) {
+        loadTabData(tabToRefresh, true);
+      }
     }, 10 * 1000); // Refresh every 10 SECONDS (chat needs real-time updates)
 
     // Cleanup on unmount or when chat closes
@@ -962,7 +969,7 @@ export const Admin = () => {
            </div>
            <div className="bg-white p-4 border-2 border-black shadow-manga flex flex-col">
               <h3 className="font-bold mb-4 uppercase">Asistencia por Evento</h3>
-              <div className="flex-grow min-h-[250px]">
+              <div className="grow min-h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={[{name: 'Summer Ed.', as: 1200}, {name: 'Retro', as: 850}, {name: 'Winter', as: 1500}]}>
                     <XAxis dataKey="name" /> <YAxis /> <Tooltip /> <Bar dataKey="as" fill="#D70000" />
@@ -986,20 +993,20 @@ export const Admin = () => {
                 {events.map(ev => (
                     <MangaCard key={ev.id} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="flex items-start gap-3 sm:gap-4 w-full md:w-auto">
-                            <img src={ev.images[0] || 'https://via.placeholder.com/100'} alt={ev.title} className="w-12 h-12 sm:w-16 sm:h-16 object-cover border border-black flex-shrink-0" />
-                            <div className="flex-grow min-w-0">
+                            <img src={ev.images[0] || 'https://via.placeholder.com/100'} alt={ev.title} className="w-12 h-12 sm:w-16 sm:h-16 object-cover border border-black shrink-0" />
+                            <div className="grow min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <h4 className="font-bold text-base sm:text-lg break-words">{ev.title}</h4>
+                                    <h4 className="font-bold text-base sm:text-lg break-all">{ev.title}</h4>
                                     {ev.isFeatured && <Badge color="blue">Destacado</Badge>}
                                     {ev.isPast && <Badge color="purple">Pasado</Badge>}
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-600 flex flex-col sm:flex-row gap-1 sm:gap-4 mt-1">
                                     <span className="whitespace-nowrap"><Calendar size={14} className="inline"/> {new Date(ev.date).toLocaleDateString('es-AR')}</span>
-                                    <span className="break-words">{ev.location}</span>
+                                    <span className="break-all">{ev.location}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex gap-2 w-full md:w-auto md:flex-shrink-0">
+                        <div className="flex gap-2 w-full md:w-auto md:shrink-0">
                             <Button variant="secondary" className="px-2 sm:px-3 py-2 flex-1 md:flex-initial text-sm" onClick={() => {
                                 // Convertir fecha ISO a DD/MM/YYYY para edición (usar UTC para evitar cambios de zona horaria)
                                 const dateISO = new Date(ev.date);
@@ -1066,7 +1073,11 @@ export const Admin = () => {
                       <Eye size={16} /> Ver Detalle
                     </button>
                     <button
-                      onClick={() => setChatStand(stand)}
+                      onClick={() => {
+                        console.log('🔵 [ADMIN] Opening chat for stand:', stand);
+                        console.log('🔵 [ADMIN] Stand messages:', stand.messages);
+                        setChatStand(stand);
+                      }}
                       className="flex-1 sm:flex-none bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-2 text-sm font-bold"
                     >
                       <MessageCircle size={16} /> Chat
@@ -1188,7 +1199,7 @@ export const Admin = () => {
                <div key={guest.id} className="border-2 border-black bg-white shadow-manga p-4">
                  <div className="flex gap-4">
                    {/* Número asignado - destacado */}
-                   <div className="flex-shrink-0">
+                   <div className="shrink-0">
                      <div className="flex items-center justify-center w-14 h-14 bg-yellow-400 border-2 border-black font-bold text-2xl">
                        {guest.assignedNumber}
                      </div>
@@ -1325,13 +1336,13 @@ export const Admin = () => {
             <div className="grid gap-4 sm:grid-cols-2">
                 {sponsors.map(sp => (
                     <MangaCard key={sp.id} className="flex items-center gap-3 sm:gap-4">
-                        <img src={sp.logoUrl} alt={sp.name} className="w-12 h-12 sm:w-16 sm:h-16 object-contain border border-gray-200 flex-shrink-0" />
-                        <div className="flex-grow min-w-0">
-                            <h4 className="font-bold text-sm sm:text-base break-words">{sp.name}</h4>
+                        <img src={sp.logoUrl} alt={sp.name} className="w-12 h-12 sm:w-16 sm:h-16 object-contain border border-gray-200 shrink-0" />
+                        <div className="grow min-w-0">
+                            <h4 className="font-bold text-sm sm:text-base break-all">{sp.name}</h4>
                             <div className="text-xs text-gray-500">{sp.category}</div>
                             <Badge color={sp.active ? 'red' : 'purple'}>{sp.active ? 'Activo' : 'Inactivo'}</Badge>
                         </div>
-                        <div className="flex flex-row sm:flex-col gap-2 sm:gap-1 flex-shrink-0">
+                        <div className="flex flex-row sm:flex-col gap-2 sm:gap-1 shrink-0">
                             <button onClick={() => setEditingSponsor(sp)} className="text-blue-600 p-1"><Edit size={16}/></button>
                             <button onClick={() => handleDeleteSponsor(sp.id)} className="text-red-600 p-1"><Trash2 size={16}/></button>
                         </div>
@@ -1356,11 +1367,11 @@ export const Admin = () => {
                         <div className="flex flex-col sm:flex-row justify-between gap-4">
                             <div className="flex gap-3 sm:gap-4">
                                 {g.images && g.images.length > 0 && (
-                                   <img src={g.images[0]} alt={g.title} className="w-16 h-16 sm:w-20 sm:h-20 object-cover border border-black flex-shrink-0" />
+                                   <img src={g.images[0]} alt={g.title} className="w-16 h-16 sm:w-20 sm:h-20 object-cover border border-black shrink-0" />
                                 )}
-                                <div className="flex-grow min-w-0">
-                                    <h4 className="font-bold text-base sm:text-lg break-words">{g.title}</h4>
-                                    <p className="text-xs sm:text-sm text-gray-600 break-words">Premio: {g.prize}</p>
+                                <div className="grow min-w-0">
+                                    <h4 className="font-bold text-base sm:text-lg break-all">{g.title}</h4>
+                                    <p className="text-xs sm:text-sm text-gray-600 break-all">Premio: {g.prize}</p>
                                     <div className="mt-2 text-xs">Participantes: {g.participantIds.length}</div>
                                 </div>
                             </div>
@@ -1644,9 +1655,9 @@ export const Admin = () => {
                 {configNotice && (
                   <div className={`p-4 border-2 shadow-manga animate-in slide-in-from-top-2 flex items-start gap-3 ${configNotice.type === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
                     {configNotice.type === 'success' ? (
-                      <Check className="text-green-600 flex-shrink-0" size={24} />
+                      <Check className="text-green-600 shrink-0" size={24} />
                     ) : (
-                      <AlertTriangle className="text-red-600 flex-shrink-0" size={24} />
+                      <AlertTriangle className="text-red-600 shrink-0" size={24} />
                     )}
                     <div>
                       <p className={`font-bold ${configNotice.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
@@ -1737,7 +1748,7 @@ export const Admin = () => {
                      <div className="pt-4 border-t border-gray-200">
                         {isRejectingStand ? (
                             <div className="animate-in fade-in slide-in-from-bottom-2 bg-red-50 p-4 border border-red-200 rounded">
-                                <label className="block text-sm font-bold mb-2 uppercase text-red-600 flex items-center gap-2">
+                                <label className="flex text-sm font-bold mb-2 uppercase text-red-600 items-center gap-2">
                                     <AlertTriangle size={16} /> Motivo del Rechazo (Se enviará al chat)
                                 </label>
                                 <textarea 
@@ -1890,7 +1901,7 @@ export const Admin = () => {
                  <div className="pt-4 border-t border-gray-200">
                      {isRejectingCosplay ? (
                         <div className="animate-in fade-in slide-in-from-bottom-2 bg-red-50 p-4 border border-red-200 rounded">
-                            <label className="block text-sm font-bold mb-2 uppercase text-red-600 flex items-center gap-2">
+                            <label className="flex text-sm font-bold mb-2 uppercase text-red-600 items-center gap-2">
                                 <AlertTriangle size={16} /> Motivo del Rechazo (Se enviará al chat)
                             </label>
                             <textarea 
@@ -1930,7 +1941,12 @@ export const Admin = () => {
 
       {/* SHARED CHAT MODAL (Works for Stand or Cosplay) */}
       {(chatStand || chatCosplay) && (
-          <Modal title={`Chat con ${chatStand ? chatStand.brandName : chatCosplay?.participantName}`} onClose={() => {setChatStand(null); setChatCosplay(null); setChatImage(null);}}>
+          <Modal title={`Chat con ${chatStand ? chatStand.brandName : chatCosplay?.participantName}`} onClose={() => {
+            chatClosedByUserRef.current = true;
+            setChatStand(null);
+            setChatCosplay(null);
+            setChatImage(null);
+          }}>
               <div className="flex flex-col h-[50vh]">
                   <div className="bg-gray-50 p-3 mb-4 text-xs border border-gray-200 rounded flex items-center justify-between">
                       <div>
@@ -1947,9 +1963,9 @@ export const Admin = () => {
                           {chatStand ? chatStand.phone : chatCosplay?.whatsapp}
                       </a>
                   </div>
-                  <div className="flex-grow overflow-y-auto space-y-4 p-2 mb-4" ref={chatScrollRef}>
-                      {(chatStand ? chatStand.messages : chatCosplay?.messages || []).length === 0 && <div className="text-center text-gray-400 italic text-sm mt-10">No hay mensajes. Iniciá la conversación.</div>}
-                      {(chatStand ? chatStand.messages : chatCosplay?.messages || []).map(msg => (
+                  <div className="grow overflow-y-auto space-y-4 p-2 mb-4" ref={chatScrollRef}>
+                      {((chatStand?.messages || []).length === 0 && (chatCosplay?.messages || []).length === 0) && <div className="text-center text-gray-400 italic text-sm mt-10">No hay mensajes. Iniciá la conversación.</div>}
+                      {(chatStand ? (chatStand.messages || []) : (chatCosplay?.messages || [])).map(msg => (
                           <div key={msg.id} className={`flex flex-col ${msg.sender === 'ADMIN' ? 'items-end' : 'items-start'}`}>
                               <div className={`max-w-[80%] p-3 border-2 border-black shadow-sm ${msg.sender === 'ADMIN' ? 'bg-torami-red text-white rounded-tl-xl rounded-bl-xl rounded-br-xl' : 'bg-white text-black rounded-tr-xl rounded-br-xl rounded-bl-xl'}`}>
                                   <p className="text-sm font-bold mb-1">{msg.sender === 'ADMIN' ? 'Tú (Admin)' : (chatStand ? chatStand.contactName : chatCosplay?.participantName)}</p>
@@ -1973,7 +1989,7 @@ export const Admin = () => {
                   {chatImage && (
                     <div className="flex items-center gap-2 mb-2 p-2 bg-gray-100 border border-gray-300 rounded animate-in fade-in">
                         <img src={chatImage} alt="Preview" className="h-12 w-12 object-cover border border-black rounded" />
-                        <span className="text-xs text-gray-500 italic flex-grow">Imagen adjunta</span>
+                        <span className="text-xs text-gray-500 italic grow">Imagen adjunta</span>
                         <button onClick={() => setChatImage(null)} className="text-red-500 p-1"><X size={16}/></button>
                     </div>
                   )}
@@ -1990,7 +2006,7 @@ export const Admin = () => {
                       
                       <input 
                         type="text" 
-                        className="flex-grow border-2 border-black p-2 focus:outline-none h-10" 
+                        className="grow border-2 border-black p-2 focus:outline-none h-10" 
                         placeholder="Escribir mensaje..." 
                         value={chatMessage} 
                         onChange={(e) => setChatMessage(e.target.value)} 
@@ -2004,7 +2020,7 @@ export const Admin = () => {
       {/* GALLERY PHOTO MODERATION MODAL */}
       {selectedPhoto && (
           <PhotoModal title="Moderación de Foto" onClose={() => setSelectedPhoto(null)}>
-              <div className="w-full md:w-2/3 bg-black flex items-center justify-center p-2 sm:p-4 min-h-[200px] sm:min-h-[400px]">
+              <div className="w-full md:w-2/3 bg-black flex items-center justify-center p-2 sm:p-4 min-h-52 sm:min-h-96">
                   <img src={selectedPhoto.url} alt="Moderation content" className="max-w-full max-h-[40vh] sm:max-h-[80vh] object-contain" />
               </div>
               <div className="w-full md:w-1/3 p-4 sm:p-6 bg-white flex flex-col border-t-2 md:border-t-0 md:border-l-2 border-black">
@@ -2045,11 +2061,11 @@ export const Admin = () => {
                     </div>
                   )}
                   
-                  <form onSubmit={handleGallerySave} className="flex-grow flex flex-col">
-                      <div className="mb-4 flex-grow">
+                  <form onSubmit={handleGallerySave} className="grow flex flex-col">
+                      <div className="mb-4 grow">
                           <label className="block text-sm font-bold mb-1 uppercase">Descripción del Usuario</label>
                           <textarea 
-                              className="w-full min-h-[100px] border-2 border-black p-3 focus:outline-none focus:shadow-manga resize-none bg-gray-50"
+                              className="w-full min-h-24 border-2 border-black p-3 focus:outline-none focus:shadow-manga resize-none bg-gray-50"
                               value={selectedPhoto.description || ''}
                               onChange={(e) => setSelectedPhoto({...selectedPhoto, description: e.target.value})}
                           ></textarea>
@@ -2105,7 +2121,7 @@ export const Admin = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && selectedPhoto && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4 backdrop-blur-md">
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
           <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
             <div className="bg-red-600 text-white p-4 flex items-center gap-3">
               <AlertTriangle size={24} />

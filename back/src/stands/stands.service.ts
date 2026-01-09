@@ -9,26 +9,35 @@ import { StandStatus } from '@prisma/client';
 export class StandsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(page: number = 1, limit: number = 20, status?: string) {
+  async findAll(page: number = 1, limit: number = 20, status?: string, includeMessages: boolean = false) {
     const skip = (page - 1) * limit;
     const where = status ? { status: status as StandStatus } : {};
+
+    const selectFields: any = {
+      id: true,
+      brandName: true,
+      type: true,
+      status: true,
+      contactName: true,
+      email: true,
+      phone: true,
+      createdAt: true,
+      eventId: true,
+      event: true, // Always include event information
+    };
+
+    // Include messages if requested (for admin chat)
+    if (includeMessages) {
+      selectFields.messages = true;
+      selectFields.images = true;
+    }
 
     const [stands, total] = await Promise.all([
       this.prisma.standApplication.findMany({
         take: limit,
         skip,
         where,
-        select: {
-          id: true,
-          brandName: true,
-          type: true,
-          status: true,
-          contactName: true,
-          email: true,
-          createdAt: true,
-          eventId: true,
-          // NO incluir messages ni images hasta que se abra el detalle
-        },
+        select: selectFields,
         orderBy: { createdAt: 'desc' }
       }),
       this.prisma.standApplication.count({ where })

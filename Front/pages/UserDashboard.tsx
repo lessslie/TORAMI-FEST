@@ -59,6 +59,7 @@ export const UserDashboard = () => {
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatStandRef = useRef<StandApplication | null>(null);
   const chatCosplayRef = useRef<CosplayRegistration | null>(null);
+  const chatClosedByUserRef = useRef(false);
 
   // Notification State
   const [unreadCount, setUnreadCount] = useState(0);
@@ -69,14 +70,17 @@ export const UserDashboard = () => {
   const refreshData = (updateOpenChat = false) => {
       if (user) {
           getUserStands(user.id).then(data => {
+              console.log('📥 getUserStands response:', data);
               setStands(data);
               // Only update active chat if explicitly requested AND chat is currently open
               if (updateOpenChat && chatStandRef.current) {
                   const updated = data.find(s => s.id === chatStandRef.current!.id);
+                  console.log('🔄 Updated stand for chat:', updated);
                   if (updated) setActiveChatStand(updated);
               }
           });
           getUserCosplays(user.id).then(data => {
+              console.log('📥 getUserCosplays response:', data);
               setCosplays(data);
               // Only update active chat if explicitly requested AND chat is currently open
               if (updateOpenChat && chatCosplayRef.current) {
@@ -84,6 +88,7 @@ export const UserDashboard = () => {
                   const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
                   if (!isGuest) {
                       const updated = data.find(c => c.id === chatCosplayRef.current!.id);
+                      console.log('🔄 Updated cosplay for chat:', updated);
                       if (updated) setActiveChatCosplay(updated);
                   }
               }
@@ -145,14 +150,23 @@ export const UserDashboard = () => {
   // Auto-refresh ONLY chat messages every 5 seconds when chat is open (optimized to not load all data)
   useEffect(() => {
     const chatIsOpen = activeChatStand !== null || activeChatCosplay !== null;
-    if (!chatIsOpen || !user) return;
+
+    // Reset the manual close flag when chat opens
+    if (chatIsOpen) {
+      chatClosedByUserRef.current = false;
+    }
+
+    if (!chatIsOpen || !user || chatClosedByUserRef.current) return;
 
     // Function to refresh only the active chat
     const refreshActiveChat = () => {
+      // Don't refresh if user manually closed the chat
+      if (chatClosedByUserRef.current) return;
+
       if (activeChatStand) {
         getUserStands(user.id).then(data => {
           const updated = data.find(s => s.id === activeChatStand.id);
-          if (updated) setActiveChatStand(updated);
+          if (updated && !chatClosedByUserRef.current) setActiveChatStand(updated);
         });
       } else if (activeChatCosplay) {
         // Detect if this is a cosplay guest (has assignedNumber) or normal registration
@@ -162,20 +176,17 @@ export const UserDashboard = () => {
           // Refresh from cosplay guests
           getUserCosplayGuests().then(data => {
             const updated = data.find(c => c.id === activeChatCosplay.id);
-            if (updated) setActiveChatCosplay(updated as any);
+            if (updated && !chatClosedByUserRef.current) setActiveChatCosplay(updated as any);
           });
         } else {
           // Refresh from normal cosplay registrations
           getUserCosplays(user.id).then(data => {
             const updated = data.find(c => c.id === activeChatCosplay.id);
-            if (updated) setActiveChatCosplay(updated);
+            if (updated && !chatClosedByUserRef.current) setActiveChatCosplay(updated);
           });
         }
       }
     };
-
-    // Initial refresh
-    refreshActiveChat();
 
     // Set up polling interval
     const intervalId = setInterval(() => {
@@ -614,7 +625,11 @@ export const UserDashboard = () => {
                                   <p className="text-xs font-bold uppercase text-gray-400">Mensajes</p>
                                   <p className="font-bold">{stand.messages.length}</p>
                               </div>
-                              <Button onClick={() => setActiveChatStand(stand)} variant="outline" className="flex items-center gap-2">
+                              <Button onClick={() => {
+                                 console.log('🔵 Opening chat for stand:', stand);
+                                 console.log('🔵 Stand messages:', stand.messages);
+                                 setActiveChatStand(stand);
+                              }} variant="outline" className="flex items-center gap-2">
                                  <MessageCircle size={18} /> Chat / Estado
                               </Button>
                           </div>
@@ -655,7 +670,11 @@ export const UserDashboard = () => {
                                   <p className="text-sm text-gray-600">{cos.seriesName} <span className="text-gray-400">•</span> {cos.category}</p>
                               </div>
                            </div>
-                           <Button onClick={() => setActiveChatCosplay(cos)} variant="outline" className="flex items-center gap-2">
+                           <Button onClick={() => {
+                               console.log('🔵 Opening chat for cosplay:', cos);
+                               console.log('🔵 Cosplay messages:', cos.messages);
+                               setActiveChatCosplay(cos);
+                           }} variant="outline" className="flex items-center gap-2">
                                <MessageCircle size={18} /> Chat / Estado
                            </Button>
                       </MangaCard>
@@ -819,7 +838,11 @@ export const UserDashboard = () => {
       {(activeChatStand || activeChatCosplay) && (
           <Modal
             title={activeChatStand ? `Chat Stand: ${activeChatStand.brandName}` : `Chat Cosplay: ${activeChatCosplay?.characterName}`}
-            onClose={() => { setActiveChatStand(null); setActiveChatCosplay(null); }}
+            onClose={() => {
+              chatClosedByUserRef.current = true;
+              setActiveChatStand(null);
+              setActiveChatCosplay(null);
+            }}
           >
               <div className="flex flex-col h-[50vh]">
                   {/* WhatsApp Contact Banner */}

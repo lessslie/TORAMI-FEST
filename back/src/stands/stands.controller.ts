@@ -21,11 +21,13 @@ export class StandsController {
   findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('status') status?: string
+    @Query('status') status?: string,
+    @Query('includeMessages') includeMessages?: string
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
-    return this.standsService.findAll(pageNum, limitNum, status);
+    const includeMessagesFlag = includeMessages === 'true';
+    return this.standsService.findAll(pageNum, limitNum, status, includeMessagesFlag);
   }
 
   @ApiBearerAuth()

@@ -129,6 +129,7 @@ export const api = {
       const params = new URLSearchParams();
       params.append('page', String(page));
       params.append('limit', String(limit));
+      params.append('includeMessages', 'true'); // Include messages for admin chat
       if (status) params.append('status', status);
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/stands?${params.toString()}`,
@@ -167,6 +168,7 @@ export const api = {
       const params = new URLSearchParams();
       params.append('page', String(page));
       params.append('limit', String(limit));
+      params.append('includeMessages', 'true'); // Include messages for admin chat
       if (status) params.append('status', status);
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/cosplay?${params.toString()}`,
