@@ -211,8 +211,7 @@ export const getOfficialGallery = async (page: number = 1, limit: number = 100) 
 export const getCommunityGallery = (page: number = 1, limit: number = 20) =>
   api.gallery.getAll(page, limit, undefined, 'APPROVED', false);
 export const getUserGallery = (userId: string, page: number = 1, limit: number = 20) =>
-  // Note: Need to implement getUserGallery differently since api.gallery.getAll doesn't support userId param
-  api.gallery.getAll(page, limit, undefined, undefined, undefined);
+  api.gallery.getByUser(userId, page, limit);
 export const addGalleryItem = (data: any) => {
   const { token } = getAuth();
   return api.gallery.create(token || '', data);

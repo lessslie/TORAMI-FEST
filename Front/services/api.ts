@@ -256,6 +256,16 @@ export const api = {
     getOne: (id: string) =>
       request<any>(`/gallery/${id}`, { useCache: true }),
 
+    getByUser: (userId: string, page: number = 1, limit: number = 20) => {
+      const params = new URLSearchParams();
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/gallery/user/${userId}?${params.toString()}`,
+        { useCache: false }
+      );
+    },
+
     create: (token: string, data: any) =>
       request<any>('/gallery', { method: 'POST', body: data, token, useCache: false }).then(result => {
         cacheManager.clear('/gallery');

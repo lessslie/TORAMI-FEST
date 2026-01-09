@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGalleryItemDto } from './dto/create-gallery-item.dto';
 import { ModerateGalleryItemDto } from './dto/moderate-gallery-item.dto';
-import { GalleryStatus } from '@prisma/client';
+import { GalleryStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class GalleryService {
@@ -53,6 +53,46 @@ export class GalleryService {
             },
           },
           // NO incluir feedback (solo en detalle)
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.galleryItem.count({ where })
+    ]);
+
+    return {
+      data: items,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  }
+
+  async findByUser(userId: string, page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+
+    // Only return photos uploaded by this user, excluding official photos
+    const where = {
+      userId,
+      isOfficial: false, // Users cannot see official photos in their dashboard
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.galleryItem.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+            },
+          },
+          event: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -188,8 +228,24 @@ export class GalleryService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, userId: string, userRole: UserRole) {
     const item = await this.findOne(id);
+
+    // Only allow deletion if:
+    // 1. User is ADMIN or SUPER_ADMIN (can delete any photo)
+    // 2. User is the owner of the photo (can delete their own photos only)
+    const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
+    const isOwner = item.userId === userId;
+
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('No tenés permiso para eliminar esta foto');
+    }
+
+    // Extra protection: Regular users cannot delete official photos even if they uploaded them
+    if (item.isOfficial && !isAdmin) {
+      throw new ForbiddenException('Solo los administradores pueden eliminar fotos oficiales');
+    }
+
     return this.prisma.galleryItem.delete({ where: { id } });
   }
 }

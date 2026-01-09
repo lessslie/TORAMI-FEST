@@ -43,6 +43,19 @@ export class GalleryController {
     return this.galleryService.findAll(pageNum, limitNum, eventId, status, isOfficialBool);
   }
 
+  @Get('user/:userId')
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  findByUser(
+    @Param('userId') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 20;
+    return this.galleryService.findByUser(userId, pageNum, limitNum);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.galleryService.findOne(id);
@@ -81,7 +94,7 @@ export class GalleryController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.galleryService.delete(id);
+  delete(@Request() req, @Param('id') id: string) {
+    return this.galleryService.delete(id, req.user.userId, req.user.role);
   }
 }

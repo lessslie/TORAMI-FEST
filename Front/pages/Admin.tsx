@@ -331,6 +331,7 @@ export const Admin = () => {
 
       case 'officialgallery':
         getOfficialGallery().then(setOfficialGallery);
+        getEvents().then(setEvents); // Need events for the upload form
         break;
 
       case 'giveaways':
