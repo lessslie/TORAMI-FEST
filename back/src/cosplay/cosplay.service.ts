@@ -33,7 +33,14 @@ export class CosplayService {
           createdAt: true,
           eventId: true,
           userId: true,
-          // NO incluir messages hasta el detalle
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+            }
+          },
+          // NO incluir messages, referenceImage, audioLink en la lista (solo en detalle)
         },
         orderBy: { createdAt: 'desc' }
       }),

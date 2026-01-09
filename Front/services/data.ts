@@ -3,7 +3,7 @@ import { Notification } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
-const getAuth = () => {
+export const getAuth = () => {
   try {
     const saved = localStorage.getItem('torami_auth');
     if (!saved) return { token: null, user: null };

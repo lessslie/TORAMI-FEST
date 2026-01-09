@@ -11,8 +11,9 @@ import {
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
   getCosplayGuests, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
   getUnreadNotificationCount, markAllNotificationsAsRead,
-  getAllUsers, updateUser, deleteUser
+  getAllUsers, updateUser, deleteUser, getAuth
 } from '../services/data';
+import { api } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock, Instagram, Globe } from 'lucide-react';
 
@@ -509,7 +510,22 @@ export const Admin = () => {
       setViewStand(null);
   };
 
-  // Cosplay
+  // Cosplay - Load full details
+  const handleViewCosplayDetails = async (cosplay: CosplayRegistration | CosplayGuest) => {
+    // Check if it's a guest (has assignedNumber)
+    const isGuest = (cosplay as any).assignedNumber !== undefined;
+
+    if (isGuest) {
+      // For guests, use the object as-is (already has all fields)
+      setViewCosplay(cosplay as any);
+    } else {
+      // For regular cosplay, fetch full details from API
+      const { token } = getAuth();
+      const fullDetails = await api.cosplay.getOne(token || '', cosplay.id);
+      setViewCosplay(fullDetails);
+    }
+  };
+
   const handleCosplayStatus = async (id: string, status: 'Confirmado') => {
     // Detect if it's a guest (has assignedNumber)
     const isGuest = viewCosplay && (viewCosplay as any).assignedNumber !== undefined;
@@ -1154,7 +1170,7 @@ export const Admin = () => {
 
                    {/* Botón de ver detalles */}
                    <button
-                     onClick={() => setViewCosplay(cos)}
+                     onClick={() => handleViewCosplayDetails(cos)}
                      className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
                    >
                      <Eye size={16} /> Ver Detalles
@@ -1223,7 +1239,7 @@ export const Admin = () => {
 
                      {/* Botón de ver detalles */}
                      <button
-                       onClick={() => setViewCosplay(guest as any)}
+                       onClick={() => handleViewCosplayDetails(guest)}
                        className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
                      >
                        <Eye size={16} /> Ver Detalles
@@ -1842,6 +1858,19 @@ export const Admin = () => {
                         <p className="text-center text-xs text-gray-500">{viewCosplay.seriesName}</p>
                     </div>
                  </div>
+
+                 {/* Event */}
+                 {viewCosplay.event && (
+                   <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                     <h4 className="text-xs font-bold uppercase text-blue-800 mb-1 flex items-center gap-1">
+                       <Calendar size={12}/> Evento
+                     </h4>
+                     <p className="font-bold text-lg">{viewCosplay.event.title}</p>
+                     <p className="text-sm text-gray-600">
+                       📅 {new Date(viewCosplay.event.date).toLocaleDateString('es-AR')}
+                     </p>
+                   </div>
+                 )}
 
                  <div className="grid grid-cols-2 gap-4">
                     <div>
