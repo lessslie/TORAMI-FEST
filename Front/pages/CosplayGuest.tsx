@@ -182,7 +182,7 @@ export const CosplayGuest = () => {
                 <h4 className="font-bold uppercase">Performance</h4>
                 <p className="text-xs text-gray-600">Actuación, lipsync y manejo de escenario.</p>
             </MangaCard>
-            <MangaCard className="bg-gray-200 text-center opacity-60 relative">
+            {/* <MangaCard className="bg-gray-200 text-center opacity-60 relative">
                 <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs font-bold px-2 py-1 border border-black">
                     Próximamente
                 </div>
@@ -197,17 +197,17 @@ export const CosplayGuest = () => {
                 <Users className="mx-auto mb-2 text-gray-400" />
                 <h4 className="font-bold uppercase text-gray-500">Grupal</h4>
                 <p className="text-xs text-gray-500">Para teams de 2 o más integrantes.</p>
-            </MangaCard>
+            </MangaCard> */}
         </div>
 
-        <MangaCard className="mb-8 border-l-8 border-l-purple-600">
+        {/* <MangaCard className="mb-8 border-l-8 border-l-purple-600">
              <h3 className="font-bold text-lg mb-2">Reglas Importantes</h3>
              <ul className="list-disc list-inside space-y-1 text-sm text-gray-800">
                 <li>Duración máxima de performance: 3 minutos.</li>
                 <li>Prohibido el uso de fuego real, líquidos o pirotecnia.</li>
                 <li>Las armas deben ser de utilería (goma eva, cartón, impresión 3D).</li>
              </ul>
-        </MangaCard>
+        </MangaCard> */}
 
         <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Selector */}
@@ -282,10 +282,10 @@ export const CosplayGuest = () => {
                 onChange={handleChange}
                 value={formData.category}
              >
-                <option value="General">General (Desfile)</option>
+                {/* <option value="General">General (Desfile)</option> */}
                 <option value="Performance">Performance (Actuación)</option>
-                <option value="Chibi" disabled>Chibi (Niños) - Próximamente</option>
-                <option value="Grupal" disabled>Grupal - Próximamente</option>
+                {/* <option value="Chibi" disabled>Chibi (Niños) - Próximamente</option>
+                <option value="Grupal" disabled>Grupal - Próximamente</option> */}
              </select>
             </div>
 
