@@ -177,11 +177,11 @@ export const CosplayGuest = () => {
         )}
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
-            <MangaCard className="bg-blue-50 text-center">
+            {/* <MangaCard className="bg-blue-50 text-center">
                 <Mic2 className="mx-auto mb-2 text-blue-600" />
                 <h4 className="font-bold uppercase">Performance</h4>
                 <p className="text-xs text-gray-600">Actuación, lipsync y manejo de escenario.</p>
-            </MangaCard>
+            </MangaCard> */}
             {/* <MangaCard className="bg-gray-200 text-center opacity-60 relative">
                 <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs font-bold px-2 py-1 border border-black">
                     Próximamente
@@ -283,7 +283,7 @@ export const CosplayGuest = () => {
                 value={formData.category}
              >
                 {/* <option value="General">General (Desfile)</option> */}
-                <option value="Performance">Performance (Actuación)</option>
+                {/* <option value="Performance">Performance (Actuación)</option> */}
                 {/* <option value="Chibi" disabled>Chibi (Niños) - Próximamente</option>
                 <option value="Grupal" disabled>Grupal - Próximamente</option> */}
              </select>
