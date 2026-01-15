@@ -163,7 +163,7 @@ export const CosplayGuest = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-lg">
-                  {noSlotsAvailable ? '🚫 Cupos Agotados' : `⚠️ Quedan ${availableSlots} cupos disponibles`}
+                  {noSlotsAvailable ? '🚫 Cupos Agotados!' : `⚠️ Quedan ${availableSlots} cupos disponibles`}
                 </h3>
                 <p className="text-sm text-gray-700">
                   {noSlotsAvailable
