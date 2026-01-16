@@ -345,7 +345,7 @@ export const Admin = () => {
         break;
 
       case 'config':
-        getConfig().then(setConfig);
+        getConfig(true).then(setConfig);
         break;
 
       default:
@@ -388,7 +388,7 @@ export const Admin = () => {
     getGiveaways().then(setGiveaways);
     getGallery().then(setGallery);
     getOfficialGallery().then(setOfficialGallery);
-    getConfig().then(setConfig);
+    getConfig(false).then(setConfig);
     getAllUsers().then((data: User[]) => setUsers(data));
     getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
   };

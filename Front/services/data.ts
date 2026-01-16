@@ -27,7 +27,7 @@ const request = async (path: string, options: { method?: string; body?: any; tok
 };
 
 // Config / Auth
-export const getConfig = () => api.config.get();
+export const getConfig = (includeImages?: boolean) => api.config.get(includeImages);
 export const updateConfig = (data: any) => {
   const { token } = getAuth();
   return api.config.update(token || '', data);

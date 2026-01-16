@@ -19,7 +19,7 @@ export const Home = () => {
         const [eventsData, sponsorsData, configData] = await Promise.all([
           getUpcomingEvents(),
           getActiveSponsors(),
-          getConfig()
+          getConfig(true)
         ]);
         setUpcomingEvents(eventsData);
         setSponsors(sponsorsData);

@@ -404,8 +404,10 @@ export const api = {
 
   // ==================== CONFIG ====================
   config: {
-    get: () =>
-      request<any>('/config', { useCache: true }),
+    get: (includeImages?: boolean) => {
+      const query = includeImages ? '?includeImages=true' : '';
+      return request<any>(`/config${query}`, { useCache: true });
+    },
 
     update: (token: string, data: any) =>
       request<any>('/config', { method: 'PUT', body: data, token, useCache: false }).then(result => {

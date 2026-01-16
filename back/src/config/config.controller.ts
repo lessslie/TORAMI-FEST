@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from './config.service';
@@ -20,8 +21,9 @@ export class ConfigController {
   constructor(private readonly configService: ConfigService) {}
 
   @Get()
-  getConfig() {
-    return this.configService.getConfig();
+  getConfig(@Query('includeImages') includeImages?: string) {
+    const include = includeImages === 'true' || includeImages === '1';
+    return this.configService.getConfig(include);
   }
 
   @ApiBearerAuth()
