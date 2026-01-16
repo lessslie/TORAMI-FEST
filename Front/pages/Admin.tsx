@@ -9,7 +9,7 @@ import {
   getGiveaways, saveGiveaway, deleteGiveaway,
   getGallery, getOfficialGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem, addOfficialGalleryItem,
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
-  getCosplayGuests, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
+  getCosplayGuests, getCosplayGuestById, getCosplayGuestMessages, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
   getUnreadNotificationCount, markAllNotificationsAsRead,
   getAllUsers, updateUser, deleteUser, getAuth
 } from '../services/data';
@@ -310,14 +310,20 @@ export const Admin = () => {
         break;
 
       case 'cosplayguest':
-        getCosplayGuests().then((data) => {
-          setCosplayGuests(data);
+        getCosplayGuests().then((res: any) => {
+          const data = Array.isArray(res) ? res : res.data;
+          setCosplayGuests(data || []);
           if (updateOpenChat && chatCosplayRef.current) {
             // Check if the active chat is a guest (has assignedNumber)
             const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
             if (isGuest) {
-              const updatedGuest = data.find(g => g.id === chatCosplayRef.current!.id);
-              if (updatedGuest) setChatCosplay(updatedGuest as any);
+              const updatedGuest = (data || []).find((g: any) => g.id === chatCosplayRef.current!.id);
+              if (updatedGuest) {
+                setChatCosplay((prev: any) => ({
+                  ...updatedGuest,
+                  messages: prev?.messages || [],
+                }));
+              }
             }
           }
         });
@@ -380,7 +386,10 @@ export const Admin = () => {
             if(updatedCos) setChatCosplay(updatedCos);
         }
     });
-    getCosplayGuests().then(setCosplayGuests);
+    getCosplayGuests().then((res: any) => {
+      const data = Array.isArray(res) ? res : res.data;
+      setCosplayGuests(data || []);
+    });
     getEvents().then((data) => {
       setEvents(data);
     });
@@ -422,6 +431,22 @@ export const Admin = () => {
     }
   }, [chatStand?.id, chatCosplay?.id]);
 
+  useEffect(() => {
+    if (!chatCosplay) return;
+    const isGuest = (chatCosplay as any).assignedNumber !== undefined;
+    if (isGuest) {
+      refreshCosplayGuestMessages(chatCosplay.id);
+    }
+  }, [chatCosplay?.id]);
+
+  async function refreshCosplayGuestMessages(id: string) {
+    const data = await getCosplayGuestMessages(id);
+    setChatCosplay((prev: any) => {
+      if (!prev || prev.id !== id) return prev;
+      return { ...prev, messages: data?.messages || [] };
+    });
+  }
+
   // Auto-refresh chat messages every 10 SECONDS when chat is open (chat needs faster updates)
   useEffect(() => {
     const chatIsOpen = chatStand !== null || chatCosplay !== null;
@@ -447,9 +472,12 @@ export const Admin = () => {
 
     // Set up polling interval with chat update enabled (without initial refresh)
     const intervalId = setInterval(() => {
-      if (!chatClosedByUserRef.current) {
-        loadTabData(tabToRefresh, true);
+      if (chatClosedByUserRef.current) return;
+      if (tabToRefresh === 'cosplayguest' && chatCosplay) {
+        refreshCosplayGuestMessages(chatCosplay.id);
+        return;
       }
+      loadTabData(tabToRefresh, true);
     }, 10 * 1000); // Refresh every 10 SECONDS (chat needs real-time updates)
 
     // Cleanup on unmount or when chat closes
@@ -516,8 +544,8 @@ export const Admin = () => {
     const isGuest = (cosplay as any).assignedNumber !== undefined;
 
     if (isGuest) {
-      // For guests, use the object as-is (already has all fields)
-      setViewCosplay(cosplay as any);
+      const fullDetails = await getCosplayGuestById(cosplay.id);
+      setViewCosplay(fullDetails as any);
     } else {
       // For regular cosplay, fetch full details from API
       const { token } = getAuth();
@@ -1089,7 +1117,7 @@ export const Admin = () => {
                     {stand.status === 'PENDIENTE' && (
                       <>
                         <button
-                          onClick={() => handleStandStatus(stand.id, 'APROBADA')}
+                          onClick={() => handleStandStatus(stand.id, 'Aprobada')}
                           className="text-green-600 bg-green-50 px-3 py-2 rounded hover:bg-green-100 border border-green-200 flex items-center gap-1 text-sm font-bold"
                         >
                           <Check size={16}/> Aprobar
@@ -1794,7 +1822,7 @@ export const Admin = () => {
                         ) : (
                             <div className="flex gap-4">
                                 {viewStand.status === 'PENDIENTE' && (
-                                    <Button onClick={() => handleStandStatus(viewStand.id, 'APROBADA')} className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-800">
+                                    <Button onClick={() => handleStandStatus(viewStand.id, 'Aprobada')} className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-800">
                                         Aprobar Stand
                                     </Button>
                                 )}

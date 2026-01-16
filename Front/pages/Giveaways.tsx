@@ -27,7 +27,7 @@ export const Giveaways = () => {
 
     const handleParticipate = async (id: string) => {
         if (!user) return;
-        const success = await participateInGiveaway(id, user.id);
+        const success = await participateInGiveaway(id);
         if (success) {
             setParticipatedIds(prev => [...prev, id]);
             // Refresh counts

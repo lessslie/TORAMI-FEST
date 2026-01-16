@@ -212,11 +212,21 @@ export const api = {
 
   // ==================== COSPLAY GUEST ====================
   cosplayGuest: {
-    getAll: () =>
-      request<any[]>('/cosplay-guest', { useCache: false }),
+    getAll: (page: number = 1, limit: number = 20, includeMessages?: boolean) => {
+      const params = new URLSearchParams();
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      if (includeMessages) params.append('includeMessages', 'true');
+      return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/cosplay-guest?${params.toString()}`,
+        { useCache: false }
+      );
+    },
 
-    getByUser: (token: string) =>
-      request<any[]>('/cosplay-guest/user/me', { token, useCache: false }),
+    getByUser: (token: string, includeMessages?: boolean) => {
+      const query = includeMessages ? '?includeMessages=true' : '';
+      return request<any[]>(`/cosplay-guest/user/me${query}`, { token, useCache: false });
+    },
 
     create: (token: string, data: any) =>
       request<any>('/cosplay-guest', { method: 'POST', body: data, token }),
@@ -238,6 +248,12 @@ export const api = {
 
     delete: (token: string, id: string) =>
       request<any>(`/cosplay-guest/${id}`, { method: 'DELETE', token }),
+
+    getOne: (token: string, id: string) =>
+      request<any>(`/cosplay-guest/${id}`, { token, useCache: false }),
+
+    getMessages: (token: string, id: string) =>
+      request<{ messages: any[] }>(`/cosplay-guest/${id}/messages`, { token, useCache: false }),
   },
 
   // ==================== GALLERY ====================

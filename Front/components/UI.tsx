@@ -32,7 +32,7 @@ export const Button = ({ children, variant = 'primary', className = '', ...props
   );
 };
 
-export const Badge = ({ children, color = 'red' }: { children: React.ReactNode, color?: 'red' | 'blue' | 'purple' | 'green' | 'yellow' }) => {
+export const Badge = ({ children, color = 'red', className = '' }: { children: React.ReactNode, color?: 'red' | 'blue' | 'purple' | 'green' | 'yellow', className?: string }) => {
   const colors = {
     red: 'bg-torami-red text-white',
     blue: 'bg-blue-600 text-white',
@@ -41,7 +41,7 @@ export const Badge = ({ children, color = 'red' }: { children: React.ReactNode, 
     yellow: 'bg-yellow-400 text-black'
   };
   return (
-    <span className={`inline-block px-2 py-1 text-xs font-bold uppercase transform -skew-x-12 border border-black ${colors[color]}`}>
+    <span className={`inline-block px-2 py-1 text-xs font-bold uppercase transform -skew-x-12 border border-black ${colors[color]} ${className}`}>
       <span className="block transform skew-x-12">{children}</span>
     </span>
   );

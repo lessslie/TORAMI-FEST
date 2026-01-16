@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, withdrawCosplayGuest } from '../services/data';
+import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, getCosplayGuestMessages, withdrawCosplayGuest } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole } from '../types';
 import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
@@ -96,7 +96,12 @@ export const UserDashboard = () => {
                   const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
                   if (isGuest) {
                       const updated = data.find(c => c.id === chatCosplayRef.current!.id);
-                      if (updated) setActiveChatCosplay(updated as any);
+                      if (updated) {
+                        setActiveChatCosplay((prev: any) => ({
+                          ...updated,
+                          messages: prev?.messages || [],
+                        }));
+                      }
                   }
               }
           });
@@ -104,7 +109,7 @@ export const UserDashboard = () => {
               // getUserGallery devuelve { data: [], pagination: {} }
               setGalleryItems(response.data || []);
           });
-          getUserGiveaways(user.id).then(setMyGiveaways);
+          getUserGiveaways().then(setMyGiveaways);
           getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
           setProfileData({ name: user.name, email: user.email, whatsapp: user.whatsapp || '' });
 
@@ -143,6 +148,22 @@ export const UserDashboard = () => {
     }
   }, [activeChatStand?.id, activeChatCosplay?.id]);
 
+  async function refreshGuestChatMessages(id: string) {
+    const data = await getCosplayGuestMessages(id);
+    setActiveChatCosplay((prev: any) => {
+      if (!prev || prev.id !== id) return prev;
+      return { ...prev, messages: data?.messages || [] };
+    });
+  }
+
+  useEffect(() => {
+    if (!activeChatCosplay) return;
+    const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
+    if (isGuest) {
+      refreshGuestChatMessages(activeChatCosplay.id);
+    }
+  }, [activeChatCosplay?.id]);
+
   // Auto-refresh ONLY chat messages every 5 seconds when chat is open (optimized to not load all data)
   useEffect(() => {
     const chatIsOpen = activeChatStand !== null || activeChatCosplay !== null;
@@ -169,11 +190,7 @@ export const UserDashboard = () => {
         const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
 
         if (isGuest) {
-          // Refresh from cosplay guests
-          getUserCosplayGuests().then(data => {
-            const updated = data.find(c => c.id === activeChatCosplay.id);
-            if (updated && !chatClosedByUserRef.current) setActiveChatCosplay(updated as any);
-          });
+          refreshGuestChatMessages(activeChatCosplay.id);
         } else {
           // Refresh from normal cosplay registrations
           getUserCosplays(user.id).then(data => {
@@ -244,7 +261,7 @@ export const UserDashboard = () => {
       e.preventDefault();
       if(!stampCode.trim()) return;
       
-      const result = await validateStamp(stampCode.toUpperCase(), stamps);
+      const result = await validateStamp(stampCode.toUpperCase());
       if (result.success && result.type) {
           const newStamps = [...stamps, result.type];
           setStamps(newStamps);

@@ -170,10 +170,11 @@ export const addToWaitingList = (data: any) => {
 };
 
 // Cosplay Guest
-export const getCosplayGuests = () => api.cosplayGuest.getAll();
+export const getCosplayGuests = (page: number = 1, limit: number = 100) =>
+  api.cosplayGuest.getAll(page, limit);
 export const getUserCosplayGuests = () => {
   const { token } = getAuth();
-  return api.cosplayGuest.getByUser(token || '');
+  return api.cosplayGuest.getByUser(token || '', false);
 };
 export const addCosplayGuestRegistration = (data: any) => {
   const { token } = getAuth();
@@ -197,6 +198,16 @@ export const getCosplayGuestAvailableSlots = () => api.cosplayGuest.getAvailable
 export const deleteCosplayGuest = (id: string) => {
   const { token } = getAuth();
   return api.cosplayGuest.delete(token || '', id);
+};
+
+export const getCosplayGuestById = (id: string) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.getOne(token || '', id);
+};
+
+export const getCosplayGuestMessages = (id: string) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.getMessages(token || '', id);
 };
 
 // Gallery

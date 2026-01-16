@@ -14,23 +14,71 @@ export class CosplayGuestService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    return this.prisma.cosplayGuest.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-          },
+  async findAll(page: number = 1, limit: number = 20, includeMessages: boolean = false) {
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
+    const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 20;
+    const skip = (safePage - 1) * safeLimit;
+
+    const baseSelect: any = {
+      id: true,
+      userId: true,
+      participantName: true,
+      nickname: true,
+      whatsapp: true,
+      instagram: true,
+      website: true,
+      characterName: true,
+      seriesName: true,
+      category: true,
+      status: true,
+      assignedNumber: true,
+      withdrawalReason: true,
+      eventId: true,
+      createdAt: true,
+      updatedAt: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
         },
-        event: true,
       },
-      orderBy: {
-        createdAt: 'desc',
+      event: {
+        select: {
+          id: true,
+          title: true,
+          date: true,
+          location: true,
+        },
       },
-    });
+    };
+
+    if (includeMessages) {
+      baseSelect.messages = true;
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.cosplayGuest.findMany({
+        select: baseSelect,
+        skip,
+        take: safeLimit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.cosplayGuest.count(),
+    ]);
+
+    return {
+      data: items,
+      pagination: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
+      },
+    };
   }
 
   async findOne(id: string) {
@@ -56,12 +104,34 @@ export class CosplayGuestService {
     return guest;
   }
 
-  async findByUser(userId: string) {
+  async findByUser(userId: string, includeMessages: boolean = false) {
+    const baseSelect: any = {
+      id: true,
+      userId: true,
+      participantName: true,
+      nickname: true,
+      whatsapp: true,
+      instagram: true,
+      website: true,
+      characterName: true,
+      seriesName: true,
+      category: true,
+      status: true,
+      assignedNumber: true,
+      withdrawalReason: true,
+      eventId: true,
+      createdAt: true,
+      updatedAt: true,
+      event: true,
+    };
+
+    if (includeMessages) {
+      baseSelect.messages = true;
+    }
+
     return this.prisma.cosplayGuest.findMany({
       where: { userId },
-      include: {
-        event: true,
-      },
+      select: baseSelect,
       orderBy: {
         createdAt: 'desc',
       },
@@ -198,5 +268,18 @@ export class CosplayGuestService {
         messages: [...messages, message],
       },
     });
+  }
+
+  async getMessages(id: string) {
+    const guest = await this.prisma.cosplayGuest.findUnique({
+      where: { id },
+      select: { messages: true },
+    });
+
+    if (!guest) {
+      throw new NotFoundException('Cosplay guest not found');
+    }
+
+    return { messages: Array.isArray(guest.messages) ? guest.messages : [] };
   }
 }

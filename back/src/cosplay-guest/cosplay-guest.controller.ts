@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -24,8 +25,15 @@ export class CosplayGuestController {
   constructor(private readonly cosplayGuestService: CosplayGuestService) {}
 
   @Get()
-  findAll() {
-    return this.cosplayGuestService.findAll();
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('includeMessages') includeMessages?: string,
+  ) {
+    const pageNumber = page ? Number(page) : 1;
+    const limitNumber = limit ? Number(limit) : 20;
+    const include = includeMessages === 'true' || includeMessages === '1';
+    return this.cosplayGuestService.findAll(pageNumber, limitNumber, include);
   }
 
   @Get('slots')
@@ -33,16 +41,17 @@ export class CosplayGuestController {
     return this.cosplayGuestService.getAvailableSlots();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cosplayGuestService.findOne(id);
-  }
-
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('user/me')
-  findByUser(@Request() req) {
-    return this.cosplayGuestService.findByUser(req.user.userId);
+  findByUser(@Request() req, @Query('includeMessages') includeMessages?: string) {
+    const include = includeMessages === 'true' || includeMessages === '1';
+    return this.cosplayGuestService.findByUser(req.user.userId, include);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.cosplayGuestService.findOne(id);
   }
 
   @ApiBearerAuth()
@@ -84,5 +93,12 @@ export class CosplayGuestController {
   @Post(':id/message')
   addMessage(@Param('id') id: string, @Body() message: any) {
     return this.cosplayGuestService.addMessage(id, message);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/messages')
+  getMessages(@Param('id') id: string) {
+    return this.cosplayGuestService.getMessages(id);
   }
 }

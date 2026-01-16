@@ -80,7 +80,7 @@ export interface StandApplication {
   status: 'Pendiente' | 'Aprobada' | 'Rechazada';
   eventId?: string;
   event?: Event; // Populated event data
-  messages: ChatMessage[];
+  messages?: ChatMessage[];
 }
 
 export interface CosplayRegistration {
@@ -99,7 +99,7 @@ export interface CosplayRegistration {
   status: 'Inscripto' | 'Confirmado' | 'Rechazado' | 'Lista de Espera';
   eventId?: string;
   event?: Event; // Populated event data
-  messages: ChatMessage[];
+  messages?: ChatMessage[];
   notifyEmail?: string; // Email para notificar si se libera cupo (opcional)
 }
 
