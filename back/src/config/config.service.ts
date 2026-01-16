@@ -25,10 +25,9 @@ export class ConfigService {
     };
 
     // El AppConfig siempre tiene id=1 (singleton)
-    let config = await this.prisma.appConfig.findUnique({
-      where: { id: 1 },
-      ...(includeImages ? {} : { select: baseSelect }),
-    });
+    const config = includeImages
+      ? await this.prisma.appConfig.findUnique({ where: { id: 1 } })
+      : await this.prisma.appConfig.findUnique({ where: { id: 1 }, select: baseSelect });
 
     // Si no existe, crear configuración por defecto
     if (!config) {
@@ -37,12 +36,19 @@ export class ConfigService {
         donationsEnabled: true,
         homeGalleryImages: [],
       };
-      config = includeImages
-        ? await this.prisma.appConfig.create({ data })
-        : await this.prisma.appConfig.create({ data, select: baseSelect });
+      if (includeImages) {
+        return this.prisma.appConfig.create({ data });
+      }
+
+      const created = await this.prisma.appConfig.create({ data, select: baseSelect });
+      return { ...created, homeGalleryImages: [] };
     }
 
-    return config;
+    if (includeImages) {
+      return config;
+    }
+
+    return { ...config, homeGalleryImages: [] };
   }
 
   async updateConfig(data: UpdateConfigDto) {
