@@ -170,7 +170,6 @@ export const EventDetail = () => {
           url: window.location.href,
         });
       } catch (error) {
-        console.log('Error sharing', error);
       }
     } else {
       alert('¡Enlace copiado al portapapeles!');

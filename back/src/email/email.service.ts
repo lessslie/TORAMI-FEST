@@ -10,7 +10,6 @@ export class EmailService {
    */
   async sendSlotAvailableNotification(emails: string[], availableSlots: number, totalSlots: number) {
     if (emails.length === 0) {
-      console.log('📧 No emails in waiting list to notify');
       return;
     }
 
@@ -33,7 +32,6 @@ export class EmailService {
       const successful = results.filter(r => r.status === 'fulfilled').length;
       const failed = results.filter(r => r.status === 'rejected').length;
 
-      console.log(`📧 Emails sent via SendGrid: ${successful} successful, ${failed} failed`);
 
       return { successful, failed };
     } catch (error) {

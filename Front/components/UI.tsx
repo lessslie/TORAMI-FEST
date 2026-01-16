@@ -63,7 +63,7 @@ export const Input = ({ label, error, ...props }: any) => {
     <div className="mb-4">
       <label className="block text-sm font-bold mb-1 uppercase">{label}</label>
       <input
-        className="w-full border-2 border-black p-3 focus:outline-none focus:shadow-manga transition-shadow"
+        className="w-full border-2 border-black p-3 bg-white focus:outline-none focus:shadow-manga transition-shadow"
         {...restProps}
       />
       {error && <p className="text-red-600 text-xs mt-1 font-bold">{error}</p>}

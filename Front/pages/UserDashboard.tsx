@@ -70,17 +70,14 @@ export const UserDashboard = () => {
   const refreshData = (updateOpenChat = false) => {
       if (user) {
           getUserStands(user.id).then(data => {
-              console.log('📥 getUserStands response:', data);
               setStands(data);
               // Only update active chat if explicitly requested AND chat is currently open
               if (updateOpenChat && chatStandRef.current) {
                   const updated = data.find(s => s.id === chatStandRef.current!.id);
-                  console.log('🔄 Updated stand for chat:', updated);
                   if (updated) setActiveChatStand(updated);
               }
           });
           getUserCosplays(user.id).then(data => {
-              console.log('📥 getUserCosplays response:', data);
               setCosplays(data);
               // Only update active chat if explicitly requested AND chat is currently open
               if (updateOpenChat && chatCosplayRef.current) {
@@ -88,7 +85,6 @@ export const UserDashboard = () => {
                   const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
                   if (!isGuest) {
                       const updated = data.find(c => c.id === chatCosplayRef.current!.id);
-                      console.log('🔄 Updated cosplay for chat:', updated);
                       if (updated) setActiveChatCosplay(updated);
                   }
               }
@@ -232,10 +228,8 @@ export const UserDashboard = () => {
               whatsapp: profileData.whatsapp,
               avatar: user.avatar
           };
-          console.log('🔍 Datos a enviar al backend:', updateData);
 
           const result = await updateUserProfile(updateData);
-          console.log('✅ Respuesta del backend:', result);
 
           setIsEditingProfile(false);
           setShowSuccessModal(true);
@@ -626,8 +620,6 @@ export const UserDashboard = () => {
                                   <p className="font-bold">{stand.messages.length}</p>
                               </div>
                               <Button onClick={() => {
-                                 console.log('🔵 Opening chat for stand:', stand);
-                                 console.log('🔵 Stand messages:', stand.messages);
                                  setActiveChatStand(stand);
                               }} variant="outline" className="flex items-center gap-2">
                                  <MessageCircle size={18} /> Chat / Estado
@@ -671,8 +663,6 @@ export const UserDashboard = () => {
                               </div>
                            </div>
                            <Button onClick={() => {
-                               console.log('🔵 Opening chat for cosplay:', cos);
-                               console.log('🔵 Cosplay messages:', cos.messages);
                                setActiveChatCosplay(cos);
                            }} variant="outline" className="flex items-center gap-2">
                                <MessageCircle size={18} /> Chat / Estado

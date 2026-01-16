@@ -271,13 +271,10 @@ export const Admin = () => {
 
   // Carga datos específicos del tab activo (optimizado para reducir requests innecesarios)
   const loadTabData = (tab: string, updateOpenChat = false) => {
-    console.log('🔄 Loading data for tab:', tab);
-
     switch (tab) {
       case 'dashboard':
         // Dashboard necesita stats y notificaciones
         getStats().then((data) => {
-          console.log('📊 Stats from backend:', data);
           setStats(data);
         }).catch((err) => {
           console.error('Error fetching stats:', err);
@@ -288,7 +285,6 @@ export const Admin = () => {
 
       case 'events':
         getEvents().then((data) => {
-          console.log('📅 Events from backend:', data);
           setEvents(data);
         });
         break;
@@ -364,9 +360,7 @@ export const Admin = () => {
 
   // Función legacy para refresh manual (cuando se necesite recargar todo)
   const refreshData = (updateOpenChat = false) => {
-    console.log('⚠️ refreshData() - Loading ALL data (use loadTabData() instead)');
     getStats().then((data) => {
-      console.log('📊 Stats from backend:', data);
       setStats(data);
     }).catch((err) => {
       console.error('Error fetching stats:', err);
@@ -388,7 +382,6 @@ export const Admin = () => {
     });
     getCosplayGuests().then(setCosplayGuests);
     getEvents().then((data) => {
-      console.log('📅 Events from backend:', data);
       setEvents(data);
     });
     getSponsors().then(setSponsors);
@@ -836,11 +829,6 @@ export const Admin = () => {
       // Eliminar campos que no deben enviarse al backend (id, createdAt, updatedAt)
       const { id, createdAt, updatedAt, ...configToSave } = config as any;
 
-      console.log('💾 Guardando config:', {
-        homeGalleryImages: configToSave.homeGalleryImages?.length || 0,
-        fullConfig: configToSave
-      });
-
       const result = await updateConfig(configToSave);
       // Actualizar el estado local con el resultado del servidor
       setConfig(result);
@@ -1092,8 +1080,6 @@ export const Admin = () => {
                     </button>
                     <button
                       onClick={() => {
-                        console.log('🔵 [ADMIN] Opening chat for stand:', stand);
-                        console.log('🔵 [ADMIN] Stand messages:', stand.messages);
                         setChatStand(stand);
                       }}
                       className="flex-1 sm:flex-none bg-blue-50 text-blue-600 px-4 py-2 rounded hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-2 text-sm font-bold"
@@ -1565,7 +1551,6 @@ export const Admin = () => {
                     <MediaManager
                         media={config.homeGalleryImages || []}
                         onChange={(imgs) => {
-                            console.log('📸 Galería actualizada:', imgs.length, 'imágenes');
                             setConfig({...config, homeGalleryImages: imgs});
                         }}
                         max={6}

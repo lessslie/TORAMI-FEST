@@ -18,10 +18,6 @@ export const CosplayGuest = () => {
     website: '',
     characterName: '',
     seriesName: '',
-    category: 'General',
-    audioLink: '',
-    audioStartTime: '',
-    audioEndTime: '',
     referenceImage: '',
     eventId: ''
   });
@@ -98,9 +94,8 @@ export const CosplayGuest = () => {
         website: formData.website,
         characterName: formData.characterName,
         seriesName: formData.seriesName,
-        category: formData.category,
         referenceImage: formData.referenceImage,
-        audioLink: formData.audioLink,
+        category: 'General',
         eventId: formData.eventId
       });
       setAssignedNumber(result.assignedNumber);
@@ -152,8 +147,12 @@ export const CosplayGuest = () => {
         <MangaCard className="mb-6 bg-purple-50 border-purple-600">
           <p className="font-bold text-lg mb-2">🌟 Inscripción Especial para Cosplayers Invitados</p>
           <p className="text-sm text-gray-700">
-            Registrate como cosplay invitado y obtené tu número oficial (del 1 al 30).
-            ¡Participá en el desfile o performance con reconocimiento especial!
+            Esta inscripción es solo para artistas invitados de Torami. Si vas a concursar, anotate en
+            la inscripción de Cosplay Concurso.
+          </p>
+          <p className="text-sm text-gray-700">
+            Registrate como cosplay invitado y obtené tu número oficial (del 1 al 30). ¡Participá en el
+            desfile o performance con reconocimiento especial!
           </p>
         </MangaCard>
 
@@ -274,21 +273,6 @@ export const CosplayGuest = () => {
                 <Input name="seriesName" label="Serie / Anime / Juego" required onChange={handleChange} />
             </div>
 
-            <div>
-             <label className="block text-sm font-bold mb-1 uppercase">Categoría</label>
-             <select
-                name="category"
-                className="w-full border-2 border-black p-3 bg-white focus:outline-none focus:shadow-manga"
-                onChange={handleChange}
-                value={formData.category}
-             >
-                {/* <option value="General">General (Desfile)</option> */}
-                {/* <option value="Performance">Performance (Actuación)</option> */}
-                {/* <option value="Chibi" disabled>Chibi (Niños) - Próximamente</option>
-                <option value="Grupal" disabled>Grupal - Próximamente</option> */}
-             </select>
-            </div>
-
             <div className="grid md:grid-cols-2 gap-6">
                 <div>
                    <label className="block text-sm font-bold mb-1 uppercase">Imagen de Referencia</label>
@@ -300,27 +284,9 @@ export const CosplayGuest = () => {
                            <>
                              <Image className="text-gray-400 mb-1" />
                              <span className="text-xs font-bold text-gray-500">Subir Foto</span>
-                           </>
+                         </>
                        )}
                    </div>
-                </div>
-                <div className="space-y-3">
-                    <Input name="audioLink" label="Link de Audio/Video (Drive/YouTube)" placeholder="Opcional si es solo desfile" onChange={handleChange} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        name="audioStartTime"
-                        label="Tiempo Inicio"
-                        placeholder="Ej: 1:30"
-                        onChange={handleChange}
-                      />
-                      <Input
-                        name="audioEndTime"
-                        label="Tiempo Fin"
-                        placeholder="Ej: 2:03"
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500">Si vas a hacer performance, indicá el link y el rango de tiempo que vas a usar (desde-hasta).</p>
                 </div>
             </div>
 

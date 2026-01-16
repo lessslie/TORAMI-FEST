@@ -17,7 +17,6 @@ class CacheManager {
   get<T>(key: string, ttl?: number): T | null {
     const entry = this.cache.get(key);
     if (!entry) {
-      console.log('🔴 Cache MISS:', key);
       return null;
     }
 
@@ -26,12 +25,10 @@ class CacheManager {
     const isExpired = now - entry.timestamp > maxAge;
 
     if (isExpired) {
-      console.log('⏰ Cache EXPIRED:', key);
       this.cache.delete(key);
       return null;
     }
 
-    console.log('🟢 Cache HIT:', key);
     return entry.data as T;
   }
 
@@ -41,7 +38,6 @@ class CacheManager {
    * @param data Data to cache
    */
   set<T>(key: string, data: T): void {
-    console.log('💾 Cache SET:', key);
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -56,7 +52,6 @@ class CacheManager {
   getPendingRequest<T>(key: string): Promise<T> | null {
     const pending = this.pendingRequests.get(key);
     if (pending) {
-      console.log('⏳ Request in progress, waiting:', key);
       return pending;
     }
     return null;

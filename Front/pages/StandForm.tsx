@@ -249,10 +249,10 @@ export const StandForm = () => {
           
           <div>
             <label className="block text-sm font-bold mb-1 uppercase">Descripción del Stand</label>
-            <textarea 
-              name="description" 
-              rows={4} 
-              className="w-full border-2 border-black p-3 focus:outline-none focus:shadow-manga"
+            <textarea
+              name="description"
+              rows={4}
+              className="w-full border-2 border-black p-3 bg-white focus:outline-none focus:shadow-manga"
               required
               onChange={handleChange}
               placeholder="Contanos qué vendés o qué servicio ofrecés..."

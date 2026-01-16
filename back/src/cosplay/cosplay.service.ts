@@ -236,7 +236,6 @@ export class CosplayService {
 
     // Only notify if there are available slots
     if (availableSlots === 0) {
-      console.log('📧 No available slots, skipping waiting list notification');
       return;
     }
 
@@ -251,7 +250,6 @@ export class CosplayService {
     });
 
     if (waitingList.length === 0) {
-      console.log('📧 No users in waiting list to notify');
       return;
     }
 
@@ -259,7 +257,6 @@ export class CosplayService {
     const emails = waitingList.map(reg => reg.notifyEmail || reg.user.email).filter(Boolean);
 
     if (emails.length === 0) {
-      console.log('📧 No valid emails in waiting list');
       return;
     }
 
@@ -268,7 +265,6 @@ export class CosplayService {
     // Send notification emails
     try {
       await this.emailService.sendSlotAvailableNotification(emails, availableSlots, limit);
-      console.log(`📧 Notified ${emails.length} users in waiting list about ${availableSlots} available slot(s)`);
     } catch (error) {
       console.error('❌ Error notifying waiting list:', error);
     }

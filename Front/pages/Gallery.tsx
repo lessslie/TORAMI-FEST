@@ -272,8 +272,8 @@ export const Gallery = () => {
 
                               <div>
                                   <label className="block text-sm font-bold mb-1">Descripción / Comentario</label>
-                                  <textarea 
-                                    className="w-full border-2 border-black p-2"
+                                  <textarea
+                                    className="w-full border-2 border-black p-2 bg-white"
                                     rows={2}
                                     placeholder="¿Qué momento es este?"
                                     value={uploadData.description}

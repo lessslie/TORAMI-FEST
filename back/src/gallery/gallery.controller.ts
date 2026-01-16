@@ -81,8 +81,6 @@ export class GalleryController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Patch(':id')
   moderate(@Request() req, @Param('id') id: string, @Body() dto: ModerateGalleryItemDto) {
-    console.log('🔍 Gallery moderate - req.user:', req.user);
-    console.log('🔍 Admin ID:', req.user.userId, 'Admin Name:', req.user.name);
     return this.galleryService.moderate(id, dto, req.user.userId, req.user.name);
   }
 
