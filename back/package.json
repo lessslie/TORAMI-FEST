@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "scripts": {
     "start": "node dist/main.js",
-    "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "start:dev": "cross-env DATABASE_URL=postgresql://postgres:bJVAlKALyRcvFvQrHFkUEInFQbYcfgVB@crossover.proxy.rlwy.net:34166/railway ts-node-dev --respawn --transpile-only src/main.ts",
     "build": "nest build",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.prisma\"",
@@ -49,6 +49,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.2",
     "prettier": "^3.7.4",
     "prisma": "^5.19.1",
