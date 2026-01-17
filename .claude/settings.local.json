@@ -27,7 +27,8 @@
       "Bash(npx prisma db execute:*)",
       "Bash(taskkill:*)",
       "Bash(timeout:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(git push:*)"
     ]
   }
 }

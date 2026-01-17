@@ -124,10 +124,10 @@ export const CosplayGuest = () => {
           <Star className="text-yellow-500 w-20 h-20 mb-4 animate-bounce fill-current" />
           <h2 className="font-display text-3xl mb-4">¡Inscripción Confirmada!</h2>
           <div className="bg-white border-4 border-purple-600 p-6 mb-6 shadow-manga">
-            <p className="text-sm text-gray-600 mb-2">Tu número asignado es:</p>
+            <p className="text-sm text-gray-600 mb-2">Tu número asignado para la fila es:</p>
             <div className="text-6xl font-display text-purple-600">#{assignedNumber}</div>
           </div>
-          <p className="mb-6 font-bold">¡Sos cosplay invitado oficial! Si no podés asistir, avisá para liberar tu lugar a otra persona.</p>
+          <p className="mb-6 font-bold">¡Ya estas anotado en la fila para cosplay invitado ! Si no podés asistir, avisá para liberar tu lugar a otra persona.</p>
           <Button onClick={() => navigate('/dashboard')}>Ver Mi Panel</Button>
         </MangaCard>
       </div>
