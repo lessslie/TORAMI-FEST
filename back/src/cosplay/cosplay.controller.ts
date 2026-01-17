@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards, ForbiddenException } from '@nestjs/common';
 import { CosplayService } from './cosplay.service';
 import { CreateCosplayDto } from './dto/create-cosplay.dto';
 import { UpdateCosplayStatusDto } from './dto/update-cosplay-status.dto';
@@ -57,7 +57,10 @@ export class CosplayController {
   @UseGuards(JwtAuthGuard)
   @Get('user/:userId')
   findByUser(@Param('userId') userId: string, @Req() req: any) {
-    if (req.user.userId !== userId && req.user.role === UserRole.USER) throw new Error('Forbidden');
+    // Solo el propio usuario o admins pueden ver los registros
+    if (req.user.userId !== userId && req.user.role === UserRole.USER) {
+      throw new ForbiddenException('No tienes permiso para ver estos datos');
+    }
     return this.cosplayService.findByUser(userId);
   }
 

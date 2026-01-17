@@ -28,7 +28,8 @@
       "Bash(taskkill:*)",
       "Bash(timeout:*)",
       "Bash(npx tsc:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 
@@ -13,13 +13,18 @@ export class NotificationsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const notification = await this.prisma.notification.findUnique({
       where: { id },
     });
 
     if (!notification) {
       throw new NotFoundException('Notification not found');
+    }
+
+    // Validar pertenencia si se proporciona userId
+    if (userId && notification.userId !== userId) {
+      throw new ForbiddenException('No tienes acceso a esta notificación');
     }
 
     return notification;
@@ -34,8 +39,9 @@ export class NotificationsService {
     });
   }
 
-  async markAsRead(id: string) {
-    await this.findOne(id);
+  async markAsRead(id: string, userId: string) {
+    // Valida que la notificación pertenezca al usuario
+    await this.findOne(id, userId);
 
     return this.prisma.notification.update({
       where: { id },
@@ -55,8 +61,9 @@ export class NotificationsService {
     });
   }
 
-  async delete(id: string) {
-    await this.findOne(id);
+  async delete(id: string, userId: string) {
+    // Valida que la notificación pertenezca al usuario
+    await this.findOne(id, userId);
     return this.prisma.notification.delete({ where: { id } });
   }
 

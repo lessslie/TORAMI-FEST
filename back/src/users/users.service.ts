@@ -11,7 +11,23 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatar: true,
+        whatsapp: true,
+        phone: true,
+        age: true,
+        entryAuthorized: true,
+        ticketType: true,
+        createdAt: true,
+        // NO incluir password
+      },
+    });
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
@@ -37,6 +53,20 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id: userId },
       data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        avatar: true,
+        whatsapp: true,
+        phone: true,
+        age: true,
+        entryAuthorized: true,
+        ticketType: true,
+        createdAt: true,
+        // NO incluir password
+      },
     });
   }
 

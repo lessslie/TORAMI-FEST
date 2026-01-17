@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards, ForbiddenException } from '@nestjs/common';
 import { StandsService } from './stands.service';
 import { CreateStandDto } from './dto/create-stand.dto';
 import { UpdateStandStatusDto } from './dto/update-stand-status.dto';
@@ -42,9 +42,9 @@ export class StandsController {
   @UseGuards(JwtAuthGuard)
   @Get('user/:userId')
   findByUser(@Param('userId') userId: string, @Req() req: any) {
+    // Solo el propio usuario o admins pueden ver los stands de un usuario
     if (req.user.userId !== userId && req.user.role === UserRole.USER) {
-      // basic protection; admins can view any
-      throw new Error('Forbidden');
+      throw new ForbiddenException('No tienes permiso para ver estos datos');
     }
     return this.standsService.findByUser(userId);
   }

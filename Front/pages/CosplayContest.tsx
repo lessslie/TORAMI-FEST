@@ -6,6 +6,37 @@ import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 import { Event } from '../types';
 
+// Función para comprimir imágenes
+const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.7): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('No se pudo crear contexto de canvas'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Error al cargar la imagen'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Error al leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+};
+
 export const CosplayContest = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -27,6 +58,7 @@ export const CosplayContest = () => {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // Cosplay Slots State
   const [availableSlots, setAvailableSlots] = useState<number | null>(null);
@@ -61,16 +93,26 @@ export const CosplayContest = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-          const file = e.target.files[0];
-          const reader = new FileReader();
-          reader.onloadend = () => {
-              setFilePreview(reader.result as string);
-              setFormData({ ...formData, referenceImage: reader.result as string });
-          };
-          reader.readAsDataURL(file);
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('image/')) {
+        setError("Solo se permiten archivos de imagen.");
+        return;
       }
+      setIsCompressing(true);
+      setError(null);
+      try {
+        const compressedImage = await compressImage(file, 1200, 0.7);
+        setFilePreview(compressedImage);
+        setFormData({ ...formData, referenceImage: compressedImage });
+      } catch (err) {
+        setError("Error al procesar la imagen. Intentá con otra.");
+        console.error('Error compressing image:', err);
+      } finally {
+        setIsCompressing(false);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

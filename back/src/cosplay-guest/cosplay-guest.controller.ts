@@ -24,6 +24,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class CosplayGuestController {
   constructor(private readonly cosplayGuestService: CosplayGuestService) {}
 
+  // PROTEGIDO: Solo admins pueden ver todos los registros
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Get()
   findAll(
     @Query('page') page?: string,
@@ -36,6 +40,7 @@ export class CosplayGuestController {
     return this.cosplayGuestService.findAll(pageNumber, limitNumber, include);
   }
 
+  // PÚBLICO: Los slots disponibles son info pública necesaria para el form
   @Get('slots')
   getAvailableSlots() {
     return this.cosplayGuestService.getAvailableSlots();
@@ -49,6 +54,10 @@ export class CosplayGuestController {
     return this.cosplayGuestService.findByUser(req.user.userId, include);
   }
 
+  // PROTEGIDO: Solo admins pueden ver detalles de cualquier registro
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.cosplayGuestService.findOne(id);

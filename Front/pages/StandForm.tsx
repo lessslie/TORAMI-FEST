@@ -6,6 +6,43 @@ import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertC
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 
+// Función para comprimir imágenes
+const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.7): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+
+        // Redimensionar si es muy grande
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('No se pudo crear contexto de canvas'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      img.onerror = () => reject(new Error('Error al cargar la imagen'));
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Error al leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+};
+
 export const StandForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -22,11 +59,12 @@ export const StandForm = () => {
     otherType: '',
     eventId: ''
   });
-  
+
   const [images, setImages] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -49,22 +87,35 @@ export const StandForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       if (images.length >= 5) {
         setError("Máximo 5 fotos permitidas.");
         return;
       }
-      
+
       const file = e.target.files[0];
-      const reader = new FileReader();
-      
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result as string]);
-        setError(null);
-      };
-      
-      reader.readAsDataURL(file);
+
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        setError("Solo se permiten archivos de imagen.");
+        return;
+      }
+
+      setIsCompressing(true);
+      setError(null);
+
+      try {
+        // Comprimir la imagen antes de agregarla
+        const compressedImage = await compressImage(file, 1200, 0.7);
+        setImages(prev => [...prev, compressedImage]);
+      } catch (err) {
+        setError("Error al procesar la imagen. Intentá con otra.");
+        console.error('Error compressing image:', err);
+      } finally {
+        setIsCompressing(false);
+      }
+
       // Reset input to allow selecting the same file again if deleted
       e.target.value = '';
     }
@@ -281,13 +332,23 @@ export const StandForm = () => {
                   ))}
                   
                   {images.length < 5 && (
-                      <button 
-                        type="button" 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-20 h-20 border-2 border-dashed border-gray-400 flex flex-col items-center justify-center text-gray-500 hover:text-torami-red hover:border-torami-red transition-colors bg-gray-50"
+                      <button
+                        type="button"
+                        onClick={() => !isCompressing && fileInputRef.current?.click()}
+                        disabled={isCompressing}
+                        className={`w-20 h-20 border-2 border-dashed border-gray-400 flex flex-col items-center justify-center text-gray-500 transition-colors bg-gray-50 ${isCompressing ? 'opacity-50 cursor-wait' : 'hover:text-torami-red hover:border-torami-red'}`}
                       >
-                          <Upload size={20} className="mb-1" />
-                          <span className="text-[10px] font-bold">Subir</span>
+                          {isCompressing ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-torami-red border-t-transparent rounded-full animate-spin mb-1"></div>
+                              <span className="text-[10px] font-bold">Procesando</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload size={20} className="mb-1" />
+                              <span className="text-[10px] font-bold">Subir</span>
+                            </>
+                          )}
                       </button>
                   )}
                   <input 

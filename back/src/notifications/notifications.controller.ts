@@ -35,8 +35,9 @@ export class NotificationsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.notificationsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req) {
+    // Valida que la notificación pertenezca al usuario
+    return this.notificationsService.findOne(id, req.user.userId);
   }
 
   @UseGuards(RolesGuard)
@@ -47,8 +48,8 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
-  markAsRead(@Param('id') id: string) {
-    return this.notificationsService.markAsRead(id);
+  markAsRead(@Param('id') id: string, @Request() req) {
+    return this.notificationsService.markAsRead(id, req.user.userId);
   }
 
   @Patch('read-all')
@@ -57,8 +58,8 @@ export class NotificationsController {
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.notificationsService.delete(id);
+  delete(@Param('id') id: string, @Request() req) {
+    return this.notificationsService.delete(id, req.user.userId);
   }
 
   @Delete()
