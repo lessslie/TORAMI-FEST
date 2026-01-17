@@ -101,22 +101,20 @@ export const InstallPWA = () => {
                             2. Elegí <PlusSquare size={14} /> "Agregar a Inicio"
                         </p>
                     </div>
-                ) : deferredPrompt ? (
+                ) : (
                     <p className="text-xs text-gray-300">
                         Accedé más rápido, usala sin internet y recibí notificaciones.
                     </p>
-                ) : (
-                    <div className="text-xs text-gray-300">
-                        <p>Instalá la app desde el menú de tu navegador:</p>
-                        <p className="font-bold text-white mt-1">⋮ → "Instalar aplicación"</p>
-                    </div>
                 )}
             </div>
         </div>
 
-        {!isIOS && deferredPrompt && (
+        {!isIOS && (
             <Button
-                onClick={handleInstallClick}
+                onClick={deferredPrompt ? handleInstallClick : () => {
+                    // Fallback: show alert with manual instructions
+                    alert('Para instalar la app:\n\n1. Abrí el menú del navegador (⋮)\n2. Seleccioná "Instalar aplicación" o "Agregar a pantalla de inicio"');
+                }}
                 className="w-full mt-3 bg-torami-red hover:bg-red-600 border-white text-white flex items-center justify-center gap-2 py-2 text-sm"
             >
                 <Download size={16} /> Instalar Torami Fest
