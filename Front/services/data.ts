@@ -116,6 +116,10 @@ export const getUserStands = (userId: string) => {
   const { token } = getAuth();
   return api.stands.getByUser(token || '', userId);
 };
+export const deleteStand = (id: string) => {
+  const { token } = getAuth();
+  return api.stands.delete(token || '', id);
+};
 
 // Giveaways
 export const getGiveaways = () => api.giveaways.getAll();
@@ -167,6 +171,10 @@ export const getCosplayAvailableSlots = () => api.cosplay.getAvailableSlots();
 export const addToWaitingList = (data: any) => {
   const { token } = getAuth();
   return api.cosplay.addToWaitingList(token || '', data);
+};
+export const deleteCosplayRegistration = (id: string) => {
+  const { token } = getAuth();
+  return api.cosplay.delete(token || '', id);
 };
 
 // Cosplay Guest

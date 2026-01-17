@@ -269,4 +269,20 @@ export class CosplayService {
       console.error('❌ Error notifying waiting list:', error);
     }
   }
+
+  async delete(id: string) {
+    // When deleting, check if we need to notify waiting list
+    const registration = await this.prisma.cosplayRegistration.findUnique({ where: { id } });
+
+    const result = await this.prisma.cosplayRegistration.delete({
+      where: { id },
+    });
+
+    // If deleted registration was occupying a slot, notify waiting list
+    if (registration && (registration.status === CosplayStatus.INSCRIPTO || registration.status === CosplayStatus.CONFIRMADO)) {
+      await this.notifyWaitingList();
+    }
+
+    return result;
+  }
 }

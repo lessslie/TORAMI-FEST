@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { StandsService } from './stands.service';
 import { CreateStandDto } from './dto/create-stand.dto';
 import { UpdateStandStatusDto } from './dto/update-stand-status.dto';
@@ -69,5 +69,13 @@ export class StandsController {
   @Post(':id/messages')
   addMessage(@Param('id') id: string, @Req() req: any, @Body() dto: AddMessageDto) {
     return this.standsService.addMessage(id, dto, req.user.userId, req.user.role);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.standsService.delete(id);
   }
 }

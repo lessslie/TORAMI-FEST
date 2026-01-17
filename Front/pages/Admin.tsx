@@ -8,10 +8,10 @@ import {
   getSponsors, saveSponsor, deleteSponsor,
   getGiveaways, saveGiveaway, deleteGiveaway,
   getGallery, getOfficialGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem, addOfficialGalleryItem,
-  addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage,
+  addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage, deleteCosplayRegistration,
   getCosplayGuests, getCosplayGuestById, getCosplayGuestMessages, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
   getUnreadNotificationCount, markAllNotificationsAsRead,
-  getAllUsers, updateUser, deleteUser, getAuth
+  getAllUsers, updateUser, deleteUser, getAuth, deleteStand
 } from '../services/data';
 import { api } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -268,6 +268,22 @@ export const Admin = () => {
   // Official Gallery Upload State
   const [showOfficialUpload, setShowOfficialUpload] = useState(false);
   const [officialUploadData, setOfficialUploadData] = useState({ eventId: '', description: '', url: '' });
+
+  // Cosplay Guest Delete State
+  const [deletingCosplayGuest, setDeletingCosplayGuest] = useState<CosplayGuest | null>(null);
+  const [showDeleteCosplayGuestConfirm, setShowDeleteCosplayGuestConfirm] = useState(false);
+
+  // Stand Delete State
+  const [deletingStand, setDeletingStand] = useState<StandApplication | null>(null);
+  const [showDeleteStandConfirm, setShowDeleteStandConfirm] = useState(false);
+
+  // Cosplay Registration Delete State
+  const [deletingCosplay, setDeletingCosplay] = useState<CosplayRegistration | null>(null);
+  const [showDeleteCosplayConfirm, setShowDeleteCosplayConfirm] = useState(false);
+
+  // User Delete State
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [showDeleteUserConfirm, setShowDeleteUserConfirm] = useState(false);
 
   // Carga datos específicos del tab activo (optimizado para reducir requests innecesarios)
   const loadTabData = (tab: string, updateOpenChat = false) => {
@@ -574,31 +590,117 @@ export const Admin = () => {
       // Detect if it's a guest (has assignedNumber)
       const isGuest = (viewCosplay as any).assignedNumber !== undefined;
 
-      // 1. Update status
-      if (isGuest) {
-        await updateCosplayGuestStatus(viewCosplay.id, 'Rechazado');
-      } else {
-        await updateCosplayStatus(viewCosplay.id, 'Rechazado');
+      try {
+        // 1. Update status (same flow for Guest, Concurso, and Stand - no deletion on reject)
+        if (isGuest) {
+          await updateCosplayGuestStatus(viewCosplay.id, 'Rechazado');
+        } else {
+          await updateCosplayStatus(viewCosplay.id, 'Rechazado');
+        }
+
+        // 2. Send Chat Message if reason is provided
+        if (cosplayRejectionReason.trim()) {
+            const reasonMsg = `⚠️ TU INSCRIPCIÓN FUE RECHAZADA.\n\nMotivo: ${cosplayRejectionReason}\n\nPor favor, corregí lo necesario y avisanos por este chat.`;
+
+            if (isGuest) {
+              await addCosplayGuestMessage(viewCosplay.id, reasonMsg, 'ADMIN');
+            } else {
+              await addCosplayMessage(viewCosplay.id, reasonMsg, 'ADMIN');
+            }
+        }
+
+        // 3. Cleanup and refresh
+        setIsRejectingCosplay(false);
+        setCosplayRejectionReason('');
+        refreshCurrentTab();
+
+        // 4. Close modal
+        setViewCosplay(null);
+      } catch (error) {
+        console.error('Error al rechazar:', error);
+        alert('Error al rechazar. Refrescando datos...');
+        setIsRejectingCosplay(false);
+        setCosplayRejectionReason('');
+        setViewCosplay(null);
+        refreshCurrentTab();
       }
+  };
 
-      // 2. Send Chat Message if reason is provided
-      if (cosplayRejectionReason.trim()) {
-          const reasonMsg = `⚠️ TU INSCRIPCIÓN FUE RECHAZADA.\n\nMotivo: ${cosplayRejectionReason}\n\nPor favor, corregí lo necesario y avisanos por este chat.`;
+  // Handle delete cosplay guest
+  const handleDeleteCosplayGuest = async () => {
+    if (!deletingCosplayGuest) return;
 
-          if (isGuest) {
-            await addCosplayGuestMessage(viewCosplay.id, reasonMsg, 'ADMIN');
-          } else {
-            await addCosplayMessage(viewCosplay.id, reasonMsg, 'ADMIN');
-          }
+    try {
+      await deleteCosplayGuest(deletingCosplayGuest.id);
+      setCosplayGuests(prev => prev.filter(g => g.id !== deletingCosplayGuest.id));
+      setShowDeleteCosplayGuestConfirm(false);
+      setDeletingCosplayGuest(null);
+      // Close detail modal if open
+      if (viewCosplay?.id === deletingCosplayGuest.id) {
+        setViewCosplay(null);
       }
+    } catch (error) {
+      console.error('Error deleting cosplay guest:', error);
+      alert('❌ Error al eliminar el registro');
+    }
+  };
 
-      // 3. Cleanup and refresh
-      setIsRejectingCosplay(false);
-      setCosplayRejectionReason('');
-      refreshCurrentTab();
+  // Handle delete stand
+  const handleDeleteStand = async () => {
+    if (!deletingStand) return;
 
-      // 4. Close modal
-      setViewCosplay(null);
+    try {
+      await deleteStand(deletingStand.id);
+      setStands(prev => prev.filter(s => s.id !== deletingStand.id));
+      setShowDeleteStandConfirm(false);
+      setDeletingStand(null);
+      // Close detail/chat modal if open
+      if (viewStand?.id === deletingStand.id) {
+        setViewStand(null);
+      }
+      if (chatStand?.id === deletingStand.id) {
+        setChatStand(null);
+      }
+    } catch (error) {
+      console.error('Error deleting stand:', error);
+      alert('❌ Error al eliminar el stand');
+    }
+  };
+
+  // Handle delete cosplay registration
+  const handleDeleteCosplayRegistration = async () => {
+    if (!deletingCosplay) return;
+
+    try {
+      await deleteCosplayRegistration(deletingCosplay.id);
+      setCosplayers(prev => prev.filter(c => c.id !== deletingCosplay.id));
+      setShowDeleteCosplayConfirm(false);
+      setDeletingCosplay(null);
+      // Close detail/chat modal if open
+      if (viewCosplay?.id === deletingCosplay.id) {
+        setViewCosplay(null);
+      }
+      if (chatCosplay?.id === deletingCosplay.id) {
+        setChatCosplay(null);
+      }
+    } catch (error) {
+      console.error('Error deleting cosplay registration:', error);
+      alert('❌ Error al eliminar el registro');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return;
+
+    try {
+      await deleteUser(deletingUser.id);
+      setUsers(prev => prev.filter(u => u.id !== deletingUser.id));
+      setShowDeleteUserConfirm(false);
+      setDeletingUser(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('❌ Error al eliminar el usuario');
+    }
   };
 
   const handleChatFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1130,6 +1232,17 @@ export const Admin = () => {
                         </button>
                       </>
                     )}
+                    {(stand.status === 'APROBADA' || stand.status === 'RECHAZADA') && (
+                      <button
+                        onClick={() => {
+                          setDeletingStand(stand);
+                          setShowDeleteStandConfirm(true);
+                        }}
+                        className="bg-red-100 text-red-700 px-3 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center gap-1 text-sm font-bold"
+                      >
+                        <Trash2 size={16} /> Eliminar
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1195,13 +1308,28 @@ export const Admin = () => {
                      </Badge>
                    </div>
 
-                   {/* Botón de ver detalles */}
-                   <button
-                     onClick={() => handleViewCosplayDetails(cos)}
-                     className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
-                   >
-                     <Eye size={16} /> Ver Detalles
-                   </button>
+                   {/* Botones de acción */}
+                   <div className="flex flex-wrap gap-2">
+                     <button
+                       onClick={() => handleViewCosplayDetails(cos)}
+                       className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
+                     >
+                       <Eye size={16} /> Ver Detalles
+                     </button>
+
+                     {/* Mostrar botón eliminar solo si está Confirmado o Rechazado (case-insensitive) */}
+                     {(cos.status.toUpperCase() === 'CONFIRMADO' || cos.status.toUpperCase() === 'RECHAZADO') && (
+                       <button
+                         onClick={() => {
+                           setDeletingCosplay(cos);
+                           setShowDeleteCosplayConfirm(true);
+                         }}
+                         className="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center justify-center gap-2 text-sm font-bold"
+                       >
+                         <Trash2 size={16} /> Eliminar
+                       </button>
+                     )}
+                   </div>
                  </div>
                </div>
              ))}
@@ -1264,13 +1392,28 @@ export const Admin = () => {
                        </Badge>
                      </div>
 
-                     {/* Botón de ver detalles */}
-                     <button
-                       onClick={() => handleViewCosplayDetails(guest)}
-                       className="w-full sm:w-auto bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
-                     >
-                       <Eye size={16} /> Ver Detalles
-                     </button>
+                     {/* Botones de acción */}
+                     <div className="flex flex-wrap gap-2">
+                       <button
+                         onClick={() => handleViewCosplayDetails(guest)}
+                         className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
+                       >
+                         <Eye size={16} /> Ver Detalles
+                       </button>
+
+                       {/* Mostrar botón eliminar solo si está Confirmado o Rechazado (case-insensitive) */}
+                       {(guest.status.toUpperCase() === 'CONFIRMADO' || guest.status.toUpperCase() === 'RECHAZADO') && (
+                         <button
+                           onClick={() => {
+                             setDeletingCosplayGuest(guest);
+                             setShowDeleteCosplayGuestConfirm(true);
+                           }}
+                           className="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center justify-center gap-2 text-sm font-bold"
+                         >
+                           <Trash2 size={16} /> Eliminar
+                         </button>
+                       )}
+                     </div>
                    </div>
                  </div>
                </div>
@@ -1521,9 +1664,8 @@ export const Admin = () => {
                         {user?.role === 'SUPER_ADMIN' && u.id !== user.id && (
                           <button
                             onClick={() => {
-                              if (confirm(`¿Eliminar usuario ${u.name}? Esta acción no se puede deshacer.`)) {
-                                deleteUser(u.id).then(() => refreshCurrentTab());
-                              }
+                              setDeletingUser(u);
+                              setShowDeleteUserConfirm(true);
                             }}
                             className="flex-1 sm:flex-none bg-red-50 text-red-600 px-4 py-2 rounded hover:bg-red-100 border border-red-200 flex items-center justify-center gap-2 text-sm font-bold"
                           >
@@ -1835,6 +1977,21 @@ export const Admin = () => {
                         )}
                      </div>
                  )}
+
+                 {/* Botón eliminar para Stand cuando está Aprobada o Rechazada */}
+                 {(viewStand.status === 'APROBADA' || viewStand.status === 'RECHAZADA') && (
+                     <div className="pt-4 border-t border-gray-200">
+                        <button
+                            onClick={() => {
+                                setDeletingStand(viewStand);
+                                setShowDeleteStandConfirm(true);
+                            }}
+                            className="w-full bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center justify-center gap-2 text-sm font-bold"
+                        >
+                            <Trash2 size={16} /> Eliminar Stand Permanentemente
+                        </button>
+                     </div>
+                 )}
               </div>
           </Modal>
       )}
@@ -1986,16 +2143,46 @@ export const Admin = () => {
                             </div>
                         </div>
                      ) : (
-                        <div className="flex gap-4">
-                            {viewCosplay.status !== 'Confirmado' && (
-                                <Button onClick={() => handleCosplayStatus(viewCosplay.id, 'Confirmado')} className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-800">
-                                    Confirmar
-                                </Button>
+                        <div className="space-y-3">
+                            <div className="flex gap-4">
+                                {viewCosplay.status !== 'Confirmado' && (
+                                    <Button onClick={() => handleCosplayStatus(viewCosplay.id, 'Confirmado')} className="flex-1 bg-green-600 hover:bg-green-700 text-white border-green-800">
+                                        Confirmar
+                                    </Button>
+                                )}
+                                {viewCosplay.status !== 'Rechazado' && (
+                                    <Button onClick={() => setIsRejectingCosplay(true)} variant="outline" className="flex-1 text-red-600 border-red-600 hover:bg-red-50">
+                                        Rechazar
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Botón eliminar para Cosplay Guest cuando está Confirmado o Rechazado (case-insensitive) */}
+                            {(viewCosplay as any).assignedNumber !== undefined &&
+                             (viewCosplay.status.toUpperCase() === 'CONFIRMADO' || viewCosplay.status.toUpperCase() === 'RECHAZADO') && (
+                                <button
+                                    onClick={() => {
+                                        setDeletingCosplayGuest(viewCosplay as unknown as CosplayGuest);
+                                        setShowDeleteCosplayGuestConfirm(true);
+                                    }}
+                                    className="w-full bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center justify-center gap-2 text-sm font-bold"
+                                >
+                                    <Trash2 size={16} /> Eliminar Registro Permanentemente
+                                </button>
                             )}
-                            {viewCosplay.status !== 'Rechazado' && (
-                                <Button onClick={() => setIsRejectingCosplay(true)} variant="outline" className="flex-1 text-red-600 border-red-600 hover:bg-red-50">
-                                    Rechazar
-                                </Button>
+
+                            {/* Botón eliminar para Cosplay Registration (concurso, no guest) cuando está Confirmado o Rechazado (case-insensitive) */}
+                            {(viewCosplay as any).assignedNumber === undefined &&
+                             (viewCosplay.status.toUpperCase() === 'CONFIRMADO' || viewCosplay.status.toUpperCase() === 'RECHAZADO') && (
+                                <button
+                                    onClick={() => {
+                                        setDeletingCosplay(viewCosplay as CosplayRegistration);
+                                        setShowDeleteCosplayConfirm(true);
+                                    }}
+                                    className="w-full bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center justify-center gap-2 text-sm font-bold"
+                                >
+                                    <Trash2 size={16} /> Eliminar Registro Permanentemente
+                                </button>
                             )}
                         </div>
                      )}
@@ -2233,15 +2420,221 @@ export const Admin = () => {
         </div>
       )}
 
+      {/* Delete Cosplay Guest Confirmation Modal */}
+      {showDeleteCosplayGuestConfirm && deletingCosplayGuest && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+          <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <h3 className="font-display text-xl">¡Advertencia!</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-lg font-bold mb-3">¿Eliminar este cosplay invitado permanentemente?</p>
+              <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+              <p className="text-sm text-gray-600 mb-4">Se eliminará el registro y todos sus mensajes de chat.</p>
+
+              <div className="bg-gray-50 p-3 border-2 border-gray-200 rounded mb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center justify-center w-10 h-10 bg-yellow-400 border-2 border-black font-bold text-lg">
+                    {deletingCosplayGuest.assignedNumber}
+                  </div>
+                  <div>
+                    <p className="font-bold">{deletingCosplayGuest.participantName}</p>
+                    <p className="text-sm text-gray-500 italic">"{deletingCosplayGuest.nickname}"</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">{deletingCosplayGuest.characterName}</span> - {deletingCosplayGuest.seriesName}
+                </p>
+                <Badge color={deletingCosplayGuest.status === 'Confirmado' ? 'green' : 'red'} className="mt-2">
+                  {deletingCosplayGuest.status}
+                </Badge>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleDeleteCosplayGuest}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Sí, Eliminar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDeleteCosplayGuestConfirm(false);
+                    setDeletingCosplayGuest(null);
+                  }}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Stand Confirmation Modal */}
+      {showDeleteStandConfirm && deletingStand && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+          <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <h3 className="font-display text-xl">¡Advertencia!</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-lg font-bold mb-3">¿Eliminar este stand permanentemente?</p>
+              <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+              <p className="text-sm text-gray-600 mb-4">Se eliminará la solicitud y todos sus mensajes de chat.</p>
+
+              <div className="bg-gray-50 p-3 border-2 border-gray-200 rounded mb-4">
+                <p className="font-bold text-lg">{deletingStand.brandName}</p>
+                <p className="text-sm text-gray-600">{deletingStand.type}</p>
+                <p className="text-sm mt-2">
+                  <span className="font-medium">{deletingStand.contactName}</span>
+                </p>
+                <Badge color={deletingStand.status === 'APROBADA' ? 'green' : 'red'} className="mt-2">
+                  {deletingStand.status}
+                </Badge>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleDeleteStand}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Sí, Eliminar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDeleteStandConfirm(false);
+                    setDeletingStand(null);
+                  }}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Cosplay Registration Confirmation Modal */}
+      {showDeleteCosplayConfirm && deletingCosplay && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+          <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <h3 className="font-display text-xl">¡Advertencia!</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-lg font-bold mb-3">¿Eliminar este registro de cosplay permanentemente?</p>
+              <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+              <p className="text-sm text-gray-600 mb-4">Se eliminará la inscripción y todos sus mensajes de chat.</p>
+
+              <div className="bg-gray-50 p-3 border-2 border-gray-200 rounded mb-4">
+                <p className="font-bold">{deletingCosplay.participantName}</p>
+                {deletingCosplay.nickname && (
+                  <p className="text-sm text-gray-500 italic">"{deletingCosplay.nickname}"</p>
+                )}
+                <p className="text-sm text-gray-700 mt-2">
+                  <span className="font-semibold">{deletingCosplay.characterName}</span> - {deletingCosplay.seriesName}
+                </p>
+                <Badge color={deletingCosplay.status === 'Confirmado' ? 'green' : 'red'} className="mt-2">
+                  {deletingCosplay.status}
+                </Badge>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleDeleteCosplayRegistration}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Sí, Eliminar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDeleteCosplayConfirm(false);
+                    setDeletingCosplay(null);
+                  }}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE USER CONFIRMATION MODAL */}
+      {showDeleteUserConfirm && deletingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+          <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <h3 className="font-display text-xl">¡Advertencia!</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-lg font-bold mb-3">¿Eliminar este usuario permanentemente?</p>
+              <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+              <p className="text-sm text-gray-600 mb-4">Se eliminará el usuario y todos sus datos asociados (inscripciones, stands, galería, etc).</p>
+
+              <div className="bg-gray-50 p-4 border-2 border-gray-200 rounded mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-torami-red to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                    {deletingUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">{deletingUser.name}</p>
+                    <p className="text-sm text-gray-600">{deletingUser.email}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge color={deletingUser.role === 'ADMIN' ? 'purple' : deletingUser.role === 'SUPER_ADMIN' ? 'red' : 'blue'}>
+                    {deletingUser.role}
+                  </Badge>
+                  {deletingUser.entryAuthorized && (
+                    <Badge color="green">Entrada Autorizada</Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleDeleteUser}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Sí, Eliminar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDeleteUserConfirm(false);
+                    setDeletingUser(null);
+                  }}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* EDIT EVENT MODAL */}
       {editingEvent && (
           <Modal title={editingEvent.id ? 'Editar Evento' : 'Nuevo Evento'} onClose={() => setEditingEvent(null)}>
               <form onSubmit={handleSaveEvent} className="space-y-4">
                   <Input label="Título" value={editingEvent.title} onChange={(e:any) => setEditingEvent({...editingEvent, title: e.target.value})} required />
-                  
+
                   {/* Media Manager for Event Images (Upload or Link) */}
-                  <MediaManager 
-                    media={editingEvent.images || []} 
+                  <MediaManager
+                    media={editingEvent.images || []}
                     onChange={(imgs) => setEditingEvent({...editingEvent, images: imgs})}
                     label="Imágenes / Videos (Max 5)"
                   />

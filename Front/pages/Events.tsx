@@ -211,7 +211,7 @@ export const EventDetail = () => {
 
           <div className="flex gap-2 mb-6 flex-wrap">
             {event.tags.map(tag => (
-               <Badge key={tag} color="blue">{tag}</Badge>
+               <span key={tag}><Badge color="blue">{tag}</Badge></span>
             ))}
           </div>
 

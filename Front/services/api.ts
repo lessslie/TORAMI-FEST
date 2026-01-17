@@ -160,6 +160,12 @@ export const api = {
         cacheManager.clear('/stands');
         return result;
       }),
+
+    delete: (token: string, id: string) =>
+      request<any>(`/stands/${id}`, { method: 'DELETE', token, useCache: false }).then(result => {
+        cacheManager.clear('/stands');
+        return result;
+      }),
   },
 
   // ==================== COSPLAY ====================
@@ -205,6 +211,12 @@ export const api = {
 
     addToWaitingList: (token: string, data: any) =>
       request<any>('/cosplay/waiting-list', { method: 'POST', body: data, token, useCache: false }).then(result => {
+        cacheManager.clear('/cosplay');
+        return result;
+      }),
+
+    delete: (token: string, id: string) =>
+      request<any>(`/cosplay/${id}`, { method: 'DELETE', token, useCache: false }).then(result => {
         cacheManager.clear('/cosplay');
         return result;
       }),

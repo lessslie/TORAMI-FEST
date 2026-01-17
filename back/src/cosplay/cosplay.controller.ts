@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { CosplayService } from './cosplay.service';
 import { CreateCosplayDto } from './dto/create-cosplay.dto';
 import { UpdateCosplayStatusDto } from './dto/update-cosplay-status.dto';
@@ -91,5 +91,13 @@ export class CosplayController {
   @Post('waiting-list')
   addToWaitingList(@Req() req: any, @Body() dto: CreateCosplayDto) {
     return this.cosplayService.addToWaitingList(req.user.userId, dto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Delete(':id')
+  delete(@Param('id') id: string) {
+    return this.cosplayService.delete(id);
   }
 }

@@ -157,4 +157,10 @@ export class StandsService {
       data: { messages: updatedMessages },
     });
   }
+
+  async delete(id: string) {
+    return this.prisma.standApplication.delete({
+      where: { id },
+    });
+  }
 }

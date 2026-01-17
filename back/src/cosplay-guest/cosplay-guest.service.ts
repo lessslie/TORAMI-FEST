@@ -224,16 +224,8 @@ export class CosplayGuestService {
   }
 
   async updateStatus(id: string, status: CosplayStatus) {
-    // If rejecting, delete the guest to free up the number
-    if (status === CosplayStatus.RECHAZADO) {
-      const guest = await this.findOne(id);
-      await this.prisma.cosplayGuest.delete({
-        where: { id },
-      });
-      return guest; // Return the guest data before deletion
-    }
-
-    // Otherwise, just update the status (for CONFIRMADO)
+    // Just update the status (same flow as Cosplay Concurso and Stand)
+    // Deletion is handled separately by the delete endpoint
     return this.prisma.cosplayGuest.update({
       where: { id },
       data: { status },
