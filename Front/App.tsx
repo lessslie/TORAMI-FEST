@@ -17,6 +17,7 @@ import { RecoverPassword } from './pages/RecoverPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { About } from './pages/About';
 import { Donations } from './pages/Donations';
+import { Contact } from './pages/Contact';
 import { User, UserRole } from './types';
 import { SectionTitle, MangaCard } from './components/UI';
 import { requestPasswordRecovery, resetPassword as apiResetPassword } from './services/data';
@@ -147,11 +148,11 @@ export default function App() {
             <Route path="/galeria-oficial" element={<OfficialGallery />} />
             <Route path="/sorteos" element={<Giveaways />} />
             
-            <Route path="/eventos-pasados" element={<PlaceholderPage title="Eventos Pasados" />} />
+            <Route path="/eventos-pasados" element={<PlaceholderPage title="🎤​ Karaoke" />} />
             <Route path="/sponsors" element={<PlaceholderPage title="Nuestros Sponsors" />} />
             <Route path="/donar" element={<Donations />} />
             <Route path="/donaciones" element={<Donations />} />
-            <Route path="/contacto" element={<PlaceholderPage title="Contacto" />} />
+            <Route path="/contacto" element={<Contact />} />
             <Route path="/sobre" element={<About />} />
           </Routes>
         </Layout>

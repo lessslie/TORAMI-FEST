@@ -224,14 +224,14 @@ export const api = {
 
   // ==================== COSPLAY GUEST ====================
   cosplayGuest: {
-    getAll: (page: number = 1, limit: number = 20, includeMessages?: boolean) => {
+    getAll: (token: string, page: number = 1, limit: number = 20, includeMessages?: boolean) => {
       const params = new URLSearchParams();
       params.append('page', String(page));
       params.append('limit', String(limit));
       if (includeMessages) params.append('includeMessages', 'true');
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/cosplay-guest?${params.toString()}`,
-        { useCache: false }
+        { token, useCache: false }
       );
     },
 

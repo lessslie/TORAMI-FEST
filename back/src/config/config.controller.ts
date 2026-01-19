@@ -36,7 +36,7 @@ export class ConfigController {
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Post('reset')
   resetConfig() {
     return this.configService.resetConfig();

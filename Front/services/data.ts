@@ -178,8 +178,10 @@ export const deleteCosplayRegistration = (id: string) => {
 };
 
 // Cosplay Guest
-export const getCosplayGuests = (page: number = 1, limit: number = 100) =>
-  api.cosplayGuest.getAll(page, limit);
+export const getCosplayGuests = (page: number = 1, limit: number = 100) => {
+  const { token } = getAuth();
+  return api.cosplayGuest.getAll(token || '', page, limit);
+};
 export const getUserCosplayGuests = () => {
   const { token } = getAuth();
   return api.cosplayGuest.getByUser(token || '', false);

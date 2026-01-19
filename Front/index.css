@@ -68,14 +68,27 @@ a {
 }
 /* Hardening nav breakpoints in case Tailwind purge misses classes */
 .nav-desktop {
-  display: none;
+  display: none !important;
 }
-@media (min-width: 768px) {
+.nav-mobile-toggle {
+  display: flex !important;
+}
+@media (min-width: 1350px) {
   .nav-desktop {
+    display: flex !important;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: auto;
+    padding-left: 2rem;
+  }
+  .nav-desktop a {
     display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
   }
   .nav-mobile-toggle {
-    display: none;
+    display: none !important;
   }
 }
 

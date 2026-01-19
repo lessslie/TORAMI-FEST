@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 
@@ -100,6 +100,15 @@ export class UsersService {
   }
 
   async deleteUser(userId: string) {
+    // Verificar que no se intente eliminar a un SUPER_ADMIN
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('No se puede eliminar a un SUPER_ADMIN');
+    }
+
     return this.prisma.user.delete({
       where: { id: userId },
     });

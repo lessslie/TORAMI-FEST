@@ -46,10 +46,10 @@ export const Navbar = () => {
       return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu if resizing to desktop
+  // Close mobile menu if resizing to desktop (nav breakpoint = 1350px)
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) setIsOpen(false);
+      if (window.innerWidth >= 1350) setIsOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -84,7 +84,7 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-white/30 backdrop-blur-md border-b-2 border-black shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <Link to="/" className="flex-shrink-0 flex items-center gap-2 group">
               <div className="relative">
                 <img src="/torami_fest_logo_circle.jpg" alt="Torami Logo" className="w-10 h-10 rounded-full border-2 border-black overflow-hidden object-cover group-hover:scale-110 transition-transform bg-white" />
@@ -95,8 +95,7 @@ export const Navbar = () => {
           </div>
           
           {/* Desktop Menu */}
-          <div className="hidden md:flex md:items-center md:space-x-4 nav-desktop">
-            <Link to="/" className={isActive('/')}>Inicio</Link>
+          <div className="hidden min-[1350px]:flex min-[1350px]:items-center min-[1350px]:space-x-4 nav-desktop">
             <Link to="/proximos-eventos" className={isActive('/proximos-eventos')}>Eventos</Link>
             <Link to="/quiero-un-stand" className={isActive('/quiero-un-stand')}>Stands</Link>
             <Link to="/concursos-cosplay" className={isActive('/concursos-cosplay')}>Concursos</Link>
@@ -105,6 +104,7 @@ export const Navbar = () => {
             </Link>
             <Link to="/galeria-oficial" className={isActive('/galeria-oficial')}>📸 Oficial</Link>
             <Link to="/galeria" className={isActive('/galeria')}>👥 Comunitaria</Link>
+            <Link to="/eventos-pasados" className={isActive('/eventos-pasados')}>🎤 Karaoke</Link>
             <Link to="/sorteos" className={isActive('/sorteos')}>Sorteos</Link>
             
             {(user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN) && (
@@ -187,7 +187,7 @@ export const Navbar = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center md:hidden gap-2 nav-mobile-toggle">
+          <div className="flex items-center min-[1350px]:hidden gap-2 nav-mobile-toggle">
              {/* Mobile Notification Bell */}
              {user && (
                  <Link to="/dashboard" className="p-2 relative">
@@ -210,7 +210,7 @@ export const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white/30 backdrop-blur-md border-t-2 border-black animate-in slide-in-from-top-2">
+        <div className="min-[1350px]:hidden bg-white/30 backdrop-blur-md border-t-2 border-black animate-in slide-in-from-top-2">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <NavLink to="/" icon={Home}>Inicio</NavLink>
             <NavLink to="/proximos-eventos" icon={Calendar}>Próximos Eventos</NavLink>
@@ -219,7 +219,7 @@ export const Navbar = () => {
             <NavLink to="/quiero-un-stand" icon={Store}>Quiero un Stand</NavLink>
             <NavLink to="/galeria-oficial" icon={Sparkles}>📸 Galería Oficial</NavLink>
             <NavLink to="/galeria" icon={Image}>👥 Galería Comunitaria</NavLink>
-            <NavLink to="/eventos-pasados" icon={Ghost}>Blog / Pasados</NavLink>
+            <NavLink to="/eventos-pasados" icon={Ghost}>🎤​ Karaoke</NavLink>
             <NavLink to="/sorteos" icon={Gift}>Sorteos</NavLink>
             <NavLink to="/donar" icon={DollarSign}>Donar / Apoyar</NavLink>
             <NavLink to="/contacto" icon={MessageCircle}>Contacto</NavLink>
@@ -276,6 +276,7 @@ export const Footer = () => (
       {/* Col 3: Links */}
       <div className="flex justify-center md:justify-end gap-6">
         <Link to="/sobre" className="hover:text-torami-red transition-colors text-sm">Sobre Nosotros</Link>
+        <Link to="/contacto" className="hover:text-torami-red transition-colors text-sm">Contacto</Link>
         <Link to="/sponsors" className="hover:text-torami-red transition-colors text-sm">Sponsors</Link>
         <a href="https://www.instagram.com/torami.fest/" target="_blank" rel="noreferrer" className="hover:text-torami-red transition-colors text-sm">Instagram</a>
       </div>

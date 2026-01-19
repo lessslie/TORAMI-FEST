@@ -11,6 +11,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        'nav': '1350px', // Breakpoint personalizado para el navbar
+      },
       colors: {
         torami: {
           red: '#D70000',

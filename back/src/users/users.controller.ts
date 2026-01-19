@@ -42,7 +42,7 @@ export class UsersController {
     return this.usersService.updateUser(id, data);
   }
 
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.usersService.deleteUser(id);
