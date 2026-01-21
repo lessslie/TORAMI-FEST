@@ -45,25 +45,27 @@ export const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Input 
-              label="Email" 
-              name="email" 
-              type="email" 
-              required 
-              placeholder="tu@email.com" 
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              required
+              placeholder="tu@email.com"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
             />
-            
+
             <div className="relative">
-              <Input 
-                label="Contraseña" 
-                name="password" 
-                type="password" 
-                required 
-                placeholder="******" 
+              <Input
+                label="Contraseña"
+                name="password"
+                type="password"
+                required
+                placeholder="******"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="current-password"
               />
               <Link to="/recuperar-password">
                   <span className="absolute top-0 right-0 text-xs text-blue-600 hover:underline cursor-pointer">

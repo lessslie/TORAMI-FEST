@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../App';
 import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
@@ -210,7 +211,9 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
 
 export const Admin = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'officialgallery'|'config'|'cosplay'|'cosplayguest'|'users'>('dashboard');
+  const [pendingChatId, setPendingChatId] = useState<string | null>(null);
 
   // Data State
   const [stats, setStats] = useState<any>(null);
@@ -422,6 +425,46 @@ export const Admin = () => {
   useEffect(() => {
     loadTabData(activeTab);
   }, [activeTab]);
+
+  // Handle URL query params for opening specific chat from notifications
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const chatId = searchParams.get('chat');
+
+    if (tab && ['stands', 'cosplay', 'cosplayguest'].includes(tab)) {
+      setActiveTab(tab as any);
+      if (chatId) {
+        setPendingChatId(chatId);
+      }
+      // Clear query params after reading
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
+  // Open chat when data is loaded and we have a pending chat ID
+  useEffect(() => {
+    if (!pendingChatId) return;
+
+    if (activeTab === 'stands' && stands.length > 0) {
+      const stand = stands.find(s => s.id === pendingChatId);
+      if (stand) {
+        setChatStand(stand);
+        setPendingChatId(null);
+      }
+    } else if (activeTab === 'cosplay' && cosplayers.length > 0) {
+      const cosplay = cosplayers.find(c => c.id === pendingChatId);
+      if (cosplay) {
+        setChatCosplay(cosplay);
+        setPendingChatId(null);
+      }
+    } else if (activeTab === 'cosplayguest' && cosplayGuests.length > 0) {
+      const guest = cosplayGuests.find(g => g.id === pendingChatId);
+      if (guest) {
+        setChatCosplay(guest as any); // cosplayguest uses same chat component
+        setPendingChatId(null);
+      }
+    }
+  }, [pendingChatId, activeTab, stands, cosplayers, cosplayGuests]);
 
   // Sync refs with state
   useEffect(() => {

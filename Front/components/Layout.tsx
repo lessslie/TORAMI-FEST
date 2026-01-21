@@ -55,9 +55,13 @@ export const Navbar = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleMarkRead = async (id: string) => {
-      await markNotificationRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
+  const handleNotificationClick = async (notif: Notification) => {
+      await markNotificationRead(notif.id);
+      setNotifications(prev => prev.map(n => n.id === notif.id ? {...n, read: true} : n));
+      setShowNotifications(false);
+      if (notif.link) {
+        navigate(notif.link);
+      }
   };
 
   const handleLogout = () => {
@@ -147,9 +151,9 @@ export const Navbar = () => {
                             ) : (
                                 <div>
                                     {notifications.map(notif => (
-                                        <div 
-                                            key={notif.id} 
-                                            onClick={() => handleMarkRead(notif.id)}
+                                        <div
+                                            key={notif.id}
+                                            onClick={() => handleNotificationClick(notif)}
                                             className={`p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${notif.read ? 'opacity-60' : 'bg-blue-50'}`}
                                         >
                                             <div className="flex justify-between items-start mb-1">
@@ -159,6 +163,9 @@ export const Navbar = () => {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-gray-600">{notif.message}</p>
+                                            {notif.link && (
+                                                <p className="text-[10px] text-torami-red mt-1">Click para ver detalles →</p>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

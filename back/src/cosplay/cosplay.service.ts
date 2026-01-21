@@ -134,7 +134,7 @@ export class CosplayService {
           title: 'Nuevo mensaje sobre tu inscripción al concurso',
           message: `Recibiste un mensaje sobre "${item.characterName}"`,
           type: 'CHAT_COSPLAY',
-          link: '/dashboard',
+          link: `/dashboard?tab=cosplay&chat=${id}`,
         },
       });
     }
@@ -157,7 +157,7 @@ export class CosplayService {
               title: 'Nuevo mensaje de participante',
               message: `${item.participantName} te envió un mensaje sobre su cosplay "${item.characterName}"`,
               type: 'CHAT_COSPLAY',
-              link: '/admin',
+              link: `/admin?tab=cosplay&chat=${id}`,
             },
           })
         )

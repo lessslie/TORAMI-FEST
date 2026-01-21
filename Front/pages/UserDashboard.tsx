@@ -4,7 +4,7 @@ import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI'
 import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, getCosplayGuestMessages, withdrawCosplayGuest } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole } from '../types';
 import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star } from 'lucide-react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
   <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -22,7 +22,9 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 
 export const UserDashboard = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'cosplayguest'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
+  const [pendingChatId, setPendingChatId] = useState<string | null>(null);
 
   // Data State
   const [stands, setStands] = useState<StandApplication[]>([]);
@@ -121,6 +123,46 @@ export const UserDashboard = () => {
   useEffect(() => {
     refreshData();
   }, [user]);
+
+  // Handle URL query params for opening specific chat from notifications
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const chatId = searchParams.get('chat');
+
+    if (tab && ['stands', 'cosplay', 'cosplayguest'].includes(tab)) {
+      setActiveTab(tab as any);
+      if (chatId) {
+        setPendingChatId(chatId);
+      }
+      // Clear query params after reading
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
+
+  // Open chat when data is loaded and we have a pending chat ID
+  useEffect(() => {
+    if (!pendingChatId) return;
+
+    if (activeTab === 'stands' && stands.length > 0) {
+      const stand = stands.find(s => s.id === pendingChatId);
+      if (stand) {
+        setActiveChatStand(stand);
+        setPendingChatId(null);
+      }
+    } else if (activeTab === 'cosplay' && cosplays.length > 0) {
+      const cosplay = cosplays.find(c => c.id === pendingChatId);
+      if (cosplay) {
+        setActiveChatCosplay(cosplay);
+        setPendingChatId(null);
+      }
+    } else if (activeTab === 'cosplayguest' && cosplayGuests.length > 0) {
+      const guest = cosplayGuests.find(g => g.id === pendingChatId);
+      if (guest) {
+        setActiveChatCosplay(guest as any);
+        setPendingChatId(null);
+      }
+    }
+  }, [pendingChatId, activeTab, stands, cosplays, cosplayGuests]);
 
   // Sync refs with state
   useEffect(() => {

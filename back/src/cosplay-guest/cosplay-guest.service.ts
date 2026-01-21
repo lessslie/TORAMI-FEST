@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCosplayGuestDto } from './dto/create-cosplay-guest.dto';
 import { WithdrawCosplayGuestDto } from './dto/withdraw-cosplay-guest.dto';
-import { CosplayStatus } from '@prisma/client';
+import { CosplayStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class CosplayGuestService {
@@ -254,12 +254,49 @@ export class CosplayGuestService {
     const guest = await this.findOne(id);
     const messages = Array.isArray(guest.messages) ? guest.messages : [];
 
-    return this.prisma.cosplayGuest.update({
+    const updated = await this.prisma.cosplayGuest.update({
       where: { id },
       data: {
         messages: [...messages, message],
       },
     });
+
+    // Create notification when admin sends message to user
+    if (message.sender === 'ADMIN') {
+      await this.prisma.notification.create({
+        data: {
+          userId: guest.userId,
+          title: 'Nuevo mensaje sobre tu inscripción de invitado',
+          message: `Recibiste un mensaje sobre "${guest.characterName}"`,
+          type: 'CHAT_COSPLAY_GUEST',
+          link: `/dashboard?tab=cosplayguest&chat=${id}`,
+        },
+      });
+    }
+
+    // If user sends message, notify all admins
+    if (message.sender === 'USER') {
+      const admins = await this.prisma.user.findMany({
+        where: { role: { in: [UserRole.ADMIN, UserRole.SUPER_ADMIN] } },
+        select: { id: true },
+      });
+
+      await Promise.all(
+        admins.map((admin) =>
+          this.prisma.notification.create({
+            data: {
+              userId: admin.id,
+              title: 'Nuevo mensaje de invitado cosplay',
+              message: `${guest.participantName} te envió un mensaje sobre "${guest.characterName}"`,
+              type: 'CHAT_COSPLAY_GUEST',
+              link: `/admin?tab=cosplayguest&chat=${id}`,
+            },
+          })
+        )
+      );
+    }
+
+    return updated;
   }
 
   async getMessages(id: string) {

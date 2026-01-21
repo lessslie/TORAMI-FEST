@@ -122,7 +122,7 @@ export class StandsService {
           title: 'Nuevo mensaje sobre tu stand',
           message: `Recibiste un mensaje sobre "${stand.brandName}"`,
           type: 'CHAT_STAND',
-          link: '/dashboard',
+          link: `/dashboard?tab=stands&chat=${id}`,
         },
       });
     }
@@ -145,7 +145,7 @@ export class StandsService {
               title: 'Nuevo mensaje de usuario',
               message: `${stand.contactName} te envió un mensaje sobre su stand "${stand.brandName}"`,
               type: 'CHAT_STAND',
-              link: '/admin',
+              link: `/admin?tab=stands&chat=${id}`,
             },
           })
         )
