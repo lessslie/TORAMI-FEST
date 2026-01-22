@@ -72,4 +72,24 @@ export class UpdateConfigDto {
   @IsInt()
   @Min(1)
   cosplayGuestLimit?: number;
+
+  @ApiProperty({ required: false, description: 'Inscripciones de cosplay abiertas' })
+  @IsOptional()
+  @IsBoolean()
+  cosplayInscripcionesAbiertas?: boolean;
+
+  @ApiProperty({ required: false, description: 'Inscripciones de cosplay invitados abiertas' })
+  @IsOptional()
+  @IsBoolean()
+  cosplayGuestInscripcionesAbiertas?: boolean;
+
+  @ApiProperty({ required: false, description: 'Inscripciones de stands abiertas' })
+  @IsOptional()
+  @IsBoolean()
+  standsInscripcionesAbiertas?: boolean;
+
+  @ApiProperty({ required: false, description: 'Inscripciones de karaoke abiertas' })
+  @IsOptional()
+  @IsBoolean()
+  karaokeInscripcionesAbiertas?: boolean;
 }

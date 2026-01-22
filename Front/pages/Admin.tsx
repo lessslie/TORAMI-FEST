@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../App';
-import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User } from '../types';
+import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User, Karaoke } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import {
   getStats, getStandApplications, updateStandStatus, getConfig, updateConfig,
@@ -12,11 +12,12 @@ import {
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage, deleteCosplayRegistration,
   getCosplayGuests, getCosplayGuestById, getCosplayGuestMessages, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
   getUnreadNotificationCount, markAllNotificationsAsRead,
-  getAllUsers, updateUser, deleteUser, getAuth, deleteStand
+  getAllUsers, updateUser, deleteUser, getAuth, deleteStand,
+  getKaraokeRegistrations, updateKaraokeStatus, deleteKaraoke
 } from '../services/data';
 import { api } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock, Instagram, Globe } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock, Instagram, Globe, Mic, Music } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -212,7 +213,7 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
 export const Admin = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'officialgallery'|'config'|'cosplay'|'cosplayguest'|'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard'|'stands'|'events'|'sponsors'|'giveaways'|'gallery'|'officialgallery'|'config'|'cosplay'|'cosplayguest'|'karaoke'|'users'>('dashboard');
   const [pendingChatId, setPendingChatId] = useState<string | null>(null);
 
   // Data State
@@ -221,6 +222,7 @@ export const Admin = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [cosplayers, setCosplayers] = useState<CosplayRegistration[]>([]);
   const [cosplayGuests, setCosplayGuests] = useState<CosplayGuest[]>([]);
+  const [karaokeList, setKaraokeList] = useState<Karaoke[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
@@ -371,6 +373,11 @@ export const Admin = () => {
 
       case 'config':
         getConfig(true).then(setConfig);
+        break;
+
+      case 'karaoke':
+        getKaraokeRegistrations().then(setKaraokeList);
+        getEvents().then(setEvents); // Necesario para filtrar por evento
         break;
 
       default:
@@ -1065,6 +1072,7 @@ export const Admin = () => {
             <option value="stands">Stands</option>
             <option value="cosplay">Cosplay</option>
             <option value="cosplayguest">🌟 Cosplay Invitados</option>
+            <option value="karaoke">🎤 Karaoke</option>
             <option value="gallery">Galería Comunitaria</option>
             <option value="officialgallery">📸 Galería Oficial</option>
             <option value="giveaways">Sorteos</option>
@@ -1081,6 +1089,7 @@ export const Admin = () => {
           <TabButton id="stands" label="Stands" icon={Store} />
           <TabButton id="cosplay" label="Cosplay" icon={Trophy} />
           <TabButton id="cosplayguest" label="🌟 Invitados" icon={Star} />
+          <TabButton id="karaoke" label="🎤 Karaoke" icon={Mic} />
           <TabButton id="gallery" label="👥 Comunitaria" icon={Image} />
           <TabButton id="officialgallery" label="📸 Oficial" icon={Sparkles} />
           <TabButton id="giveaways" label="Sorteos" icon={Gift} />
@@ -1471,6 +1480,143 @@ export const Admin = () => {
         </div>
       )}
 
+      {/* --- KARAOKE MANAGEMENT --- */}
+      {activeTab === 'karaoke' && (
+        <div className="animate-in fade-in">
+          <div className="flex justify-between mb-4">
+            <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
+              <Mic size={24} className="text-purple-600" />
+              Gestión de Karaoke
+            </h3>
+          </div>
+
+          {/* Stats de karaoke */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <MangaCard className="text-center bg-yellow-50">
+              <div className="text-2xl font-display text-yellow-600">
+                {karaokeList.filter(k => k.status === 'Pendiente' || k.status === 'PENDIENTE').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Pendientes</div>
+            </MangaCard>
+            <MangaCard className="text-center bg-green-50">
+              <div className="text-2xl font-display text-green-600">
+                {karaokeList.filter(k => k.status === 'Aprobado' || k.status === 'APROBADO').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Aprobados</div>
+            </MangaCard>
+            <MangaCard className="text-center bg-red-50">
+              <div className="text-2xl font-display text-red-600">
+                {karaokeList.filter(k => k.status === 'Rechazado' || k.status === 'RECHAZADO').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Rechazados</div>
+            </MangaCard>
+          </div>
+
+          {/* Lista de inscripciones */}
+          <div className="space-y-3">
+            {karaokeList.map(karaoke => (
+              <div key={karaoke.id} className="border-2 border-black bg-white shadow-manga p-4">
+                <div className="flex gap-4">
+                  {/* Número asignado si existe */}
+                  <div className="shrink-0">
+                    <div className={`flex items-center justify-center w-14 h-14 border-2 border-black font-bold text-2xl ${
+                      karaoke.assignedNumber ? 'bg-green-400' : 'bg-gray-200'
+                    }`}>
+                      {karaoke.assignedNumber || '?'}
+                    </div>
+                  </div>
+
+                  {/* Contenido */}
+                  <div className="flex-1 min-w-0">
+                    {/* Nombre y canción */}
+                    <div className="mb-2">
+                      <h4 className="font-bold text-lg">{karaoke.fullName}</h4>
+                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                        <Music size={14} /> {karaoke.songName}
+                      </p>
+                    </div>
+
+                    {/* Contacto */}
+                    <div className="flex flex-wrap gap-3 text-sm mb-2">
+                      <a
+                        href={`https://instagram.com/${karaoke.instagram.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-pink-600 hover:underline flex items-center gap-1"
+                      >
+                        <Instagram size={14} /> {karaoke.instagram}
+                      </a>
+                      <a href={`mailto:${karaoke.email}`} className="text-blue-600 hover:underline">
+                        {karaoke.email}
+                      </a>
+                      <a href={`https://wa.me/${karaoke.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline flex items-center gap-1">
+                        <Phone size={14} /> {karaoke.whatsapp}
+                      </a>
+                    </div>
+
+                    {/* Evento y estado */}
+                    <div className="flex flex-wrap gap-2 items-center mb-3 text-sm">
+                      <span className="text-gray-700">
+                        📅 {karaoke.event?.title || 'Sin evento'}
+                      </span>
+                      <Badge color={
+                        (karaoke.status === 'Pendiente' || karaoke.status === 'PENDIENTE') ? 'yellow' :
+                        (karaoke.status === 'Aprobado' || karaoke.status === 'APROBADO') ? 'green' : 'red'
+                      }>
+                        {karaoke.status}
+                      </Badge>
+                    </div>
+
+                    {/* Botones de acción */}
+                    <div className="flex flex-wrap gap-2">
+                      {(karaoke.status === 'Pendiente' || karaoke.status === 'PENDIENTE') && (
+                        <>
+                          <button
+                            onClick={async () => {
+                              await updateKaraokeStatus(karaoke.id, 'APROBADO');
+                              loadTabData('karaoke');
+                            }}
+                            className="bg-green-100 text-green-700 px-4 py-2 rounded hover:bg-green-200 border border-green-300 flex items-center gap-2 text-sm font-bold"
+                          >
+                            <Check size={16} /> Aprobar
+                          </button>
+                          <button
+                            onClick={async () => {
+                              await updateKaraokeStatus(karaoke.id, 'RECHAZADO');
+                              loadTabData('karaoke');
+                            }}
+                            className="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center gap-2 text-sm font-bold"
+                          >
+                            <X size={16} /> Rechazar
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={async () => {
+                          if (confirm('¿Eliminar esta inscripción?')) {
+                            await deleteKaraoke(karaoke.id);
+                            loadTabData('karaoke');
+                          }
+                        }}
+                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-2 text-sm font-bold"
+                      >
+                        <Trash2 size={16} /> Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {karaokeList.length === 0 && (
+              <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500 italic">
+                No hay inscripciones de karaoke aún.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* --- GALLERY MODERATION (COMMUNITY) --- */}
       {activeTab === 'gallery' && (
           <div className="animate-in fade-in">
@@ -1775,6 +1921,82 @@ export const Admin = () => {
                             ✓ {config.homeGalleryImages.length} imagen(es) cargada(s) - Click en "Guardar Cambios Globales" para persistir
                         </div>
                     )}
+                </MangaCard>
+
+                {/* Control de Inscripciones */}
+                <MangaCard className="border-t-4 border-t-purple-600">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <AlertTriangle size={20} className="text-purple-600" /> Control de Inscripciones
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-4">Abre o cierra manualmente las inscripciones. Cuando están cerradas, los usuarios ven un mensaje de "cupo completo".</p>
+
+                    {/* Cosplay Contest */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 mb-3 rounded">
+                        <div>
+                            <span className="font-bold block">Cosplay Concurso</span>
+                            <span className="text-xs text-gray-500">
+                                {config.cosplayInscripcionesAbiertas !== false ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setConfig({...config, cosplayInscripcionesAbiertas: !config.cosplayInscripcionesAbiertas})}
+                            className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.cosplayInscripcionesAbiertas !== false ? 'bg-green-500' : 'bg-red-400'}`}
+                        >
+                            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.cosplayInscripcionesAbiertas !== false ? 'translate-x-6' : ''}`}></div>
+                        </button>
+                    </div>
+
+                    {/* Cosplay Guest */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 mb-3 rounded">
+                        <div>
+                            <span className="font-bold block">Cosplay Invitados</span>
+                            <span className="text-xs text-gray-500">
+                                {config.cosplayGuestInscripcionesAbiertas !== false ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setConfig({...config, cosplayGuestInscripcionesAbiertas: !config.cosplayGuestInscripcionesAbiertas})}
+                            className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.cosplayGuestInscripcionesAbiertas !== false ? 'bg-green-500' : 'bg-red-400'}`}
+                        >
+                            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.cosplayGuestInscripcionesAbiertas !== false ? 'translate-x-6' : ''}`}></div>
+                        </button>
+                    </div>
+
+                    {/* Stands */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 mb-3 rounded">
+                        <div>
+                            <span className="font-bold block">Stands / Emprendedores</span>
+                            <span className="text-xs text-gray-500">
+                                {config.standsInscripcionesAbiertas !== false ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setConfig({...config, standsInscripcionesAbiertas: !config.standsInscripcionesAbiertas})}
+                            className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.standsInscripcionesAbiertas !== false ? 'bg-green-500' : 'bg-red-400'}`}
+                        >
+                            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.standsInscripcionesAbiertas !== false ? 'translate-x-6' : ''}`}></div>
+                        </button>
+                    </div>
+
+                    {/* Karaoke */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                        <div>
+                            <span className="font-bold block">Karaoke</span>
+                            <span className="text-xs text-gray-500">
+                                {config.karaokeInscripcionesAbiertas !== false ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setConfig({...config, karaokeInscripcionesAbiertas: !config.karaokeInscripcionesAbiertas})}
+                            className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.karaokeInscripcionesAbiertas !== false ? 'bg-green-500' : 'bg-red-400'}`}
+                        >
+                            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.karaokeInscripcionesAbiertas !== false ? 'translate-x-6' : ''}`}></div>
+                        </button>
+                    </div>
+
+                    <p className="text-xs text-yellow-600 mt-3 font-medium">
+                        Recordá hacer click en "Guardar Cambios Globales" para aplicar los cambios.
+                    </p>
                 </MangaCard>
             </div>
 

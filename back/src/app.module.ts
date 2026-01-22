@@ -21,6 +21,7 @@ import { StampsModule } from './stamps/stamps.module';
 import { ConfigModule as AppConfigModule } from './config/config.module';
 import { ChatModule } from './chat/chat.module';
 import { DonationsModule } from './donations/donations.module';
+import { KaraokeModule } from './karaoke/karaoke.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { DonationsModule } from './donations/donations.module';
     AppConfigModule,
     ChatModule,
     DonationsModule,
+    KaraokeModule,
   ],
   controllers: [AppController],
   providers: [

@@ -22,6 +22,11 @@ export class ConfigService {
       donationGoal: true,
       cosplayLimit: true,
       cosplayGuestLimit: true,
+      // Control de inscripciones
+      cosplayInscripcionesAbiertas: true,
+      cosplayGuestInscripcionesAbiertas: true,
+      standsInscripcionesAbiertas: true,
+      karaokeInscripcionesAbiertas: true,
     };
 
     // El AppConfig siempre tiene id=1 (singleton)

@@ -135,6 +135,33 @@ export interface CosplayGuest {
   updatedAt: string;
 }
 
+export interface Karaoke {
+  id: string;
+  userId: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+  };
+  fullName: string;
+  instagram: string;
+  email: string;
+  whatsapp: string;
+  songName: string;
+  status: 'Pendiente' | 'Aprobado' | 'Rechazado';
+  assignedNumber?: number;
+  eventId: string;
+  event?: {
+    id: string;
+    title: string;
+    date: string;
+    location?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Sponsor {
   id: string;
   name: string;
@@ -202,6 +229,12 @@ export interface AppConfig {
   donationGoal?: number;
   // Cosplay Limit
   cosplayLimit?: number; // Límite de cupos para concurso de cosplay
+  cosplayGuestLimit?: number; // Límite de cupos para cosplay invitados
+  // Control manual de inscripciones
+  cosplayInscripcionesAbiertas?: boolean;
+  cosplayGuestInscripcionesAbiertas?: boolean;
+  standsInscripcionesAbiertas?: boolean;
+  karaokeInscripcionesAbiertas?: boolean;
 }
 
 export interface Donation {

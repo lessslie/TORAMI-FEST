@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Heart, User as UserIcon, LogOut, Home, Calendar, Image, Store, Gift, MessageCircle, DollarSign, Ghost, Sparkles, ShieldCheck, ArrowUp, Trophy, UserCog, LogIn, Bell, Star } from 'lucide-react';
+import { Menu, X, Heart, User as UserIcon, LogOut, Home, Calendar, Image, Store, Gift, MessageCircle, DollarSign, Ghost, Sparkles, ShieldCheck, ArrowUp, Trophy, UserCog, LogIn, Bell, Star, Mic } from 'lucide-react';
 import { useAuth } from '../App';
 import { UserRole, Notification } from '../types';
 import { ToramiBot } from './ToramiBot';
@@ -108,7 +108,7 @@ export const Navbar = () => {
             </Link>
             <Link to="/galeria-oficial" className={isActive('/galeria-oficial')}>📸 Oficial</Link>
             <Link to="/galeria" className={isActive('/galeria')}>👥 Comunitaria</Link>
-            <Link to="/eventos-pasados" className={isActive('/eventos-pasados')}>🎤 Karaoke</Link>
+            <Link to="/karaoke" className={isActive('/karaoke')}>🎤 Karaoke</Link>
             <Link to="/sorteos" className={isActive('/sorteos')}>Sorteos</Link>
             
             {(user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN) && (
@@ -226,7 +226,7 @@ export const Navbar = () => {
             <NavLink to="/quiero-un-stand" icon={Store}>Quiero un Stand</NavLink>
             <NavLink to="/galeria-oficial" icon={Sparkles}>📸 Galería Oficial</NavLink>
             <NavLink to="/galeria" icon={Image}>👥 Galería Comunitaria</NavLink>
-            <NavLink to="/eventos-pasados" icon={Ghost}>🎤​ Karaoke</NavLink>
+            <NavLink to="/karaoke" icon={Mic}>🎤​ Karaoke</NavLink>
             <NavLink to="/sorteos" icon={Gift}>Sorteos</NavLink>
             <NavLink to="/donar" icon={DollarSign}>Donar / Apoyar</NavLink>
             <NavLink to="/contacto" icon={MessageCircle}>Contacto</NavLink>
