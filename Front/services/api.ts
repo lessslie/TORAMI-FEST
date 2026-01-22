@@ -268,6 +268,32 @@ export const api = {
       request<{ messages: any[] }>(`/cosplay-guest/${id}/messages`, { token, useCache: false }),
   },
 
+  // ==================== KARAOKE ====================
+  karaoke: {
+    getAll: (token: string, eventId?: string) => {
+      const params = eventId ? `?eventId=${eventId}` : '';
+      return request<any[]>(`/karaoke${params}`, { token, useCache: false });
+    },
+
+    getByUser: (token: string) =>
+      request<any[]>('/karaoke/user/me', { token, useCache: false }),
+
+    getAvailableSlots: (eventId: string) =>
+      request<{ available: number; limit: number; occupied: number }>(`/karaoke/slots/${eventId}`),
+
+    create: (token: string, data: any) =>
+      request<any>('/karaoke', { method: 'POST', body: data, token }),
+
+    updateStatus: (token: string, id: string, status: string) =>
+      request<any>(`/karaoke/${id}/status`, { method: 'PATCH', body: { status }, token }),
+
+    delete: (token: string, id: string) =>
+      request<any>(`/karaoke/${id}`, { method: 'DELETE', token }),
+
+    withdraw: (token: string, id: string) =>
+      request<any>(`/karaoke/${id}/withdraw`, { method: 'DELETE', token }),
+  },
+
   // ==================== GALLERY ====================
   gallery: {
     getAll: (page: number = 1, limit: number = 20, eventId?: string, status?: string, isOfficial?: boolean) => {
@@ -434,18 +460,19 @@ export const api = {
   config: {
     get: (includeImages?: boolean) => {
       const query = includeImages ? '?includeImages=true' : '';
-      return request<any>(`/config${query}`, { useCache: true });
+      // No usar cache para config - siempre obtener datos frescos
+      return request<any>(`/config${query}`, { useCache: false });
     },
 
     update: (token: string, data: any) =>
       request<any>('/config', { method: 'PUT', body: data, token, useCache: false }).then(result => {
-        cacheManager.clear('config');
+        cacheManager.clear('/config');
         return result;
       }),
 
     reset: (token: string) =>
       request<any>('/config/reset', { method: 'POST', token, useCache: false }).then(result => {
-        cacheManager.clear('config');
+        cacheManager.clear('/config');
         return result;
       }),
   },

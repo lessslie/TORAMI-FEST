@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addStandApplication, getUpcomingEvents } from '../services/data';
-import { StandApplication, Event } from '../types';
+import { addStandApplication, getUpcomingEvents, getConfig } from '../services/data';
+import { StandApplication, Event, AppConfig } from '../types';
 import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
@@ -46,6 +46,10 @@ const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.
 export const StandForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Estado de configuración (inscripciones abiertas/cerradas)
+  const [inscripcionesAbiertas, setInscripcionesAbiertas] = useState<boolean | null>(null);
+
   const [events, setEvents] = useState<Event[]>([]);
   const [formData, setFormData] = useState({
     brandName: '',
@@ -68,8 +72,12 @@ export const StandForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const loadEvents = async () => {
+    const loadData = async () => {
       try {
+        // Load config para saber si inscripciones están abiertas
+        const configData = await getConfig();
+        setInscripcionesAbiertas(configData.standsInscripcionesAbiertas !== false);
+
         const upcomingEvents = await getUpcomingEvents();
         setEvents(upcomingEvents);
         // Auto-select the first event if available
@@ -77,10 +85,10 @@ export const StandForm = () => {
           setFormData(prev => ({ ...prev, eventId: upcomingEvents[0].id }));
         }
       } catch (error) {
-        console.error('Error loading events:', error);
+        console.error('Error loading data:', error);
       }
     };
-    loadEvents();
+    loadData();
   }, []);
 
   const handleChange = (e: any) => {
@@ -197,6 +205,29 @@ export const StandForm = () => {
               eventId: events.length > 0 ? events[0].id : ''
             });
           }}>Enviar otra</Button>
+        </MangaCard>
+      </div>
+    );
+  }
+
+  // Pantalla de inscripciones cerradas (lee de la config de DB)
+  if (inscripcionesAbiertas === false) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <SectionTitle>
+          <span className="flex items-center gap-3">
+            <Store className="text-torami-red transform -rotate-3" /> Quiero un Stand
+          </span>
+        </SectionTitle>
+        <MangaCard className="bg-gray-100 border-gray-400 text-center py-16">
+          <div className="text-6xl mb-4">🚫</div>
+          <h2 className="text-2xl font-bold text-gray-700 mb-4">Inscripciones Cerradas</h2>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Las inscripciones para stands están cerradas temporalmente. Volverán a habilitarse pronto.
+          </p>
+          <p className="text-sm text-gray-500 mt-4">
+            Seguinos en nuestras redes para enterarte de las novedades.
+          </p>
         </MangaCard>
       </div>
     );

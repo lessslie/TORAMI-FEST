@@ -29,7 +29,8 @@
       "Bash(timeout:*)",
       "Bash(npx tsc:*)",
       "Bash(git push:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

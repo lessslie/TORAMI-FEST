@@ -16,7 +16,7 @@
   src: url("https://fonts.cdnfonts.com/s/40599/BillionDreams_PERSONAL.woff") format("woff");
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
 }
 
 body {

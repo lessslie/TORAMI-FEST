@@ -6,6 +6,7 @@ import { EventsList, EventDetail } from './pages/Events';
 import { StandForm } from './pages/StandForm';
 import { CosplayContest } from './pages/CosplayContest';
 import { CosplayGuest } from './pages/CosplayGuest';
+import { Karaoke } from './pages/Karaoke';
 import { Admin } from './pages/Admin';
 import { UserDashboard } from './pages/UserDashboard';
 import { Gallery } from './pages/Gallery';
@@ -148,7 +149,7 @@ export default function App() {
             <Route path="/galeria-oficial" element={<OfficialGallery />} />
             <Route path="/sorteos" element={<Giveaways />} />
             
-            <Route path="/eventos-pasados" element={<PlaceholderPage title="🎤​ Karaoke" />} />
+            <Route path="/karaoke" element={<Karaoke />} />
             <Route path="/sponsors" element={<PlaceholderPage title="Nuestros Sponsors" />} />
             <Route path="/donar" element={<Donations />} />
             <Route path="/donaciones" element={<Donations />} />

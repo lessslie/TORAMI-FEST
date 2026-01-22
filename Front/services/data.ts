@@ -220,6 +220,34 @@ export const getCosplayGuestMessages = (id: string) => {
   return api.cosplayGuest.getMessages(token || '', id);
 };
 
+// Karaoke
+export const getKaraokeRegistrations = (eventId?: string) => {
+  const { token } = getAuth();
+  return api.karaoke.getAll(token || '', eventId);
+};
+export const getUserKaraoke = () => {
+  const { token } = getAuth();
+  return api.karaoke.getByUser(token || '');
+};
+export const getKaraokeAvailableSlots = (eventId: string) =>
+  api.karaoke.getAvailableSlots(eventId);
+export const addKaraokeRegistration = (data: any) => {
+  const { token } = getAuth();
+  return api.karaoke.create(token || '', data);
+};
+export const updateKaraokeStatus = (id: string, status: 'APROBADO' | 'RECHAZADO' | 'PENDIENTE') => {
+  const { token } = getAuth();
+  return api.karaoke.updateStatus(token || '', id, status);
+};
+export const deleteKaraoke = (id: string) => {
+  const { token } = getAuth();
+  return api.karaoke.delete(token || '', id);
+};
+export const withdrawKaraoke = (id: string) => {
+  const { token } = getAuth();
+  return api.karaoke.withdraw(token || '', id);
+};
+
 // Gallery
 export const getGallery = async (page: number = 1, limit: number = 100, eventId?: string, status?: string) => {
   const response = await api.gallery.getAll(page, limit, eventId, status, undefined);

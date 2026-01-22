@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addCosplayGuestRegistration, getUpcomingEvents, getCosplayGuestAvailableSlots } from '../services/data';
+import { addCosplayGuestRegistration, getUpcomingEvents, getCosplayGuestAvailableSlots, getConfig } from '../services/data';
 import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle, Calendar, Mail, X, Star } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
-import { Event } from '../types';
+import { Event, AppConfig } from '../types';
 
 // Función para comprimir imágenes
 const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.7): Promise<string> => {
@@ -40,6 +40,10 @@ const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.
 export const CosplayGuest = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Estado de configuración (inscripciones abiertas/cerradas)
+  const [inscripcionesAbiertas, setInscripcionesAbiertas] = useState<boolean | null>(null);
+
   const [events, setEvents] = useState<Event[]>([]);
   const [formData, setFormData] = useState({
     participantName: '',
@@ -66,6 +70,10 @@ export const CosplayGuest = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Load config para saber si inscripciones están abiertas
+        const configData = await getConfig();
+        setInscripcionesAbiertas(configData.cosplayGuestInscripcionesAbiertas !== false);
+
         // Load events
         const upcomingEvents = await getUpcomingEvents();
         setEvents(upcomingEvents);
@@ -177,6 +185,29 @@ export const CosplayGuest = () => {
   }
 
   const noSlotsAvailable = availableSlots === 0;
+
+  // Pantalla de inscripciones cerradas (lee de la config de DB)
+  if (inscripcionesAbiertas === false) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <SectionTitle>
+          <span className="flex items-center gap-3">
+            <Star className="text-yellow-500 fill-current animate-pulse" /> Cosplay Invitados
+          </span>
+        </SectionTitle>
+        <MangaCard className="bg-gray-100 border-gray-400 text-center py-16">
+          <div className="text-6xl mb-4">🚫</div>
+          <h2 className="text-2xl font-bold text-gray-700 mb-4">Inscripciones Cerradas</h2>
+          <p className="text-gray-600 max-w-md mx-auto">
+            El cupo está completo. La página se volverá a habilitar cuando se libere un cupo.
+          </p>
+          <p className="text-sm text-gray-500 mt-4">
+            Seguinos en nuestras redes para enterarte de las novedades.
+          </p>
+        </MangaCard>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">

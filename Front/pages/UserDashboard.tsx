@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, getCosplayGuestMessages, withdrawCosplayGuest } from '../services/data';
-import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole } from '../types';
-import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star } from 'lucide-react';
+import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, getCosplayGuestMessages, withdrawCosplayGuest, getUserKaraoke, withdrawKaraoke } from '../services/data';
+import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole, Karaoke } from '../types';
+import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star, Mic, Music } from 'lucide-react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -23,13 +23,14 @@ const Modal = ({ title, onClose, children }: { title: string, onClose: () => voi
 export const UserDashboard = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'cosplayguest'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
+  const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'cosplayguest'|'karaoke'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
   const [pendingChatId, setPendingChatId] = useState<string | null>(null);
 
   // Data State
   const [stands, setStands] = useState<StandApplication[]>([]);
   const [cosplays, setCosplays] = useState<CosplayRegistration[]>([]);
   const [cosplayGuests, setCosplayGuests] = useState<CosplayGuest[]>([]);
+  const [karaokeList, setKaraokeList] = useState<Karaoke[]>([]);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [myGiveaways, setMyGiveaways] = useState<Giveaway[]>([]);
   
@@ -111,6 +112,7 @@ export const UserDashboard = () => {
               // getUserGallery devuelve { data: [], pagination: {} }
               setGalleryItems(response.data || []);
           });
+          getUserKaraoke().then(setKaraokeList);
           getUserGiveaways().then(setMyGiveaways);
           getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
           setProfileData({ name: user.name, email: user.email, whatsapp: user.whatsapp || '' });
@@ -470,6 +472,7 @@ export const UserDashboard = () => {
             <TabButton id="stands" label="Stands" icon={Store} badge={getStandUnreadCount()} />
             <TabButton id="cosplay" label="Cosplay" icon={Trophy} badge={getCosplayUnreadCount()} />
             <TabButton id="cosplayguest" label="Invitados" icon={Star} />
+            <TabButton id="karaoke" label="Karaoke" icon={Mic} />
             <TabButton id="gallery" label="Fotos" icon={Image} />
             <TabButton id="giveaways" label="Sorteos" icon={Gift} />
          </div>
@@ -797,6 +800,83 @@ export const UserDashboard = () => {
                                   <span className="text-sm font-bold">DARME DE BAJA</span>
                                 </Button>
                               </div>
+                           </div>
+                      </MangaCard>
+                  ))}
+              </div>
+          )}
+
+          {/* KARAOKE TAB */}
+          {activeTab === 'karaoke' && (
+              <div className="space-y-4 animate-in fade-in">
+                  {karaokeList.length === 0 && (
+                      <MangaCard className="text-center py-10 bg-gray-50">
+                          <Mic size={48} className="mx-auto text-purple-400 mb-4" />
+                          <p className="text-gray-500 mb-4">No te has inscripto al karaoke aún.</p>
+                          <Link to="/karaoke">
+                              <Button className="bg-purple-600 hover:bg-purple-700 border-purple-800">
+                                <Mic size={18} className="mr-2 inline" /> ¡Inscribirse!
+                              </Button>
+                          </Link>
+                      </MangaCard>
+                  )}
+                  {karaokeList.map(karaoke => (
+                      <MangaCard key={karaoke.id} className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-300">
+                           <div className="flex items-center gap-4">
+                              {/* Número asignado */}
+                              <div className="flex flex-col items-center bg-white border-2 border-black p-2 shadow-manga flex-shrink-0">
+                                <span className="text-[10px] font-bold text-gray-500 uppercase mb-1">Turno</span>
+                                <div className={`flex items-center justify-center w-12 h-12 border-2 border-black font-display text-2xl font-bold ${
+                                  karaoke.assignedNumber ? 'bg-green-400' : 'bg-gray-200'
+                                }`}>
+                                  {karaoke.assignedNumber || '?'}
+                                </div>
+                              </div>
+
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                      <h3 className="font-bold text-lg truncate flex items-center gap-2">
+                                        <Music size={18} className="text-purple-600" />
+                                        {karaoke.songName}
+                                      </h3>
+                                      <Badge color={
+                                        (karaoke.status === 'Pendiente' || karaoke.status === 'PENDIENTE') ? 'yellow' :
+                                        (karaoke.status === 'Aprobado' || karaoke.status === 'APROBADO') ? 'green' : 'red'
+                                      }>
+                                        {karaoke.status}
+                                      </Badge>
+                                  </div>
+                                  <p className="text-sm text-gray-600 truncate">
+                                    📅 {karaoke.event?.title || 'Sin evento'}
+                                  </p>
+                                  {(karaoke.status === 'Pendiente' || karaoke.status === 'PENDIENTE') && (
+                                    <p className="text-xs text-yellow-600 mt-1">
+                                      Tu inscripción está siendo revisada por el equipo.
+                                    </p>
+                                  )}
+                                  {(karaoke.status === 'Aprobado' || karaoke.status === 'APROBADO') && karaoke.assignedNumber && (
+                                    <p className="text-xs text-green-600 font-bold mt-1">
+                                      ¡Aprobado! Tu turno es el #{karaoke.assignedNumber}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Botón cancelar solo si está pendiente */}
+                              {(karaoke.status === 'Pendiente' || karaoke.status === 'PENDIENTE') && (
+                                <Button
+                                  onClick={async () => {
+                                    if (confirm('¿Cancelar tu inscripción al karaoke?')) {
+                                      await withdrawKaraoke(karaoke.id);
+                                      refreshData();
+                                    }
+                                  }}
+                                  variant="outline"
+                                  className="text-red-600 border-red-300 hover:bg-red-50 text-sm"
+                                >
+                                  <XCircle size={16} className="mr-1" /> Cancelar
+                                </Button>
+                              )}
                            </div>
                       </MangaCard>
                   ))}

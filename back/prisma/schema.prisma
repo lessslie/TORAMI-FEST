@@ -24,6 +24,7 @@ model User {
   stands    StandApplication[]
   cosplays  CosplayRegistration[]
   cosplayGuests CosplayGuest[] @relation("UserCosplayGuests")
+  karaoke   Karaoke[] @relation("UserKaraoke")
   giveaways GiveawayParticipant[]
   gallery   GalleryItem[]
   notifications Notification[]
@@ -52,6 +53,7 @@ model Event {
   stands      StandApplication[] @relation("EventStands")
   cosplays    CosplayRegistration[] @relation("EventCosplays")
   cosplayGuests CosplayGuest[] @relation("EventCosplayGuests")
+  karaoke     Karaoke[] @relation("EventKaraoke")
   giveaways   Giveaway[] @relation("EventGiveaways")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -133,6 +135,26 @@ model CosplayGuest {
 
   @@index([status])
   @@index([assignedNumber])
+}
+
+model Karaoke {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id], name: "UserKaraoke")
+  userId          String
+  fullName        String
+  instagram       String
+  email           String
+  whatsapp        String
+  songName        String
+  status          KaraokeStatus @default(PENDIENTE)
+  assignedNumber  Int?
+  event           Event    @relation("EventKaraoke", fields: [eventId], references: [id])
+  eventId         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([eventId])
 }
 
 model Sponsor {
@@ -226,6 +248,11 @@ model AppConfig {
   donationGoal Decimal? @db.Decimal(10, 2)
   cosplayLimit Int @default(20)
   cosplayGuestLimit Int @default(30)
+  // Control manual de inscripciones
+  cosplayInscripcionesAbiertas Boolean @default(true)
+  cosplayGuestInscripcionesAbiertas Boolean @default(true)
+  standsInscripcionesAbiertas Boolean @default(true)
+  karaokeInscripcionesAbiertas Boolean @default(true)
 }
 
 model Donation {
@@ -268,4 +295,10 @@ enum GalleryStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum KaraokeStatus {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
 }
