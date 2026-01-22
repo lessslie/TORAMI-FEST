@@ -30,8 +30,7 @@
       "Bash(npx tsc:*)",
       "Bash(git push:*)",
       "Bash(git reset:*)",
-      "Bash(node -e:*)",
-      "Bash(DATABASE_URL=\"postgresql://postgres:TORAMI-FEST-CLAVE@db.twhndgkhtwaisfbefyxk.supabase.co:5432/postgres?sslmode=require\" npx prisma db push:*)"
+      "Bash(node -e:*)"
     ]
   }
 }
