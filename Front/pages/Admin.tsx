@@ -286,6 +286,10 @@ export const Admin = () => {
   const [deletingCosplay, setDeletingCosplay] = useState<CosplayRegistration | null>(null);
   const [showDeleteCosplayConfirm, setShowDeleteCosplayConfirm] = useState(false);
 
+  // Karaoke Delete State
+  const [deletingKaraoke, setDeletingKaraoke] = useState<Karaoke | null>(null);
+  const [showDeleteKaraokeConfirm, setShowDeleteKaraokeConfirm] = useState(false);
+
   // User Delete State
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [showDeleteUserConfirm, setShowDeleteUserConfirm] = useState(false);
@@ -1315,8 +1319,30 @@ export const Admin = () => {
            <div className="flex justify-between mb-4">
                 <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
                   <Trophy size={24} className="text-purple-600" />
-                  Inscriptos Cosplay
+                  Gestión de Cosplay
                 </h3>
+           </div>
+
+           {/* Stats de cosplay */}
+           <div className="grid grid-cols-3 gap-4 mb-6">
+             <MangaCard className="text-center bg-yellow-50">
+               <div className="text-2xl font-display text-yellow-600">
+                 {cosplayers.filter(c => c.status.toUpperCase() === 'INSCRIPTO').length}
+               </div>
+               <div className="text-xs uppercase text-gray-500 font-bold">Inscriptos</div>
+             </MangaCard>
+             <MangaCard className="text-center bg-green-50">
+               <div className="text-2xl font-display text-green-600">
+                 {cosplayers.filter(c => c.status.toUpperCase() === 'CONFIRMADO').length}
+               </div>
+               <div className="text-xs uppercase text-gray-500 font-bold">Confirmados</div>
+             </MangaCard>
+             <MangaCard className="text-center bg-red-50">
+               <div className="text-2xl font-display text-red-600">
+                 {cosplayers.filter(c => c.status.toUpperCase() === 'RECHAZADO').length}
+               </div>
+               <div className="text-xs uppercase text-gray-500 font-bold">Rechazados</div>
+             </MangaCard>
            </div>
 
            {/* Cards para móvil y desktop */}
@@ -1398,15 +1424,37 @@ export const Admin = () => {
       {/* --- COSPLAY INVITADOS --- */}
       {activeTab === 'cosplayguest' && (
         <div className="animate-in fade-in">
-           <div className="flex justify-between mb-4">
-                <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
-                  <Star size={24} className="text-yellow-500 fill-current" />
-                  Cosplay Invitados
-                </h3>
-           </div>
+          <div className="flex justify-between mb-4">
+            <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
+              <Star size={24} className="text-yellow-500 fill-current" />
+              Gestión de Cosplay Invitados
+            </h3>
+          </div>
 
-           {/* Cards para móvil y desktop */}
-           <div className="space-y-3">
+          {/* Stats de cosplay invitados */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <MangaCard className="p-4 text-center bg-yellow-50">
+              <div className="text-2xl font-display text-yellow-600">
+                {cosplayGuests.filter(g => g.status.toUpperCase() === 'INSCRIPTO').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Inscriptos</div>
+            </MangaCard>
+            <MangaCard className="p-4 text-center bg-green-50">
+              <div className="text-2xl font-display text-green-600">
+                {cosplayGuests.filter(g => g.status.toUpperCase() === 'CONFIRMADO').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Confirmados</div>
+            </MangaCard>
+            <MangaCard className="p-4 text-center bg-red-50">
+              <div className="text-2xl font-display text-red-600">
+                {cosplayGuests.filter(g => g.status.toUpperCase() === 'RECHAZADO').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Rechazados</div>
+            </MangaCard>
+          </div>
+
+          {/* Cards para móvil y desktop */}
+          <div className="space-y-3">
              {cosplayGuests.map(guest => (
                <div key={guest.id} className="border-2 border-black bg-white shadow-manga p-4">
                  <div className="flex gap-4">
@@ -1472,11 +1520,11 @@ export const Admin = () => {
              ))}
 
              {cosplayGuests.length === 0 && (
-               <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500 italic">
-                 No hay invitados especiales registrados aún.
-               </div>
-             )}
-           </div>
+              <div className="border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500 italic">
+                No hay invitados especiales registrados aún.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1592,11 +1640,9 @@ export const Admin = () => {
                         </>
                       )}
                       <button
-                        onClick={async () => {
-                          if (confirm('¿Eliminar esta inscripción?')) {
-                            await deleteKaraoke(karaoke.id);
-                            loadTabData('karaoke');
-                          }
+                        onClick={() => {
+                          setDeletingKaraoke(karaoke);
+                          setShowDeleteKaraokeConfirm(true);
                         }}
                         className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center gap-2 text-sm font-bold"
                       >
@@ -2108,6 +2154,48 @@ export const Admin = () => {
                   />
                   <p className="text-xs text-gray-600 mt-2">
                     Cupos actuales: {stats?.cosplay?.approved || 0} aprobados + {stats?.cosplay?.pending || 0} pendientes = {(stats?.cosplay?.approved || 0) + (stats?.cosplay?.pending || 0)} ocupados
+                  </p>
+                </MangaCard>
+
+                <MangaCard className="border-t-4 border-t-yellow-500">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Star size={20} /> Cosplay Invitados
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Configurá el límite de cupos para cosplay invitados especiales.
+                  </p>
+                  <Input
+                    label="Límite de Cupos"
+                    name="cosplayGuestLimit"
+                    type="number"
+                    value={config.cosplayGuestLimit || 30}
+                    onChange={handleConfigChange}
+                    placeholder="30"
+                    min="1"
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Cupos actuales: {cosplayGuests.filter(g => g.status.toUpperCase() === 'CONFIRMADO').length} confirmados + {cosplayGuests.filter(g => g.status.toUpperCase() === 'INSCRIPTO').length} inscriptos = {cosplayGuests.filter(g => g.status.toUpperCase() !== 'RECHAZADO').length} ocupados
+                  </p>
+                </MangaCard>
+
+                <MangaCard className="border-t-4 border-t-pink-500">
+                  <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Mic size={20} /> Karaoke
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Configurá el límite de cupos para el karaoke por evento.
+                  </p>
+                  <Input
+                    label="Límite de Cupos"
+                    name="karaokeLimit"
+                    type="number"
+                    value={config.karaokeLimit || 12}
+                    onChange={handleConfigChange}
+                    placeholder="12"
+                    min="1"
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Cupos actuales: {karaokeList.filter(k => k.status === 'Aprobado' || k.status === 'APROBADO').length} aprobados + {karaokeList.filter(k => k.status === 'Pendiente' || k.status === 'PENDIENTE').length} pendientes = {karaokeList.filter(k => k.status !== 'Rechazado' && k.status !== 'RECHAZADO').length} ocupados
                   </p>
                 </MangaCard>
 
@@ -2727,6 +2815,76 @@ export const Admin = () => {
                   onClick={() => {
                     setShowDeleteCosplayGuestConfirm(false);
                     setDeletingCosplayGuest(null);
+                  }}
+                  variant="outline"
+                  className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Karaoke Confirmation Modal */}
+      {showDeleteKaraokeConfirm && deletingKaraoke && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+          <div className="bg-white border-4 border-red-600 shadow-manga w-full max-w-md animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 text-white p-4 flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <h3 className="font-display text-xl">¡Advertencia!</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-lg font-bold mb-3">¿Eliminar esta inscripción de karaoke?</p>
+              <p className="text-gray-700 mb-2">Esta acción <span className="font-bold text-red-600">no se puede deshacer</span>.</p>
+
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 border-2 border-purple-200 rounded mb-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center justify-center w-12 h-12 bg-purple-600 text-white rounded-full font-bold text-lg">
+                    <Mic size={24} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">{deletingKaraoke.fullName}</p>
+                    <p className="text-sm text-gray-600 flex items-center gap-1">
+                      <Music size={14} /> {deletingKaraoke.songName}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 text-sm">
+                  {deletingKaraoke.assignedNumber && (
+                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded font-bold">
+                      #{deletingKaraoke.assignedNumber}
+                    </span>
+                  )}
+                  <Badge color={
+                    deletingKaraoke.status === 'Aprobado' || deletingKaraoke.status === 'APROBADO' ? 'green' :
+                    deletingKaraoke.status === 'Rechazado' || deletingKaraoke.status === 'RECHAZADO' ? 'red' : 'yellow'
+                  }>
+                    {deletingKaraoke.status}
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {deletingKaraoke.event?.title || 'Sin evento asignado'}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={async () => {
+                    await deleteKaraoke(deletingKaraoke.id);
+                    setShowDeleteKaraokeConfirm(false);
+                    setDeletingKaraoke(null);
+                    loadTabData('karaoke');
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={18} /> Sí, Eliminar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDeleteKaraokeConfirm(false);
+                    setDeletingKaraoke(null);
                   }}
                   variant="outline"
                   className="flex-1 border-gray-400 text-gray-700 hover:bg-gray-100"

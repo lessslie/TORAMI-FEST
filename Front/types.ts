@@ -230,6 +230,7 @@ export interface AppConfig {
   // Cosplay Limit
   cosplayLimit?: number; // Límite de cupos para concurso de cosplay
   cosplayGuestLimit?: number; // Límite de cupos para cosplay invitados
+  karaokeLimit?: number; // Límite de cupos para karaoke
   // Control manual de inscripciones
   cosplayInscripcionesAbiertas?: boolean;
   cosplayGuestInscripcionesAbiertas?: boolean;
