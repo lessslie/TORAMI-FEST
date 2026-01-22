@@ -73,6 +73,12 @@ export class UpdateConfigDto {
   @Min(1)
   cosplayGuestLimit?: number;
 
+  @ApiProperty({ required: false, description: 'Límite de cupos para karaoke' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  karaokeLimit?: number;
+
   @ApiProperty({ required: false, description: 'Inscripciones de cosplay abiertas' })
   @IsOptional()
   @IsBoolean()

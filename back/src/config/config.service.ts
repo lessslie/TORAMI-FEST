@@ -22,6 +22,7 @@ export class ConfigService {
       donationGoal: true,
       cosplayLimit: true,
       cosplayGuestLimit: true,
+      karaokeLimit: true,
       // Control de inscripciones
       cosplayInscripcionesAbiertas: true,
       cosplayGuestInscripcionesAbiertas: true,

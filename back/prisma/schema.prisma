@@ -248,6 +248,7 @@ model AppConfig {
   donationGoal Decimal? @db.Decimal(10, 2)
   cosplayLimit Int @default(20)
   cosplayGuestLimit Int @default(30)
+  karaokeLimit Int @default(12)
   // Control manual de inscripciones
   cosplayInscripcionesAbiertas Boolean @default(true)
   cosplayGuestInscripcionesAbiertas Boolean @default(true)
