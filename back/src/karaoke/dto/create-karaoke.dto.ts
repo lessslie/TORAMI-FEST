@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsEmail, Matches } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsEmail, Matches, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateKaraokeDto {
   @ApiProperty()
@@ -27,6 +27,18 @@ export class CreateKaraokeDto {
   @IsString()
   @IsNotEmpty()
   songName!: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  songName2?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  @IsNotEmpty()
+  songName3?: string;
 
   @ApiProperty()
   @IsString()

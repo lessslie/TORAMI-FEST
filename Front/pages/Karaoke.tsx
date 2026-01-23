@@ -25,6 +25,8 @@ export const Karaoke = () => {
     email: '',
     whatsapp: '',
     songName: '',
+    songName2: '',
+    songName3: '',
   });
 
   useEffect(() => {
@@ -111,6 +113,8 @@ export const Karaoke = () => {
       setFormData(prev => ({
         ...prev,
         songName: '',
+        songName2: '',
+        songName3: '',
       }));
     } catch (err: any) {
       setError(err.message || 'Error al inscribirse');
@@ -300,15 +304,36 @@ export const Karaoke = () => {
                         )}
                       </div>
 
-                      <Input
-                        label="Canción que vas a cantar"
-                        name="songName"
-                        required
-                        placeholder="Nombre de la canción - Artista/Anime"
-                        value={formData.songName}
-                        onChange={handleChange}
-                        icon={<Music size={18} />}
-                      />
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-500">
+                          Podés elegir hasta 3 canciones. Solo cantarás 1 opción el día del evento.
+                        </p>
+                        <Input
+                          label="Canción 1 (obligatoria)"
+                          name="songName"
+                          required
+                          placeholder="Nombre de la canción - Artista/Anime"
+                          value={formData.songName}
+                          onChange={handleChange}
+                          icon={<Music size={18} />}
+                        />
+                        <Input
+                          label="Canción 2 (opcional)"
+                          name="songName2"
+                          placeholder="Nombre de la canción - Artista/Anime"
+                          value={formData.songName2}
+                          onChange={handleChange}
+                          icon={<Music size={18} />}
+                        />
+                        <Input
+                          label="Canción 3 (opcional)"
+                          name="songName3"
+                          placeholder="Nombre de la canción - Artista/Anime"
+                          value={formData.songName3}
+                          onChange={handleChange}
+                          icon={<Music size={18} />}
+                        />
+                      </div>
 
                       {error && (
                         <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded">
@@ -345,9 +370,18 @@ export const Karaoke = () => {
                         <p className="font-medium text-sm">{reg.event?.title || 'Evento'}</p>
                         {getStatusBadge(reg.status)}
                       </div>
-                      <p className="text-xs text-gray-600 flex items-center gap-1">
-                        <Music size={12} /> {reg.songName}
-                      </p>
+                      <div className="text-xs text-gray-600">
+                        <p className="flex items-center gap-1">
+                          <Music size={12} /> Opciones:
+                        </p>
+                        <ul className="ml-5 list-disc">
+                          {[reg.songName, reg.songName2, reg.songName3]
+                            .filter(Boolean)
+                            .map((song, idx) => (
+                              <li key={`${reg.id}-song-${idx}`}>{song}</li>
+                            ))}
+                        </ul>
+                      </div>
                       {reg.assignedNumber && (
                         <p className="text-xs text-green-600 font-medium mt-1">
                           Número asignado: #{reg.assignedNumber}
@@ -366,6 +400,7 @@ export const Karaoke = () => {
                 <li>• Solo 12 cupos por evento</li>
                 <li>• Tu inscripción debe ser aprobada</li>
                 <li>• Te contactaremos por WhatsApp</li>
+                <li>• Podés proponer hasta 3 canciones (se elegirá 1)</li>
                 <li>• Podés cantar canciones de anime, videojuegos o J-Pop</li>
               </ul>
             </MangaCard>
