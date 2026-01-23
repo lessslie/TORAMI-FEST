@@ -1,47 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addStandApplication, getUpcomingEvents, getConfig, getUserStands } from '../services/data';
+import { addStandApplication, getUpcomingEvents, getConfig, getUserStands, uploadImageToCloudinary } from '../services/data';
 import { StandApplication, Event, AppConfig } from '../types';
 import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
-
-// Función para comprimir imágenes
-const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.7): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-
-        // Redimensionar si es muy grande
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('No se pudo crear contexto de canvas'));
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressedBase64);
-      };
-      img.onerror = () => reject(new Error('Error al cargar la imagen'));
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = () => reject(new Error('Error al leer el archivo'));
-    reader.readAsDataURL(file);
-  });
-};
 
 export const StandForm = () => {
   const { user } = useAuth();
@@ -142,12 +105,12 @@ export const StandForm = () => {
       setError(null);
 
       try {
-        // Comprimir la imagen antes de agregarla
-        const compressedImage = await compressImage(file, 1200, 0.7);
-        setImages(prev => [...prev, compressedImage]);
-      } catch (err) {
-        setError("Error al procesar la imagen. Intentá con otra.");
-        console.error('Error compressing image:', err);
+        // Subir a Cloudinary y obtener URL
+        const imageUrl = await uploadImageToCloudinary(file);
+        setImages(prev => [...prev, imageUrl]);
+      } catch (err: any) {
+        setError(err.message || "Error al subir la imagen. Intentá con otra.");
+        console.error('Error uploading image:', err);
       } finally {
         setIsCompressing(false);
       }
