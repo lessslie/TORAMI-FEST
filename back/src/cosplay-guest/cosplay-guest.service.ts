@@ -180,6 +180,21 @@ export class CosplayGuestService {
   }
 
   async create(userId: string, dto: CreateCosplayGuestDto) {
+    // Check if user is already registered for this event
+    const existingRegistration = await this.prisma.cosplayGuest.findFirst({
+      where: {
+        userId,
+        eventId: dto.eventId,
+        status: {
+          not: CosplayStatus.RECHAZADO, // Allow re-registration if previously rejected
+        },
+      },
+    });
+
+    if (existingRegistration) {
+      throw new BadRequestException('Ya estás inscrito como cosplay invitado para este evento.');
+    }
+
     // Check slots availability
     const slots = await this.getAvailableSlots();
     if (slots.available <= 0) {

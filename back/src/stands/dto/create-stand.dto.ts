@@ -1,4 +1,4 @@
-import { IsArray, IsEmail, IsOptional, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsEmail, IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreateStandDto {
   @IsString()
@@ -14,6 +14,7 @@ export class CreateStandDto {
   email!: string;
 
   @IsString()
+  @Matches(/^[\d\s\-+()]+$/, { message: 'El número de WhatsApp solo puede contener números, espacios, guiones y el signo +' })
   phone!: string;
 
   @IsString()
@@ -25,8 +26,8 @@ export class CreateStandDto {
   @IsString()
   needs!: string;
 
-  @IsOptional()
   @IsArray()
+  @ArrayNotEmpty()
   images?: string[];
 
   @IsOptional()

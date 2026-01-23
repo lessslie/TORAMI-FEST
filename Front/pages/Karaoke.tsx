@@ -17,6 +17,7 @@ export const Karaoke = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [whatsappError, setWhatsappError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -70,8 +71,25 @@ export const Karaoke = () => {
     }
   };
 
+  // Validar que el WhatsApp solo contenga números y caracteres permitidos
+  const validateWhatsapp = (value: string): boolean => {
+    const whatsappRegex = /^[\d\s\-+()]*$/;
+    return whatsappRegex.test(value);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    // Validación especial para WhatsApp
+    if (name === 'whatsapp') {
+      if (!validateWhatsapp(value)) {
+        setWhatsappError('Solo se permiten números, espacios, guiones y +');
+        return; // No actualizar el valor si contiene caracteres inválidos
+      } else {
+        setWhatsappError(null);
+      }
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -267,15 +285,20 @@ export const Karaoke = () => {
                         icon={<Mail size={18} />}
                       />
 
-                      <Input
-                        label="WhatsApp"
-                        name="whatsapp"
-                        required
-                        placeholder="11 1234-5678"
-                        value={formData.whatsapp}
-                        onChange={handleChange}
-                        icon={<Phone size={18} />}
-                      />
+                      <div>
+                        <Input
+                          label="WhatsApp"
+                          name="whatsapp"
+                          required
+                          placeholder="11 1234-5678"
+                          value={formData.whatsapp}
+                          onChange={handleChange}
+                          icon={<Phone size={18} />}
+                        />
+                        {whatsappError && (
+                          <p className="text-red-500 text-xs mt-1">{whatsappError}</p>
+                        )}
+                      </div>
 
                       <Input
                         label="Canción que vas a cantar"

@@ -83,17 +83,20 @@ export class KaraokeService {
   }
 
   async getAvailableSlots(eventId: string) {
-    const approvedCount = await this.prisma.karaoke.count({
+    // Contar PENDIENTE + APROBADO (los rechazados no ocupan cupo)
+    const occupiedCount = await this.prisma.karaoke.count({
       where: {
         eventId,
-        status: KaraokeStatus.APROBADO,
+        status: {
+          in: [KaraokeStatus.PENDIENTE, KaraokeStatus.APROBADO],
+        },
       },
     });
 
     return {
-      available: Math.max(0, this.KARAOKE_LIMIT - approvedCount),
+      available: Math.max(0, this.KARAOKE_LIMIT - occupiedCount),
       limit: this.KARAOKE_LIMIT,
-      occupied: approvedCount,
+      occupied: occupiedCount,
     };
   }
 
