@@ -149,6 +149,8 @@ export interface Karaoke {
   email: string;
   whatsapp: string;
   songName: string;
+  songName2?: string;
+  songName3?: string;
   status: 'Pendiente' | 'Aprobado' | 'Rechazado';
   assignedNumber?: number;
   eventId: string;

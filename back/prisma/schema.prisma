@@ -146,6 +146,8 @@ model Karaoke {
   email           String
   whatsapp        String
   songName        String
+  songName2       String?
+  songName3       String?
   status          KaraokeStatus @default(PENDIENTE)
   assignedNumber  Int?
   event           Event    @relation("EventKaraoke", fields: [eventId], references: [id])

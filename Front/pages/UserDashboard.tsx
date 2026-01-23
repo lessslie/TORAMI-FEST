@@ -836,10 +836,19 @@ export const UserDashboard = () => {
                               {/* Info */}
                               <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                      <h3 className="font-bold text-lg truncate flex items-center gap-2">
-                                        <Music size={18} className="text-purple-600" />
-                                        {karaoke.songName}
-                                      </h3>
+                                      <div>
+                                        <h3 className="font-bold text-lg flex items-center gap-2">
+                                          <Music size={18} className="text-purple-600" />
+                                          Opciones
+                                        </h3>
+                                        <ul className="ml-6 list-disc text-sm text-gray-700">
+                                          {[karaoke.songName, karaoke.songName2, karaoke.songName3]
+                                            .filter(Boolean)
+                                            .map((song, idx) => (
+                                              <li key={`${karaoke.id}-song-${idx}`}>{song}</li>
+                                            ))}
+                                        </ul>
+                                      </div>
                                       <Badge color={
                                         (karaoke.status === 'Pendiente' || karaoke.status === 'PENDIENTE') ? 'yellow' :
                                         (karaoke.status === 'Aprobado' || karaoke.status === 'APROBADO') ? 'green' : 'red'

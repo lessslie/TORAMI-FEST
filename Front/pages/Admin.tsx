@@ -1778,7 +1778,18 @@ export const Admin = () => {
                     <div className="mb-2">
                       <h4 className="font-bold text-lg">{karaoke.fullName}</h4>
                       <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <Music size={14} /> {karaoke.songName}
+                        <div className="text-xs text-gray-600">
+                          <p className="flex items-center gap-1">
+                            <Music size={14} /> Opciones:
+                          </p>
+                          <ul className="ml-5 list-disc">
+                            {[karaoke.songName, karaoke.songName2, karaoke.songName3]
+                              .filter(Boolean)
+                              .map((song, idx) => (
+                                <li key={`${karaoke.id}-song-${idx}`}>{song}</li>
+                              ))}
+                          </ul>
+                        </div>
                       </p>
                     </div>
 
@@ -3055,7 +3066,18 @@ export const Admin = () => {
                   <div>
                     <p className="font-bold text-lg">{deletingKaraoke.fullName}</p>
                     <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Music size={14} /> {deletingKaraoke.songName}
+                      <div className="text-xs text-gray-600">
+                        <p className="flex items-center gap-1">
+                          <Music size={14} /> Opciones:
+                        </p>
+                        <ul className="ml-5 list-disc">
+                          {[deletingKaraoke.songName, deletingKaraoke.songName2, deletingKaraoke.songName3]
+                            .filter(Boolean)
+                            .map((song, idx) => (
+                              <li key={`${deletingKaraoke.id}-song-${idx}`}>{song}</li>
+                            ))}
+                        </ul>
+                      </div>
                     </p>
                   </div>
                 </div>
