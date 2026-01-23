@@ -1,41 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addCosplayGuestRegistration, getUpcomingEvents, getCosplayGuestAvailableSlots, getConfig, getUserCosplayGuests } from '../services/data';
+import { addCosplayGuestRegistration, getUpcomingEvents, getCosplayGuestAvailableSlots, getConfig, getUserCosplayGuests, uploadImageToCloudinary } from '../services/data';
 import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle, Calendar, Mail, X, Star } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 import { Event, AppConfig, CosplayGuest as CosplayGuestType } from '../types';
-
-// Función para comprimir imágenes
-const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.7): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('No se pudo crear contexto de canvas'));
-          return;
-        }
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = () => reject(new Error('Error al cargar la imagen'));
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = () => reject(new Error('Error al leer el archivo'));
-    reader.readAsDataURL(file);
-  });
-};
 
 export const CosplayGuest = () => {
   const { user } = useAuth();
@@ -134,12 +103,13 @@ export const CosplayGuest = () => {
       setIsCompressing(true);
       setError(null);
       try {
-        const compressedImage = await compressImage(file, 1200, 0.7);
-        setFilePreview(compressedImage);
-        setFormData({ ...formData, referenceImage: compressedImage });
-      } catch (err) {
-        setError("Error al procesar la imagen. Intentá con otra.");
-        console.error('Error compressing image:', err);
+        // Subir a Cloudinary y obtener URL
+        const imageUrl = await uploadImageToCloudinary(file);
+        setFilePreview(imageUrl);
+        setFormData({ ...formData, referenceImage: imageUrl });
+      } catch (err: any) {
+        setError(err.message || "Error al subir la imagen. Intentá con otra.");
+        console.error('Error uploading image:', err);
       } finally {
         setIsCompressing(false);
       }

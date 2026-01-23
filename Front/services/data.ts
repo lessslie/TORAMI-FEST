@@ -26,6 +26,15 @@ const request = async (path: string, options: { method?: string; body?: any; tok
   return res.json();
 };
 
+// Upload images to Cloudinary
+export const uploadImageToCloudinary = async (file: File): Promise<string> => {
+  const { token } = getAuth();
+  if (!token) throw new Error('Debes iniciar sesión para subir imágenes');
+
+  const result = await api.uploads.uploadImage(token, file);
+  return result.secure_url;
+};
+
 // Config / Auth
 export const getConfig = (includeImages?: boolean) => api.config.get(includeImages);
 export const updateConfig = (data: any) => {
@@ -93,10 +102,10 @@ export const deleteSponsor = (id: string) => {
 };
 
 // Stands
-export const getStandApplications = async () => {
+export const getStandApplications = async (page: number = 1, limit: number = 10) => {
   const { token } = getAuth();
-  const response = await api.stands.getAll(token || '', 1, 100);
-  return response.data;
+  const response = await api.stands.getAll(token || '', page, limit);
+  return response;
 };
 export const updateStandStatus = (id: string, status: 'Aprobada' | 'Rechazada') => {
   const { token } = getAuth();
@@ -142,10 +151,10 @@ export const deleteGiveaway = (id: string) => {
 };
 
 // Cosplay
-export const getCosplayRegistrations = async () => {
+export const getCosplayRegistrations = async (page: number = 1, limit: number = 10) => {
   const { token } = getAuth();
-  const response = await api.cosplay.getAll(token || '', 1, 100);
-  return response.data;
+  const response = await api.cosplay.getAll(token || '', page, limit);
+  return response;
 };
 export const getUserCosplays = (userId: string) => {
   const { token } = getAuth();
@@ -178,7 +187,7 @@ export const deleteCosplayRegistration = (id: string) => {
 };
 
 // Cosplay Guest
-export const getCosplayGuests = (page: number = 1, limit: number = 100) => {
+export const getCosplayGuests = (page: number = 1, limit: number = 10) => {
   const { token } = getAuth();
   return api.cosplayGuest.getAll(token || '', page, limit);
 };
@@ -332,9 +341,9 @@ export const markAllNotificationsAsRead = () => {
 };
 
 // Admin - User Management
-export const getAllUsers = () => {
+export const getAllUsers = (page: number = 1, limit: number = 10) => {
   const { token } = getAuth();
-  return request('/users', { token });
+  return request(`/users?page=${page}&limit=${limit}`, { token });
 };
 
 export const updateUser = (userId: string, data: Partial<{ name: string; email: string; whatsapp: string; phone: string; role: string; entryAuthorized: boolean }>) => {

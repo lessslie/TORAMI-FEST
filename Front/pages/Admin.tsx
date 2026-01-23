@@ -209,6 +209,76 @@ const MediaManager = ({ media, onChange, max = 5, label = "Galería", useCloudin
   );
 };
 
+// Pagination Component
+const PaginationControls = ({
+  page,
+  totalPages,
+  total,
+  limit,
+  onPageChange,
+  onLimitChange
+}: {
+  page: number;
+  totalPages: number;
+  total: number;
+  limit: number;
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
+}) => {
+  if (total === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 mt-4 p-3 bg-gray-50 border-2 border-black">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="font-bold">Mostrar:</span>
+        <select
+          value={limit}
+          onChange={(e) => onLimitChange(Number(e.target.value))}
+          className="border-2 border-black p-1 bg-white"
+        >
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+        <span className="text-gray-600">| Total: {total} registros</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={page === 1}
+          className="px-2 py-1 border-2 border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        >
+          ««
+        </button>
+        <button
+          onClick={() => onPageChange(page - 1)}
+          disabled={page === 1}
+          className="px-2 py-1 border-2 border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        >
+          «
+        </button>
+        <span className="px-3 py-1 border-2 border-black bg-torami-red text-white font-bold">
+          {page} / {totalPages || 1}
+        </span>
+        <button
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="px-2 py-1 border-2 border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        >
+          »
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={page >= totalPages}
+          className="px-2 py-1 border-2 border-black bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+        >
+          »»
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export const Admin = () => {
   const { user } = useAuth();
@@ -231,6 +301,14 @@ export const Admin = () => {
   const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined });
   const [configNotice, setConfigNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isTogglingDonations, setIsTogglingDonations] = useState(false);
+
+  // Pagination State
+  const [pagination, setPagination] = useState({
+    stands: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    cosplay: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    cosplayguest: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    users: { page: 1, limit: 10, total: 0, totalPages: 0 },
+  });
 
   // Edit State
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
@@ -315,29 +393,49 @@ export const Admin = () => {
         break;
 
       case 'stands':
-        getStandApplications().then((data) => {
+        getStandApplications(pagination.stands.page, pagination.stands.limit).then((response: any) => {
+          const data = Array.isArray(response) ? response : response.data || [];
           setStands(data);
+          if (response.total !== undefined) {
+            setPagination(prev => ({
+              ...prev,
+              stands: { ...prev.stands, total: response.total, totalPages: Math.ceil(response.total / prev.stands.limit) }
+            }));
+          }
           if (updateOpenChat && chatStandRef.current) {
-            const updatedStand = data.find(s => s.id === chatStandRef.current!.id);
+            const updatedStand = data.find((s: any) => s.id === chatStandRef.current!.id);
             if (updatedStand) setChatStand(updatedStand);
           }
         });
         break;
 
       case 'cosplay':
-        getCosplayRegistrations().then((data) => {
+        getCosplayRegistrations(pagination.cosplay.page, pagination.cosplay.limit).then((response: any) => {
+          const data = Array.isArray(response) ? response : response.data || [];
           setCosplayers(data);
+          if (response.total !== undefined) {
+            setPagination(prev => ({
+              ...prev,
+              cosplay: { ...prev.cosplay, total: response.total, totalPages: Math.ceil(response.total / prev.cosplay.limit) }
+            }));
+          }
           if (updateOpenChat && chatCosplayRef.current) {
-            const updatedCos = data.find(c => c.id === chatCosplayRef.current!.id);
+            const updatedCos = data.find((c: any) => c.id === chatCosplayRef.current!.id);
             if (updatedCos) setChatCosplay(updatedCos);
           }
         });
         break;
 
       case 'cosplayguest':
-        getCosplayGuests().then((res: any) => {
-          const data = Array.isArray(res) ? res : res.data;
-          setCosplayGuests(data || []);
+        getCosplayGuests(pagination.cosplayguest.page, pagination.cosplayguest.limit).then((res: any) => {
+          const data = Array.isArray(res) ? res : res.data || [];
+          setCosplayGuests(data);
+          if (res.total !== undefined) {
+            setPagination(prev => ({
+              ...prev,
+              cosplayguest: { ...prev.cosplayguest, total: res.total, totalPages: Math.ceil(res.total / prev.cosplayguest.limit) }
+            }));
+          }
           if (updateOpenChat && chatCosplayRef.current) {
             // Check if the active chat is a guest (has assignedNumber)
             const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
@@ -372,7 +470,16 @@ export const Admin = () => {
         break;
 
       case 'users':
-        getAllUsers().then((data: User[]) => setUsers(data));
+        getAllUsers(pagination.users.page, pagination.users.limit).then((res: any) => {
+          const data = Array.isArray(res) ? res : res.data || [];
+          setUsers(data);
+          if (res.total !== undefined) {
+            setPagination(prev => ({
+              ...prev,
+              users: { ...prev.users, total: res.total, totalPages: Math.ceil(res.total / prev.users.limit) }
+            }));
+          }
+        });
         break;
 
       case 'config':
@@ -394,6 +501,38 @@ export const Admin = () => {
     loadTabData(activeTab, updateOpenChat);
   };
 
+  // Pagination handlers
+  const handlePageChange = (section: 'stands' | 'cosplay' | 'cosplayguest' | 'users', newPage: number) => {
+    setPagination(prev => ({
+      ...prev,
+      [section]: { ...prev[section], page: newPage }
+    }));
+  };
+
+  const handleLimitChange = (section: 'stands' | 'cosplay' | 'cosplayguest' | 'users', newLimit: number) => {
+    setPagination(prev => ({
+      ...prev,
+      [section]: { ...prev[section], limit: newLimit, page: 1 } // Reset to page 1 when changing limit
+    }));
+  };
+
+  // Reload data when pagination changes
+  useEffect(() => {
+    if (activeTab === 'stands') loadTabData('stands');
+  }, [pagination.stands.page, pagination.stands.limit]);
+
+  useEffect(() => {
+    if (activeTab === 'cosplay') loadTabData('cosplay');
+  }, [pagination.cosplay.page, pagination.cosplay.limit]);
+
+  useEffect(() => {
+    if (activeTab === 'cosplayguest') loadTabData('cosplayguest');
+  }, [pagination.cosplayguest.page, pagination.cosplayguest.limit]);
+
+  useEffect(() => {
+    if (activeTab === 'users') loadTabData('users');
+  }, [pagination.users.page, pagination.users.limit]);
+
   // Función legacy para refresh manual (cuando se necesite recargar todo)
   const refreshData = (updateOpenChat = false) => {
     getStats().then((data) => {
@@ -402,23 +541,43 @@ export const Admin = () => {
       console.error('Error fetching stats:', err);
       setStats({ users: { total: 0 }, events: { total: 0 }, stands: { pending: 0 }, giveaways: { active: 0 } });
     });
-    getStandApplications().then((data) => {
+    getStandApplications(pagination.stands.page, pagination.stands.limit).then((response: any) => {
+        const data = Array.isArray(response) ? response : response.data || [];
         setStands(data);
+        if (response.total !== undefined) {
+          setPagination(prev => ({
+            ...prev,
+            stands: { ...prev.stands, total: response.total, totalPages: Math.ceil(response.total / prev.stands.limit) }
+          }));
+        }
         if (updateOpenChat && chatStandRef.current) {
-            const updatedStand = data.find(s => s.id === chatStandRef.current!.id);
+            const updatedStand = data.find((s: any) => s.id === chatStandRef.current!.id);
             if (updatedStand) setChatStand(updatedStand);
         }
     });
-    getCosplayRegistrations().then((data) => {
+    getCosplayRegistrations(pagination.cosplay.page, pagination.cosplay.limit).then((response: any) => {
+        const data = Array.isArray(response) ? response : response.data || [];
         setCosplayers(data);
+        if (response.total !== undefined) {
+          setPagination(prev => ({
+            ...prev,
+            cosplay: { ...prev.cosplay, total: response.total, totalPages: Math.ceil(response.total / prev.cosplay.limit) }
+          }));
+        }
         if (updateOpenChat && chatCosplayRef.current) {
-            const updatedCos = data.find(c => c.id === chatCosplayRef.current!.id);
+            const updatedCos = data.find((c: any) => c.id === chatCosplayRef.current!.id);
             if(updatedCos) setChatCosplay(updatedCos);
         }
     });
-    getCosplayGuests().then((res: any) => {
-      const data = Array.isArray(res) ? res : res.data;
-      setCosplayGuests(data || []);
+    getCosplayGuests(pagination.cosplayguest.page, pagination.cosplayguest.limit).then((res: any) => {
+      const data = Array.isArray(res) ? res : res.data || [];
+      setCosplayGuests(data);
+      if (res.total !== undefined) {
+        setPagination(prev => ({
+          ...prev,
+          cosplayguest: { ...prev.cosplayguest, total: res.total, totalPages: Math.ceil(res.total / prev.cosplayguest.limit) }
+        }));
+      }
     });
     getEvents().then((data) => {
       setEvents(data);
@@ -428,7 +587,16 @@ export const Admin = () => {
     getGallery().then(setGallery);
     getOfficialGallery().then(setOfficialGallery);
     getConfig(false).then(setConfig);
-    getAllUsers().then((data: User[]) => setUsers(data));
+    getAllUsers(pagination.users.page, pagination.users.limit).then((res: any) => {
+      const data = Array.isArray(res) ? res : res.data || [];
+      setUsers(data);
+      if (res.total !== undefined) {
+        setPagination(prev => ({
+          ...prev,
+          users: { ...prev.users, total: res.total, totalPages: Math.ceil(res.total / prev.users.limit) }
+        }));
+      }
+    });
     getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
   };
 
@@ -1310,6 +1478,16 @@ export const Admin = () => {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          <PaginationControls
+            page={pagination.stands.page}
+            totalPages={pagination.stands.totalPages}
+            total={pagination.stands.total}
+            limit={pagination.stands.limit}
+            onPageChange={(page) => handlePageChange('stands', page)}
+            onLimitChange={(limit) => handleLimitChange('stands', limit)}
+          />
         </div>
       )}
 
@@ -1418,6 +1596,16 @@ export const Admin = () => {
                </div>
              )}
            </div>
+
+           {/* Pagination Controls */}
+           <PaginationControls
+             page={pagination.cosplay.page}
+             totalPages={pagination.cosplay.totalPages}
+             total={pagination.cosplay.total}
+             limit={pagination.cosplay.limit}
+             onPageChange={(page) => handlePageChange('cosplay', page)}
+             onLimitChange={(limit) => handleLimitChange('cosplay', limit)}
+           />
         </div>
       )}
 
@@ -1525,6 +1713,16 @@ export const Admin = () => {
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          <PaginationControls
+            page={pagination.cosplayguest.page}
+            totalPages={pagination.cosplayguest.totalPages}
+            total={pagination.cosplayguest.total}
+            limit={pagination.cosplayguest.limit}
+            onPageChange={(page) => handlePageChange('cosplayguest', page)}
+            onLimitChange={(limit) => handleLimitChange('cosplayguest', limit)}
+          />
         </div>
       )}
 
@@ -1913,6 +2111,16 @@ export const Admin = () => {
                 </div>
               ))}
             </div>
+
+            {/* Pagination Controls */}
+            <PaginationControls
+              page={pagination.users.page}
+              totalPages={pagination.users.totalPages}
+              total={pagination.users.total}
+              limit={pagination.users.limit}
+              onPageChange={(page) => handlePageChange('users', page)}
+              onLimitChange={(limit) => handleLimitChange('users', limit)}
+            />
           </div>
       )}
 
