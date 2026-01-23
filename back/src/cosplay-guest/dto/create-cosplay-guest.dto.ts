@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCosplayGuestDto {
@@ -15,6 +15,7 @@ export class CreateCosplayGuestDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[\d\s\-+()]+$/, { message: 'El número de WhatsApp solo puede contener números, espacios, guiones y el signo +' })
   whatsapp!: string;
 
   @ApiPropertyOptional()
@@ -42,10 +43,10 @@ export class CreateCosplayGuestDto {
   @IsNotEmpty()
   category!: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsString()
-  @IsOptional()
-  referenceImage?: string;
+  @IsNotEmpty()
+  referenceImage!: string;
 
   @ApiPropertyOptional()
   @IsString()

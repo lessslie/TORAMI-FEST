@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addStandApplication, getUpcomingEvents, getConfig } from '../services/data';
+import { addStandApplication, getUpcomingEvents, getConfig, getUserStands } from '../services/data';
 import { StandApplication, Event, AppConfig } from '../types';
 import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle, Calendar } from 'lucide-react';
 import { useAuth } from '../App';
@@ -69,7 +69,11 @@ export const StandForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [whatsappError, setWhatsappError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // User's existing stand applications
+  const [myStands, setMyStands] = useState<StandApplication[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -84,15 +88,39 @@ export const StandForm = () => {
         if (upcomingEvents.length > 0) {
           setFormData(prev => ({ ...prev, eventId: upcomingEvents[0].id }));
         }
+
+        // Load user's existing stand applications
+        if (user) {
+          const userStands = await getUserStands(user.id);
+          setMyStands(userStands || []);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       }
     };
     loadData();
-  }, []);
+  }, [user]);
+
+  // Validar que el WhatsApp solo contenga números y caracteres permitidos
+  const validateWhatsapp = (value: string): boolean => {
+    const whatsappRegex = /^[\d\s\-+()]*$/;
+    return whatsappRegex.test(value);
+  };
 
   const handleChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Validación especial para el campo de teléfono/WhatsApp
+    if (name === 'phone') {
+      if (!validateWhatsapp(value)) {
+        setWhatsappError('Solo se permiten números, espacios, guiones y +');
+        return; // No actualizar el valor si contiene caracteres inválidos
+      } else {
+        setWhatsappError(null);
+      }
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -285,6 +313,15 @@ export const StandForm = () => {
             )}
           </div>
 
+          {/* Aviso si ya tiene un stand para este evento */}
+          {myStands.some(s => s.eventId === formData.eventId) && (
+            <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded">
+              <p className="text-yellow-700 font-medium">
+                ⚠️ Ya tenés una solicitud de stand para este evento.
+              </p>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6">
             <Input name="brandName" label="Nombre del Stand" required onChange={handleChange} placeholder="Ej. Tienda Kawaii" />
             <Input name="contactName" label="Persona de Contacto" required onChange={handleChange} />
@@ -292,13 +329,19 @@ export const StandForm = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             <Input name="email" label="Email" type="email" required onChange={handleChange} />
-            <Input 
-                name="phone" 
-                label="Número de WhatsApp (Obligatorio)" 
-                required 
-                onChange={handleChange} 
-                placeholder="Ej. +54 9 11 1234 5678"
-            />
+            <div>
+              <Input
+                  name="phone"
+                  label="Número de WhatsApp (Obligatorio)"
+                  required
+                  onChange={handleChange}
+                  value={formData.phone}
+                  placeholder="Ej: 11 1234-5678"
+              />
+              {whatsappError && (
+                <p className="text-red-500 text-xs mt-1">{whatsappError}</p>
+              )}
+            </div>
           </div>
 
           <div>
@@ -415,11 +458,15 @@ export const StandForm = () => {
             </MangaCard>
           )}
 
-          <Button type="submit" disabled={isSubmitting} className="w-full flex items-center justify-center gap-2">
+          <Button type="submit" disabled={isSubmitting || myStands.some(s => s.eventId === formData.eventId)} className="w-full flex items-center justify-center gap-2">
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 Enviando...
+              </>
+            ) : myStands.some(s => s.eventId === formData.eventId) ? (
+              <>
+                ⚠️ Ya tenés una solicitud para este evento
               </>
             ) : (
               <>

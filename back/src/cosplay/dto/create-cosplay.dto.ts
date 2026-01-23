@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 import { CosplayStatus } from '@prisma/client';
 
 export class CreateCosplayDto {
@@ -9,6 +9,7 @@ export class CreateCosplayDto {
   nickname!: string;
 
   @IsString()
+  @Matches(/^[\d\s\-+()]+$/, { message: 'El número de WhatsApp solo puede contener números, espacios, guiones y el signo +' })
   whatsapp!: string;
 
   @IsOptional()
@@ -28,9 +29,9 @@ export class CreateCosplayDto {
   @IsString()
   category!: string;
 
-  @IsOptional()
   @IsString()
-  referenceImage?: string;
+  @IsNotEmpty()
+  referenceImage!: string;
 
   @IsOptional()
   @IsString()

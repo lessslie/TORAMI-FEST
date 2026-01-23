@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
-import { addCosplayRegistration, getUpcomingEvents, getCosplayAvailableSlots, addToWaitingList, getConfig } from '../services/data';
+import { addCosplayRegistration, getUpcomingEvents, getCosplayAvailableSlots, addToWaitingList, getConfig, getUserCosplays } from '../services/data';
 import { Sparkles, Trophy, Mic2, Users, Upload, Image, CheckCircle, Send, AlertCircle, Calendar, Mail, X } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
-import { Event, AppConfig } from '../types';
+import { Event, AppConfig, CosplayRegistration } from '../types';
 
 // Función para comprimir imágenes
 const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.7): Promise<string> => {
@@ -63,6 +63,7 @@ export const CosplayContest = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [whatsappError, setWhatsappError] = useState<string | null>(null);
 
   // Cosplay Slots State
   const [availableSlots, setAvailableSlots] = useState<number | null>(null);
@@ -71,6 +72,9 @@ export const CosplayContest = () => {
   const [waitingListEmail, setWaitingListEmail] = useState('');
   const [notifyBySocial, setNotifyBySocial] = useState(true);
   const [waitingListSubmitted, setWaitingListSubmitted] = useState(false);
+
+  // User's existing registrations
+  const [myRegistrations, setMyRegistrations] = useState<CosplayRegistration[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -90,15 +94,39 @@ export const CosplayContest = () => {
         const slotsData = await getCosplayAvailableSlots();
         setAvailableSlots(slotsData.available);
         setTotalSlots(slotsData.limit);
+
+        // Load user's existing registrations
+        if (user) {
+          const userCosplays = await getUserCosplays(user.id);
+          setMyRegistrations(userCosplays || []);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       }
     };
     loadData();
-  }, []);
+  }, [user]);
+
+  // Validar que el WhatsApp solo contenga números y caracteres permitidos
+  const validateWhatsapp = (value: string): boolean => {
+    const whatsappRegex = /^[\d\s\-+()]*$/;
+    return whatsappRegex.test(value);
+  };
 
   const handleChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Validación especial para WhatsApp
+    if (name === 'whatsapp') {
+      if (!validateWhatsapp(value)) {
+        setWhatsappError('Solo se permiten números, espacios, guiones y +');
+        return; // No actualizar el valor si contiene caracteres inválidos
+      } else {
+        setWhatsappError(null);
+      }
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,6 +163,11 @@ export const CosplayContest = () => {
 
     if (!formData.eventId) {
       setError('Debes seleccionar un evento para tu inscripción');
+      return;
+    }
+
+    if (!formData.referenceImage) {
+      setError('Subí una imagen de referencia para completar la inscripción.');
       return;
     }
 
@@ -232,6 +265,7 @@ export const CosplayContest = () => {
   }
 
   const noSlotsAvailable = availableSlots === 0;
+  const isAlreadyRegistered = myRegistrations.some(r => r.eventId === formData.eventId);
 
   // Pantalla de inscripciones cerradas (lee de la config de DB)
   if (inscripcionesAbiertas === false) {
@@ -352,6 +386,15 @@ export const CosplayContest = () => {
               )}
             </div>
 
+            {/* Aviso si ya está inscrito */}
+            {isAlreadyRegistered && (
+              <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded">
+                <p className="text-yellow-700 font-medium">
+                  ⚠️ Ya estás inscrito en el concurso de cosplay para este evento.
+                </p>
+              </div>
+            )}
+
             <h3 className="font-display text-xl border-b-2 border-black pb-2 mb-4">Datos del Cosplayer</h3>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -359,13 +402,19 @@ export const CosplayContest = () => {
                 <Input name="nickname" label="Nombre Artístico / Nick" onChange={handleChange} />
             </div>
             
-            <Input
-                name="whatsapp"
-                label="Número de WhatsApp (Obligatorio)"
-                required
-                onChange={handleChange}
-                placeholder="Para avisos del concurso"
-            />
+            <div>
+              <Input
+                  name="whatsapp"
+                  label="Número de WhatsApp (Obligatorio)"
+                  required
+                  onChange={handleChange}
+                  value={formData.whatsapp}
+                  placeholder="Ej: 11 1234-5678"
+              />
+              {whatsappError && (
+                <p className="text-red-500 text-xs mt-1">{whatsappError}</p>
+              )}
+            </div>
 
             <div className="grid md:grid-cols-2 gap-6">
                 <Input
@@ -446,12 +495,14 @@ export const CosplayContest = () => {
                   <div>
                     <h4 className="font-bold text-red-800 mb-2">No podés inscribirte</h4>
                     <p className="text-red-700">{error}</p>
-                    <Button
-                      onClick={() => navigate('/login')}
-                      className="mt-3 bg-red-600 hover:bg-red-700"
-                    >
-                      Iniciar Sesión
-                    </Button>
+                    {!user && (
+                      <Button
+                        onClick={() => navigate('/login')}
+                        className="mt-3 bg-red-600 hover:bg-red-700"
+                      >
+                        Iniciar Sesión
+                      </Button>
+                    )}
                   </div>
                 </div>
               </MangaCard>
@@ -459,13 +510,17 @@ export const CosplayContest = () => {
 
             <Button
               type="submit"
-              disabled={isSubmitting || noSlotsAvailable}
+              disabled={isSubmitting || noSlotsAvailable || isAlreadyRegistered}
               className="w-full flex items-center justify-center gap-2 py-4 text-lg"
             >
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     Enviando inscripción...
+                  </>
+                ) : isAlreadyRegistered ? (
+                  <>
+                    ⚠️ Ya estás inscrito en este evento
                   </>
                 ) : noSlotsAvailable ? (
                   <>

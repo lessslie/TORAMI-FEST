@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStandDto } from './dto/create-stand.dto';
 import { UpdateStandStatusDto } from './dto/update-stand-status.dto';
@@ -85,6 +85,21 @@ export class StandsService {
   }
 
   async create(userId: string, dto: CreateStandDto) {
+    // Check if user already has a stand application for this event
+    const existingApplication = await this.prisma.standApplication.findFirst({
+      where: {
+        userId,
+        eventId: dto.eventId,
+        status: {
+          not: StandStatus.RECHAZADA, // Allow re-application if previously rejected
+        },
+      },
+    });
+
+    if (existingApplication) {
+      throw new BadRequestException('Ya tenés una solicitud de stand para este evento.');
+    }
+
     return this.prisma.standApplication.create({
       data: {
         ...dto,
