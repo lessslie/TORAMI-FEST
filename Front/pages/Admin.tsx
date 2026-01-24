@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../App';
-import { UserRole, StandApplication, Event, Sponsor, Giveaway, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User, Karaoke } from '../types';
+import { UserRole, StandApplication, Event, Sponsor, Giveaway, GiveawayParticipant, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User, Karaoke } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import {
   getStats, getStandApplications, updateStandStatus, getConfig, updateConfig,
   getEvents, saveEvent, deleteEvent,
   getSponsors, saveSponsor, deleteSponsor,
-  getGiveaways, saveGiveaway, deleteGiveaway,
+  getGiveaways, saveGiveaway, deleteGiveaway, getGiveawayParticipants,
   getGallery, getOfficialGallery, approveGalleryItem, deleteGalleryItem, updateGalleryItem, rejectGalleryItem, addOfficialGalleryItem,
   addStandMessage, getCosplayRegistrations, updateCosplayStatus, addCosplayMessage, deleteCosplayRegistration,
   getCosplayGuests, getCosplayGuestById, getCosplayGuestMessages, updateCosplayGuestStatus, addCosplayGuestMessage, deleteCosplayGuest,
@@ -17,7 +17,7 @@ import {
 } from '../services/data';
 import { api } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock, Instagram, Globe, Mic, Music } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, Ghost, Image, Gift, Calendar, Store, DollarSign, Upload, ExternalLink, MessageCircle, Send, ZoomIn, Save, AlertTriangle, RefreshCw, Link as LinkIcon, Film, Paperclip, Trophy, Eye, Mic2, Phone, Users, Sparkles, Star, Clock, Instagram, Globe, Mic, Music, Download, ToggleLeft, ToggleRight } from 'lucide-react';
 
 // --- Helper Components for Modals ---
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -298,7 +298,7 @@ export const Admin = () => {
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [officialGallery, setOfficialGallery] = useState<GalleryItem[]>([]);
-  const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined });
+  const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined, giveawaysInscripcionesAbiertas: true });
   const [configNotice, setConfigNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isTogglingDonations, setIsTogglingDonations] = useState(false);
 
@@ -315,6 +315,10 @@ export const Admin = () => {
   const [editingSponsor, setEditingSponsor] = useState<Partial<Sponsor> | null>(null);
   const [editingGiveaway, setEditingGiveaway] = useState<Partial<Giveaway> | null>(null);
   const [editingUser, setEditingUser] = useState<Partial<User> | null>(null);
+
+  // Giveaway Participants State
+  const [viewingGiveawayParticipants, setViewingGiveawayParticipants] = useState<Giveaway | null>(null);
+  const [giveawayParticipants, setGiveawayParticipants] = useState<GiveawayParticipant[]>([]);
   
   // Chat & Detail State (Stands)
   const [chatStand, setChatStand] = useState<StandApplication | null>(null);
@@ -1976,27 +1980,70 @@ export const Admin = () => {
           <div className="animate-in fade-in">
             <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
                 <h3 className="font-display text-xl sm:text-2xl">Sorteos</h3>
-                <Button onClick={() => setEditingGiveaway({ title: '', description: '', prize: '', startDate: '', endDate: '', status: 'Activo', images: [] })} className="text-sm sm:text-base">
+                <Button onClick={() => setEditingGiveaway({ title: '', description: '', startDate: '', endDate: '', status: 'ACTIVO', isEnabled: true })} className="text-sm sm:text-base">
                     <Plus size={18} className="mr-2 inline" /> Nuevo Sorteo
                 </Button>
             </div>
+            {giveaways.length === 0 ? (
+                <MangaCard className="text-center py-10 text-gray-500">
+                    <Gift className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <p>No hay sorteos creados</p>
+                    <p className="text-sm">Crea un nuevo sorteo para comenzar</p>
+                </MangaCard>
+            ) : (
             <div className="grid gap-4">
                 {giveaways.map(g => (
                     <MangaCard key={g.id}>
                         <div className="flex flex-col sm:flex-row justify-between gap-4">
                             <div className="flex gap-3 sm:gap-4">
-                                {g.images && g.images.length > 0 && (
-                                   <img src={g.images[0]} alt={g.title} className="w-16 h-16 sm:w-20 sm:h-20 object-cover border border-black shrink-0" />
-                                )}
+                                <div className={`w-12 h-12 flex items-center justify-center rounded-full border-2 ${g.isEnabled ? 'bg-green-100 border-green-500 text-green-600' : 'bg-gray-100 border-gray-400 text-gray-400'}`}>
+                                    <Gift size={24} />
+                                </div>
                                 <div className="grow min-w-0">
-                                    <h4 className="font-bold text-base sm:text-lg break-all">{g.title}</h4>
-                                    <p className="text-xs sm:text-sm text-gray-600 break-all">Premio: {g.prize}</p>
-                                    <div className="mt-2 text-xs">Participantes: {g.participantIds.length}</div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h4 className="font-bold text-base sm:text-lg">{g.title}</h4>
+                                        {g.isEnabled ? (
+                                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Habilitado</span>
+                                        ) : (
+                                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded font-bold">Deshabilitado</span>
+                                        )}
+                                    </div>
+                                    {g.description && <p className="text-xs sm:text-sm text-gray-600 mt-1">{g.description}</p>}
+                                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
+                                        <span><Calendar size={12} className="inline mr-1" />Inicio: {new Date(g.startDate).toLocaleDateString('es-AR')}</span>
+                                        <span><Calendar size={12} className="inline mr-1" />Fin: {new Date(g.endDate).toLocaleDateString('es-AR')}</span>
+                                        <span className="font-bold text-torami-red"><Users size={12} className="inline mr-1" />{g._count?.participants || 0} participantes</span>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex sm:flex-col items-start sm:items-end justify-between sm:justify-start gap-3 sm:gap-2">
-                                <Badge color={g.status === 'Activo' ? 'red' : 'purple'}>{g.status}</Badge>
-                                <div className="flex gap-2">
+                                <Badge color={g.status === 'ACTIVO' ? 'red' : 'purple'}>{g.status}</Badge>
+                                <div className="flex gap-2 flex-wrap">
+                                    <button
+                                        onClick={async () => {
+                                            setViewingGiveawayParticipants(g);
+                                            const participants = await getGiveawayParticipants(g.id);
+                                            setGiveawayParticipants(participants);
+                                        }}
+                                        className="text-green-600 hover:bg-green-50 p-1 rounded flex items-center gap-1 text-xs"
+                                        title="Ver participantes"
+                                    >
+                                        <Eye size={16}/> <span className="hidden sm:inline">Ver</span>
+                                    </button>
+                                    <a
+                                        href={`${api.giveaways.getDownloadUrl(g.id)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-purple-600 hover:bg-purple-50 p-1 rounded flex items-center gap-1 text-xs"
+                                        title="Descargar CSV"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            const { token } = getAuth();
+                                            window.open(`${api.giveaways.getDownloadUrl(g.id)}`, '_blank');
+                                        }}
+                                    >
+                                        <Download size={16}/> <span className="hidden sm:inline">CSV</span>
+                                    </a>
                                     <button onClick={() => setEditingGiveaway(g)} className="text-blue-600 hover:bg-blue-50 p-1 rounded"><Edit size={16}/></button>
                                     <button onClick={() => handleDeleteGiveaway(g.id)} className="text-red-600 hover:bg-red-50 p-1 rounded"><Trash2 size={16}/></button>
                                 </div>
@@ -2005,6 +2052,7 @@ export const Admin = () => {
                     </MangaCard>
                 ))}
             </div>
+            )}
           </div>
       )}
 
@@ -2244,7 +2292,7 @@ export const Admin = () => {
                     </div>
 
                     {/* Karaoke */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 mb-3 rounded">
                         <div>
                             <span className="font-bold block">Karaoke</span>
                             <span className="text-xs text-gray-500">
@@ -2256,6 +2304,22 @@ export const Admin = () => {
                             className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.karaokeInscripcionesAbiertas !== false ? 'bg-green-500' : 'bg-red-400'}`}
                         >
                             <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.karaokeInscripcionesAbiertas !== false ? 'translate-x-6' : ''}`}></div>
+                        </button>
+                    </div>
+
+                    {/* Giveaways */}
+                    <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded">
+                        <div>
+                            <span className="font-bold block">Sorteos</span>
+                            <span className="text-xs text-gray-500">
+                                {config.giveawaysInscripcionesAbiertas !== false ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setConfig({...config, giveawaysInscripcionesAbiertas: !config.giveawaysInscripcionesAbiertas})}
+                            className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${config.giveawaysInscripcionesAbiertas !== false ? 'bg-green-500' : 'bg-red-400'}`}
+                        >
+                            <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${config.giveawaysInscripcionesAbiertas !== false ? 'translate-x-6' : ''}`}></div>
                         </button>
                     </div>
 
@@ -3385,32 +3449,103 @@ export const Admin = () => {
       {editingGiveaway && (
           <Modal title={editingGiveaway.id ? 'Editar Sorteo' : 'Nuevo Sorteo'} onClose={() => setEditingGiveaway(null)}>
               <form onSubmit={handleSaveGiveaway} className="space-y-4">
-                  <Input label="Título" value={editingGiveaway.title} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, title: e.target.value})} required />
-                  
-                  {/* Media Manager for Giveaway */}
-                  <MediaManager 
-                    media={editingGiveaway.images || []} 
-                    onChange={(imgs) => setEditingGiveaway({...editingGiveaway, images: imgs})} 
-                  />
+                  <Input label="Título del Sorteo" value={editingGiveaway.title} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, title: e.target.value})} required />
 
-                  <Input label="Premio" value={editingGiveaway.prize} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, prize: e.target.value})} required />
+                  <div>
+                      <label className="block text-sm font-bold mb-1 uppercase">Descripción (opcional)</label>
+                      <textarea className="w-full border-2 border-black p-2 bg-white" rows={3} value={editingGiveaway.description || ''} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, description: e.target.value})} placeholder="Descripción del sorteo..." />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
-                      <Input label="Inicio" type="date" value={editingGiveaway.startDate} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, startDate: e.target.value})} required />
-                      <Input label="Fin" type="date" value={editingGiveaway.endDate} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, endDate: e.target.value})} required />
+                      <Input label="Fecha Inicio" type="date" value={editingGiveaway.startDate?.split('T')[0] || ''} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, startDate: e.target.value})} required />
+                      <Input label="Fecha Fin" type="date" value={editingGiveaway.endDate?.split('T')[0] || ''} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, endDate: e.target.value})} required />
                   </div>
+
+                  <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 border-2 border-black font-bold hover:bg-gray-100 transition-colors">
+                    <input
+                        type="checkbox"
+                        className="w-5 h-5 accent-green-600"
+                        checked={editingGiveaway.isEnabled !== false}
+                        onChange={(e) => setEditingGiveaway({...editingGiveaway, isEnabled: e.target.checked})}
+                    />
+                    <span className="flex items-center gap-2">
+                        {editingGiveaway.isEnabled !== false ? <ToggleRight className="text-green-600" size={20} /> : <ToggleLeft className="text-gray-400" size={20} />}
+                        Inscripciones Habilitadas
+                    </span>
+                  </label>
+
                   <div>
-                      <label className="block text-sm font-bold mb-1 uppercase">Descripción</label>
-                      <textarea className="w-full border-2 border-black p-2 bg-white" rows={3} value={editingGiveaway.description} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, description: e.target.value})} required />
-                  </div>
-                  <div>
-                      <label className="block text-sm font-bold mb-1 uppercase">Estado</label>
-                      <select className="w-full border-2 border-black p-2 bg-white" value={editingGiveaway.status} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, status: e.target.value})}>
-                          <option value="Activo">Activo</option>
-                          <option value="Finalizado">Finalizado</option>
+                      <label className="block text-sm font-bold mb-1 uppercase">Estado del Sorteo</label>
+                      <select className="w-full border-2 border-black p-2 bg-white" value={editingGiveaway.status || 'ACTIVO'} onChange={(e:any) => setEditingGiveaway({...editingGiveaway, status: e.target.value})}>
+                          <option value="ACTIVO">Activo</option>
+                          <option value="FINALIZADO">Finalizado</option>
                       </select>
                   </div>
-                  <Button type="submit" className="w-full">Guardar</Button>
+
+                  {editingGiveaway.id && (
+                      <div>
+                          <label className="block text-sm font-bold mb-1 uppercase">Ganador (opcional)</label>
+                          <input
+                              type="text"
+                              className="w-full border-2 border-black p-2 bg-white"
+                              value={editingGiveaway.winner || ''}
+                              onChange={(e:any) => setEditingGiveaway({...editingGiveaway, winner: e.target.value})}
+                              placeholder="Nombre del ganador..."
+                          />
+                      </div>
+                  )}
+
+                  <Button type="submit" className="w-full">Guardar Sorteo</Button>
               </form>
+          </Modal>
+      )}
+
+      {/* VIEW GIVEAWAY PARTICIPANTS MODAL */}
+      {viewingGiveawayParticipants && (
+          <Modal title={`Participantes: ${viewingGiveawayParticipants.title}`} onClose={() => { setViewingGiveawayParticipants(null); setGiveawayParticipants([]); }}>
+              <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-gray-50 p-3 rounded border">
+                      <span className="font-bold">{giveawayParticipants.length} participantes</span>
+                      <a
+                          href={api.giveaways.getDownloadUrl(viewingGiveawayParticipants.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm font-bold"
+                      >
+                          <Download size={16} /> Descargar CSV
+                      </a>
+                  </div>
+
+                  {giveawayParticipants.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                          <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                          <p>No hay participantes aún</p>
+                      </div>
+                  ) : (
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {giveawayParticipants.map((p, idx) => (
+                              <div key={p.id} className="border border-gray-200 p-3 rounded bg-white">
+                                  <div className="flex justify-between items-start">
+                                      <div>
+                                          <span className="text-xs text-gray-400 mr-2">#{idx + 1}</span>
+                                          <span className="font-bold">{p.fullName}</span>
+                                      </div>
+                                      <span className="text-xs text-gray-400">
+                                          {new Date(p.createdAt).toLocaleDateString('es-AR')}
+                                      </span>
+                                  </div>
+                                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                      <span><strong>DNI:</strong> {p.dni}</span>
+                                      <span><strong>Email:</strong> {p.email}</span>
+                                      <span><strong>WhatsApp:</strong> {p.whatsapp}</span>
+                                      <span><strong>Instagram:</strong> {p.instagram || '-'}</span>
+                                      <span><strong>Nacimiento:</strong> {new Date(p.birthDate).toLocaleDateString('es-AR')}</span>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+              </div>
           </Modal>
       )}
 

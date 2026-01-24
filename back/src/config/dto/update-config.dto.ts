@@ -98,4 +98,9 @@ export class UpdateConfigDto {
   @IsOptional()
   @IsBoolean()
   karaokeInscripcionesAbiertas?: boolean;
+
+  @ApiProperty({ required: false, description: 'Inscripciones de sorteos abiertas' })
+  @IsOptional()
+  @IsBoolean()
+  giveawaysInscripcionesAbiertas?: boolean;
 }

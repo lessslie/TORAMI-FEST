@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsDateString, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateGiveawayDto {
   @ApiProperty()
@@ -7,15 +7,10 @@ export class CreateGiveawayDto {
   @IsString()
   title!: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  description!: string;
-
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  prize!: string;
+  description?: string;
 
   @ApiProperty()
   @IsDateString()
@@ -25,8 +20,8 @@ export class CreateGiveawayDto {
   @IsDateString()
   endDate!: string;
 
-  @ApiProperty({ required: false, type: [String] })
+  @ApiProperty({ required: false, default: true })
   @IsOptional()
-  @IsArray()
-  images?: string[];
+  @IsBoolean()
+  isEnabled?: boolean;
 }

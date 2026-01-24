@@ -131,20 +131,49 @@ export const deleteStand = (id: string) => {
 };
 
 // Giveaways
-export const getGiveaways = () => api.giveaways.getAll();
-export const participateInGiveaway = (id: string) => {
+export const getActiveGiveaway = () => api.giveaways.getActive();
+
+export const getGiveaways = () => {
   const { token } = getAuth();
-  return api.giveaways.join(token || '', id);
+  return api.giveaways.getAll(token || '');
 };
+
+export const participateInGiveaway = (id: string, data: {
+  fullName: string;
+  birthDate: string;
+  dni: string;
+  whatsapp: string;
+  email: string;
+  instagram?: string;
+}) => {
+  const { token } = getAuth();
+  return api.giveaways.join(id, data, token || undefined);
+};
+
+export const checkGiveawayDni = (giveawayId: string, dni: string) =>
+  api.giveaways.checkDni(giveawayId, dni);
+
+export const getGiveawayParticipants = (id: string) => {
+  const { token } = getAuth();
+  return api.giveaways.getParticipants(token || '', id);
+};
+
+export const getGiveawayDownloadUrl = (id: string) => {
+  const { token } = getAuth();
+  return `${api.giveaways.getDownloadUrl(id)}?token=${token}`;
+};
+
 export const getUserGiveaways = () => {
   const { token } = getAuth();
   return api.giveaways.getUserGiveaways(token || '');
 };
+
 export const saveGiveaway = (data: any) => {
   const { token } = getAuth();
   if (data.id) return api.giveaways.update(token || '', data.id, data);
   return api.giveaways.create(token || '', data);
 };
+
 export const deleteGiveaway = (id: string) => {
   const { token } = getAuth();
   return api.giveaways.delete(token || '', id);

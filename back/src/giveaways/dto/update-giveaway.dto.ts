@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsDateString, IsArray, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsDateString, IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import { GiveawayStatus } from '@prisma/client';
 
 export class UpdateGiveawayDto {
@@ -15,11 +15,6 @@ export class UpdateGiveawayDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsString()
-  prize?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
   @IsDateString()
   startDate?: string;
 
@@ -27,6 +22,11 @@ export class UpdateGiveawayDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  isEnabled?: boolean;
 
   @ApiProperty({ required: false, enum: GiveawayStatus })
   @IsOptional()
@@ -37,9 +37,4 @@ export class UpdateGiveawayDto {
   @IsOptional()
   @IsString()
   winner?: string;
-
-  @ApiProperty({ required: false, type: [String] })
-  @IsOptional()
-  @IsArray()
-  images?: string[];
 }

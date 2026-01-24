@@ -171,27 +171,35 @@ model Sponsor {
 model Giveaway {
   id          String   @id @default(uuid())
   title       String
-  description String
-  prize       String
+  description String?
   startDate   DateTime
   endDate     DateTime
+  isEnabled   Boolean  @default(true) // Toggle manual para admin
   status      GiveawayStatus @default(ACTIVO)
   winner      String?
-  participantIds GiveawayParticipant[]
+  participants GiveawayParticipant[]
   event       Event?   @relation("EventGiveaways", fields: [eventId], references: [id])
   eventId     String?
-  images      String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model GiveawayParticipant {
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
-  giveaway Giveaway @relation(fields: [giveawayId], references: [id])
-  giveawayId String
+  id          String   @id @default(uuid())
+  giveaway    Giveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+  giveawayId  String
+  fullName    String
+  birthDate   DateTime
+  dni         String
+  whatsapp    String
+  email       String
+  instagram   String?
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?
+  createdAt   DateTime @default(now())
 
-  @@id([userId, giveawayId])
+  @@unique([giveawayId, dni]) // Un DNI solo puede inscribirse una vez por sorteo
+  @@index([giveawayId])
 }
 
 model GalleryItem {
@@ -256,6 +264,7 @@ model AppConfig {
   cosplayGuestInscripcionesAbiertas Boolean @default(true)
   standsInscripcionesAbiertas Boolean @default(true)
   karaokeInscripcionesAbiertas Boolean @default(true)
+  giveawaysInscripcionesAbiertas Boolean @default(true)
 }
 
 model Donation {

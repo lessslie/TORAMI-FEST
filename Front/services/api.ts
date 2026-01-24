@@ -355,29 +355,52 @@ export const api = {
 
   // ==================== GIVEAWAYS ====================
   giveaways: {
-    getAll: () =>
-      request<any[]>('/giveaways'),
+    // Público: obtener sorteo activo actual
+    getActive: () =>
+      request<any>('/giveaways/active', { useCache: false }),
 
-    getOne: (id: string) =>
-      request<any>(`/giveaways/${id}`),
+    // Admin: obtener todos los sorteos
+    getAll: (token: string) =>
+      request<any[]>('/giveaways', { token, useCache: false }),
 
+    // Admin: obtener un sorteo
+    getOne: (token: string, id: string) =>
+      request<any>(`/giveaways/${id}`, { token, useCache: false }),
+
+    // Admin: crear sorteo
     create: (token: string, data: any) =>
       request<any>('/giveaways', { method: 'POST', body: data, token }),
 
+    // Admin: actualizar sorteo
     update: (token: string, id: string, data: any) =>
       request<any>(`/giveaways/${id}`, { method: 'PUT', body: data, token }),
 
+    // Admin: eliminar sorteo
     delete: (token: string, id: string) =>
       request<any>(`/giveaways/${id}`, { method: 'DELETE', token }),
 
-    join: (token: string, id: string) =>
-      request<any>(`/giveaways/${id}/join`, { method: 'POST', token }),
+    // Público: inscribirse a un sorteo (formulario)
+    join: (id: string, data: any, token?: string) =>
+      request<{ message: string; success: boolean }>(`/giveaways/${id}/join`, {
+        method: 'POST',
+        body: data,
+        token: token || undefined
+      }),
 
+    // Público: verificar si un DNI ya está inscripto
+    checkDni: (id: string, dni: string) =>
+      request<{ isRegistered: boolean }>(`/giveaways/${id}/check-dni?dni=${encodeURIComponent(dni)}`),
+
+    // Admin: obtener participantes de un sorteo
+    getParticipants: (token: string, id: string) =>
+      request<any[]>(`/giveaways/${id}/participants`, { token, useCache: false }),
+
+    // Admin: descargar participantes
+    getDownloadUrl: (id: string) =>
+      `${API_BASE}/giveaways/${id}/participants/download`,
+
+    // Usuario logueado: mis sorteos
     getUserGiveaways: (token: string) =>
-      request<any[]>('/giveaways/user/me', { token }),
-
-    // Alias for compatibility
-    getUser: (token: string) =>
       request<any[]>('/giveaways/user/me', { token }),
   },
 
