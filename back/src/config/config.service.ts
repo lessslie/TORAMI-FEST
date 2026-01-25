@@ -34,18 +34,16 @@ export class ConfigService {
     // El AppConfig siempre tiene id=1 (singleton)
     let config: any = null;
 
+    // Primero intentar con todos los campos
+    const fullSelect = { ...baseSelect, giveawaysInscripcionesAbiertas: true, homeGalleryImages: true };
+
     try {
-      // Intentar con todos los campos incluyendo giveawaysInscripcionesAbiertas
-      const fullSelect = { ...baseSelect, giveawaysInscripcionesAbiertas: true };
-      config = includeImages
-        ? await this.prisma.appConfig.findUnique({ where: { id: 1 } })
-        : await this.prisma.appConfig.findUnique({ where: { id: 1 }, select: fullSelect });
+      config = await this.prisma.appConfig.findUnique({ where: { id: 1 }, select: fullSelect });
     } catch (error) {
-      // Si falla (columna no existe), intentar sin giveawaysInscripcionesAbiertas
+      // Si falla (columna giveawaysInscripcionesAbiertas no existe), intentar sin ella
       console.warn('giveawaysInscripcionesAbiertas column may not exist, using default value');
-      config = includeImages
-        ? await this.prisma.appConfig.findUnique({ where: { id: 1 } })
-        : await this.prisma.appConfig.findUnique({ where: { id: 1 }, select: baseSelect });
+      const fallbackSelect = { ...baseSelect, homeGalleryImages: true };
+      config = await this.prisma.appConfig.findUnique({ where: { id: 1 }, select: fallbackSelect });
 
       if (config) {
         config.giveawaysInscripcionesAbiertas = true; // Valor por defecto
@@ -55,32 +53,32 @@ export class ConfigService {
     // Si no existe, crear configuración por defecto
     if (!config) {
       try {
-        const data = {
+        const createData = {
           id: 1,
           donationsEnabled: true,
           giveawaysInscripcionesAbiertas: true,
           homeGalleryImages: [],
         };
-        if (includeImages) {
-          return this.prisma.appConfig.create({ data });
-        }
+        const createSelect = { ...baseSelect, giveawaysInscripcionesAbiertas: true, homeGalleryImages: true };
+        const created = await this.prisma.appConfig.create({ data: createData, select: createSelect });
 
-        const fullSelect = { ...baseSelect, giveawaysInscripcionesAbiertas: true };
-        const created = await this.prisma.appConfig.create({ data, select: fullSelect });
+        if (includeImages) {
+          return created;
+        }
         return { ...created, homeGalleryImages: [] };
       } catch (createError) {
         // Si falla al crear con giveawaysInscripcionesAbiertas, crear sin ella
-        const data = {
+        const createData = {
           id: 1,
           donationsEnabled: true,
           homeGalleryImages: [],
         };
+        const fallbackSelect = { ...baseSelect, homeGalleryImages: true };
+        const created = await this.prisma.appConfig.create({ data: createData, select: fallbackSelect });
+
         if (includeImages) {
-          const created = await this.prisma.appConfig.create({ data });
           return { ...created, giveawaysInscripcionesAbiertas: true };
         }
-
-        const created = await this.prisma.appConfig.create({ data, select: baseSelect });
         return { ...created, homeGalleryImages: [], giveawaysInscripcionesAbiertas: true };
       }
     }

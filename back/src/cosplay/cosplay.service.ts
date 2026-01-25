@@ -191,8 +191,10 @@ export class CosplayService {
    * Slots are NOT occupied by: RECHAZADO and WAITING_LIST statuses
    */
   async getAvailableSlots(): Promise<number> {
-    // Get the limit from config
-    const config = await this.prisma.appConfig.findFirst();
+    // Get the limit from config (only select the field we need)
+    const config = await this.prisma.appConfig.findFirst({
+      select: { cosplayLimit: true },
+    });
     const limit = config?.cosplayLimit ?? 20;
 
     // Count registrations that occupy slots (INSCRIPTO + CONFIRMADO)
@@ -211,7 +213,9 @@ export class CosplayService {
    * Get cosplay limit from config
    */
   async getCosplayLimit(): Promise<number> {
-    const config = await this.prisma.appConfig.findFirst();
+    const config = await this.prisma.appConfig.findFirst({
+      select: { cosplayLimit: true },
+    });
     return config?.cosplayLimit ?? 20;
   }
 
