@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGiveawayDto } from './dto/create-giveaway.dto';
 import { UpdateGiveawayDto } from './dto/update-giveaway.dto';
+import { CreateParticipantDto } from './dto/create-participant.dto';
 import { GiveawayStatus } from '@prisma/client';
 
 @Injectable()
@@ -11,17 +12,9 @@ export class GiveawaysService {
   async findAll() {
     return this.prisma.giveaway.findMany({
       include: {
-        participantIds: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              },
-            },
-          },
+        participants: true,
+        _count: {
+          select: { participants: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -32,24 +25,39 @@ export class GiveawaysService {
     const giveaway = await this.prisma.giveaway.findUnique({
       where: { id },
       include: {
-        participantIds: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              },
-            },
-          },
+        participants: {
+          orderBy: { createdAt: 'desc' },
+        },
+        _count: {
+          select: { participants: true },
         },
       },
     });
 
     if (!giveaway) {
-      throw new NotFoundException('Giveaway not found');
+      throw new NotFoundException('Sorteo no encontrado');
     }
+
+    return giveaway;
+  }
+
+  // Obtener el sorteo activo actual (para el formulario público)
+  async findActive() {
+    const now = new Date();
+
+    const giveaway = await this.prisma.giveaway.findFirst({
+      where: {
+        status: GiveawayStatus.ACTIVO,
+        isEnabled: true,
+        startDate: { lte: now },
+        endDate: { gte: now },
+      },
+      include: {
+        _count: {
+          select: { participants: true },
+        },
+      },
+    });
 
     return giveaway;
   }
@@ -57,22 +65,17 @@ export class GiveawaysService {
   async create(data: CreateGiveawayDto) {
     return this.prisma.giveaway.create({
       data: {
-        ...data,
-        images: data.images || [],
+        title: data.title,
+        description: data.description,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        isEnabled: data.isEnabled ?? true,
         status: GiveawayStatus.ACTIVO,
       },
       include: {
-        participantIds: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              },
-            },
-          },
+        participants: true,
+        _count: {
+          select: { participants: true },
         },
       },
     });
@@ -81,21 +84,22 @@ export class GiveawaysService {
   async update(id: string, data: UpdateGiveawayDto) {
     await this.findOne(id);
 
+    const updateData: any = { ...data };
+
+    if (data.startDate) {
+      updateData.startDate = new Date(data.startDate);
+    }
+    if (data.endDate) {
+      updateData.endDate = new Date(data.endDate);
+    }
+
     return this.prisma.giveaway.update({
       where: { id },
-      data,
+      data: updateData,
       include: {
-        participantIds: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              },
-            },
-          },
+        participants: true,
+        _count: {
+          select: { participants: true },
         },
       },
     });
@@ -106,58 +110,119 @@ export class GiveawaysService {
     return this.prisma.giveaway.delete({ where: { id } });
   }
 
-  async participate(giveawayId: string, userId: string) {
-    const giveaway = await this.findOne(giveawayId);
-
-    if (giveaway.status !== GiveawayStatus.ACTIVO) {
-      throw new BadRequestException('This giveaway is not active');
+  // Inscripción pública al sorteo (formulario)
+  async participate(giveawayId: string, data: CreateParticipantDto, userId?: string) {
+    // Verificar config global (con manejo de columna faltante)
+    let giveawaysOpen = true;
+    try {
+      const config = await this.prisma.appConfig.findUnique({
+        where: { id: 1 },
+        select: { giveawaysInscripcionesAbiertas: true },
+      });
+      if (config && config.giveawaysInscripcionesAbiertas === false) {
+        giveawaysOpen = false;
+      }
+    } catch (error) {
+      // Si la columna no existe, asumir que está habilitado
+      console.warn('giveawaysInscripcionesAbiertas column may not exist, defaulting to open');
+      giveawaysOpen = true;
     }
 
-    // Check if already participating
-    const existing = await this.prisma.giveawayParticipant.findUnique({
+    if (!giveawaysOpen) {
+      throw new BadRequestException('Las inscripciones de sorteos están cerradas');
+    }
+
+    const giveaway = await this.findOne(giveawayId);
+    const now = new Date();
+
+    // Verificar estado del sorteo
+    if (giveaway.status !== GiveawayStatus.ACTIVO) {
+      throw new BadRequestException('Este sorteo no está activo');
+    }
+
+    // Verificar toggle manual
+    if (!giveaway.isEnabled) {
+      throw new BadRequestException('Las inscripciones para este sorteo están cerradas');
+    }
+
+    // Verificar fechas
+    if (now < giveaway.startDate) {
+      throw new BadRequestException('Este sorteo aún no ha comenzado');
+    }
+    if (now > giveaway.endDate) {
+      throw new BadRequestException('Este sorteo ya ha finalizado');
+    }
+
+    // Verificar DNI único por sorteo
+    const existingByDni = await this.prisma.giveawayParticipant.findUnique({
       where: {
-        userId_giveawayId: {
-          userId,
+        giveawayId_dni: {
           giveawayId,
+          dni: data.dni,
         },
       },
     });
 
-    if (existing) {
-      throw new BadRequestException('Already participating in this giveaway');
+    if (existingByDni) {
+      throw new BadRequestException('Ya te inscribiste a este sorteo con este DNI');
     }
 
+    // Crear participante
     await this.prisma.giveawayParticipant.create({
       data: {
-        userId,
         giveawayId,
+        fullName: data.fullName,
+        birthDate: new Date(data.birthDate),
+        dni: data.dni,
+        whatsapp: data.whatsapp,
+        email: data.email,
+        instagram: data.instagram,
+        userId: userId || null,
       },
     });
 
-    return this.findOne(giveawayId);
+    return { message: 'Inscripción exitosa', success: true };
+  }
+
+  // Obtener participantes de un sorteo (para admin)
+  async getParticipants(giveawayId: string) {
+    await this.findOne(giveawayId);
+
+    return this.prisma.giveawayParticipant.findMany({
+      where: { giveawayId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // Verificar si un DNI ya está inscripto
+  async checkDni(giveawayId: string, dni: string) {
+    const existing = await this.prisma.giveawayParticipant.findUnique({
+      where: {
+        giveawayId_dni: {
+          giveawayId,
+          dni,
+        },
+      },
+    });
+
+    return { isRegistered: !!existing };
   }
 
   async getUserGiveaways(userId: string) {
     return this.prisma.giveaway.findMany({
       where: {
-        participantIds: {
+        participants: {
           some: {
             userId,
           },
         },
       },
       include: {
-        participantIds: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-              },
-            },
-          },
+        participants: {
+          where: { userId },
+        },
+        _count: {
+          select: { participants: true },
         },
       },
       orderBy: { createdAt: 'desc' },

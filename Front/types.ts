@@ -173,19 +173,45 @@ export interface Sponsor {
   active: boolean;
 }
 
+export interface GiveawayParticipant {
+  id: string;
+  giveawayId: string;
+  fullName: string;
+  birthDate: string;
+  dni: string;
+  whatsapp: string;
+  email: string;
+  instagram?: string;
+  userId?: string;
+  createdAt: string;
+}
+
 export interface Giveaway {
   id: string;
   title: string;
-  description: string;
-  prize: string;
+  description?: string;
   startDate: string;
   endDate: string;
-  status: 'Activo' | 'Finalizado';
-  winner?: string; // Name of winner
-  participantIds: string[]; // IDs of users participating
+  isEnabled: boolean;
+  status: 'ACTIVO' | 'FINALIZADO';
+  winner?: string;
+  participants?: GiveawayParticipant[];
+  _count?: {
+    participants: number;
+  };
   eventId?: string;
-  event?: Event; // Populated event data
-  images: string[];
+  event?: Event;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateGiveawayParticipantDto {
+  fullName: string;
+  birthDate: string;
+  dni: string;
+  whatsapp: string;
+  email: string;
+  instagram?: string;
 }
 
 export interface GalleryItem {
@@ -238,6 +264,7 @@ export interface AppConfig {
   cosplayGuestInscripcionesAbiertas?: boolean;
   standsInscripcionesAbiertas?: boolean;
   karaokeInscripcionesAbiertas?: boolean;
+  giveawaysInscripcionesAbiertas?: boolean;
 }
 
 export interface Donation {

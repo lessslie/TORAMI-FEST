@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../App';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
-import { getUserStands, getUserCosplays, addStandMessage, addCosplayMessage, addCosplayGuestMessage, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, getUnreadNotificationCount, markAllNotificationsAsRead, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, getCosplayGuestMessages, withdrawCosplayGuest, getUserKaraoke, withdrawKaraoke } from '../services/data';
+import { getUserStands, getUserCosplays, getUserGallery, getUserGiveaways, updateUserProfile, validateStamp, updateUserGalleryItem, deleteGalleryItem, getUserCosplayGuests, withdrawCosplayGuest, getUserKaraoke, withdrawKaraoke } from '../services/data';
 import { StandApplication, CosplayRegistration, GalleryItem, Giveaway, CosplayGuest, UserRole, Karaoke } from '../types';
-import { Store, Trophy, MessageCircle, X, Send, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Edit, Trash2, RefreshCw, Star, Mic, Music } from 'lucide-react';
+import { Store, Trophy, X, Clock, CheckCircle, XCircle, Image, Gift, User as UserIcon, AlertTriangle, Save, Camera, Ticket, QrCode, Sparkles, MapPin, ScanLine, Crown, Phone, Check, Trash2, RefreshCw, Star, Mic, Music, Eye } from 'lucide-react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 
 const Modal = ({ title, onClose, children }: { title: string, onClose: () => void, children: React.ReactNode }) => (
@@ -24,7 +24,6 @@ export const UserDashboard = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'stands'|'cosplay'|'cosplayguest'|'karaoke'|'gallery'|'giveaways'|'profile'|'ticket'|'passport'>('stands');
-  const [pendingChatId, setPendingChatId] = useState<string | null>(null);
 
   // Data State
   const [stands, setStands] = useState<StandApplication[]>([]);
@@ -55,66 +54,24 @@ export const UserDashboard = () => {
   const [withdrawReason, setWithdrawReason] = useState('');
   const [showWithdrawSuccessModal, setShowWithdrawSuccessModal] = useState(false);
 
-  // Chat State
-  const [activeChatStand, setActiveChatStand] = useState<StandApplication | null>(null);
-  const [activeChatCosplay, setActiveChatCosplay] = useState<CosplayRegistration | null>(null);
-  const [chatMessage, setChatMessage] = useState('');
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-  const chatStandRef = useRef<StandApplication | null>(null);
-  const chatCosplayRef = useRef<CosplayRegistration | null>(null);
-  const chatClosedByUserRef = useRef(false);
-
-  // Notification State
-  const [unreadCount, setUnreadCount] = useState(0);
+  // Detail View State
+  const [viewingStand, setViewingStand] = useState<StandApplication | null>(null);
+  const [viewingCosplay, setViewingCosplay] = useState<CosplayRegistration | null>(null);
+  const [viewingCosplayGuest, setViewingCosplayGuest] = useState<CosplayGuest | null>(null);
 
   // Image Modal State
   const [viewImage, setViewImage] = useState<string | null>(null);
 
-  const refreshData = (updateOpenChat = false) => {
+  const refreshData = () => {
       if (user) {
-          getUserStands(user.id).then(data => {
-              setStands(data);
-              // Only update active chat if explicitly requested AND chat is currently open
-              if (updateOpenChat && chatStandRef.current) {
-                  const updated = data.find(s => s.id === chatStandRef.current!.id);
-                  if (updated) setActiveChatStand(updated);
-              }
-          });
-          getUserCosplays(user.id).then(data => {
-              setCosplays(data);
-              // Only update active chat if explicitly requested AND chat is currently open
-              if (updateOpenChat && chatCosplayRef.current) {
-                  // Only update if it's NOT a guest (guests are updated below)
-                  const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
-                  if (!isGuest) {
-                      const updated = data.find(c => c.id === chatCosplayRef.current!.id);
-                      if (updated) setActiveChatCosplay(updated);
-                  }
-              }
-          });
-          getUserCosplayGuests().then(data => {
-              setCosplayGuests(data);
-              // Update active chat if it's a guest
-              if (updateOpenChat && chatCosplayRef.current) {
-                  const isGuest = (chatCosplayRef.current as any).assignedNumber !== undefined;
-                  if (isGuest) {
-                      const updated = data.find(c => c.id === chatCosplayRef.current!.id);
-                      if (updated) {
-                        setActiveChatCosplay((prev: any) => ({
-                          ...updated,
-                          messages: prev?.messages || [],
-                        }));
-                      }
-                  }
-              }
-          });
+          getUserStands(user.id).then(setStands);
+          getUserCosplays(user.id).then(setCosplays);
+          getUserCosplayGuests().then(setCosplayGuests);
           getUserGallery(user.id).then((response) => {
-              // getUserGallery devuelve { data: [], pagination: {} }
               setGalleryItems(response.data || []);
           });
           getUserKaraoke().then(setKaraokeList);
           getUserGiveaways().then(setMyGiveaways);
-          getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
           setProfileData({ name: user.name, email: user.email, whatsapp: user.whatsapp || '' });
 
           const currentStamps = user.stamps || [];
@@ -126,159 +83,14 @@ export const UserDashboard = () => {
     refreshData();
   }, [user]);
 
-  // Handle URL query params for opening specific chat from notifications
+  // Handle URL query params for opening specific tab
   useEffect(() => {
     const tab = searchParams.get('tab');
-    const chatId = searchParams.get('chat');
-
     if (tab && ['stands', 'cosplay', 'cosplayguest'].includes(tab)) {
       setActiveTab(tab as any);
-      if (chatId) {
-        setPendingChatId(chatId);
-      }
-      // Clear query params after reading
       setSearchParams({}, { replace: true });
     }
   }, [searchParams]);
-
-  // Open chat when data is loaded and we have a pending chat ID
-  useEffect(() => {
-    if (!pendingChatId) return;
-
-    if (activeTab === 'stands' && stands.length > 0) {
-      const stand = stands.find(s => s.id === pendingChatId);
-      if (stand) {
-        setActiveChatStand(stand);
-        setPendingChatId(null);
-      }
-    } else if (activeTab === 'cosplay' && cosplays.length > 0) {
-      const cosplay = cosplays.find(c => c.id === pendingChatId);
-      if (cosplay) {
-        setActiveChatCosplay(cosplay);
-        setPendingChatId(null);
-      }
-    } else if (activeTab === 'cosplayguest' && cosplayGuests.length > 0) {
-      const guest = cosplayGuests.find(g => g.id === pendingChatId);
-      if (guest) {
-        setActiveChatCosplay(guest as any);
-        setPendingChatId(null);
-      }
-    }
-  }, [pendingChatId, activeTab, stands, cosplays, cosplayGuests]);
-
-  // Sync refs with state
-  useEffect(() => {
-    chatStandRef.current = activeChatStand;
-    chatCosplayRef.current = activeChatCosplay;
-  }, [activeChatStand, activeChatCosplay]);
-
-  // Auto-refresh notifications every 10 seconds
-  useEffect(() => {
-    if (!user) return;
-
-    const intervalId = setInterval(() => {
-      getUnreadNotificationCount().then((data: any) => setUnreadCount(data.count));
-    }, 10000); // Check every 10 seconds
-
-    return () => clearInterval(intervalId);
-  }, [user]);
-
-  // Mark all notifications as read when opening chat
-  useEffect(() => {
-    if (activeChatStand || activeChatCosplay) {
-      markAllNotificationsAsRead().then(() => {
-        setUnreadCount(0);
-      });
-    }
-  }, [activeChatStand?.id, activeChatCosplay?.id]);
-
-  async function refreshGuestChatMessages(id: string) {
-    const data = await getCosplayGuestMessages(id);
-    setActiveChatCosplay((prev: any) => {
-      if (!prev || prev.id !== id) return prev;
-      return { ...prev, messages: data?.messages || [] };
-    });
-  }
-
-  useEffect(() => {
-    if (!activeChatCosplay) return;
-    const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
-    if (isGuest) {
-      refreshGuestChatMessages(activeChatCosplay.id);
-    }
-  }, [activeChatCosplay?.id]);
-
-  // Auto-refresh ONLY chat messages every 5 seconds when chat is open (optimized to not load all data)
-  useEffect(() => {
-    const chatIsOpen = activeChatStand !== null || activeChatCosplay !== null;
-
-    // Reset the manual close flag when chat opens
-    if (chatIsOpen) {
-      chatClosedByUserRef.current = false;
-    }
-
-    if (!chatIsOpen || !user || chatClosedByUserRef.current) return;
-
-    // Function to refresh only the active chat
-    const refreshActiveChat = () => {
-      // Don't refresh if user manually closed the chat
-      if (chatClosedByUserRef.current) return;
-
-      if (activeChatStand) {
-        getUserStands(user.id).then(data => {
-          const updated = data.find(s => s.id === activeChatStand.id);
-          if (updated && !chatClosedByUserRef.current) setActiveChatStand(updated);
-        });
-      } else if (activeChatCosplay) {
-        // Detect if this is a cosplay guest (has assignedNumber) or normal registration
-        const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
-
-        if (isGuest) {
-          refreshGuestChatMessages(activeChatCosplay.id);
-        } else {
-          // Refresh from normal cosplay registrations
-          getUserCosplays(user.id).then(data => {
-            const updated = data.find(c => c.id === activeChatCosplay.id);
-            if (updated && !chatClosedByUserRef.current) setActiveChatCosplay(updated);
-          });
-        }
-      }
-    };
-
-    // Set up polling interval
-    const intervalId = setInterval(() => {
-      refreshActiveChat();
-    }, 5000); // Refresh every 5 seconds
-
-    // Cleanup on unmount or when chat closes
-    return () => clearInterval(intervalId);
-  }, [activeChatStand?.id, activeChatCosplay?.id, user?.id]);
-
-  useEffect(() => {
-    if (chatScrollRef.current) {
-        chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-    }
-  }, [activeChatStand?.messages, activeChatCosplay?.messages]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!chatMessage.trim()) return;
-
-      if (activeChatStand) {
-          await addStandMessage(activeChatStand.id, chatMessage, 'USER');
-      } else if (activeChatCosplay) {
-          // Detect if this is a cosplay guest (has assignedNumber) or normal registration
-          const isGuest = (activeChatCosplay as any).assignedNumber !== undefined;
-
-          if (isGuest) {
-              await addCosplayGuestMessage(activeChatCosplay.id, chatMessage, 'USER');
-          } else {
-              await addCosplayMessage(activeChatCosplay.id, chatMessage, 'USER');
-          }
-      }
-      setChatMessage('');
-      refreshData(true);
-  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -398,35 +210,6 @@ export const UserDashboard = () => {
       </button>
   );
 
-  // Calculate unread messages for each category
-  const getStandUnreadCount = () => {
-    return stands.reduce((count, stand) => {
-      const messages = stand.messages as any[] || [];
-      const lastUserMessage = messages.filter(m => m.sender === 'USER').pop();
-      const lastAdminMessage = messages.filter(m => m.sender === 'ADMIN').pop();
-
-      // If there's an admin message after the last user message, count as unread
-      if (lastAdminMessage && (!lastUserMessage || new Date(lastAdminMessage.timestamp) > new Date(lastUserMessage.timestamp))) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-  };
-
-  const getCosplayUnreadCount = () => {
-    return cosplays.reduce((count, cosplay) => {
-      const messages = cosplay.messages as any[] || [];
-      const lastUserMessage = messages.filter(m => m.sender === 'USER').pop();
-      const lastAdminMessage = messages.filter(m => m.sender === 'ADMIN').pop();
-
-      // If there's an admin message after the last user message, count as unread
-      if (lastAdminMessage && (!lastUserMessage || new Date(lastAdminMessage.timestamp) > new Date(lastUserMessage.timestamp))) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-  };
-
   if (!user) return <div className="p-10 text-center">Inicia sesión para ver tu panel.</div>;
 
   // Redirect admins to admin panel
@@ -469,8 +252,8 @@ export const UserDashboard = () => {
             {/* <TabButton id="ticket" label="Entrada" icon={Ticket} /> */}
             {/* <TabButton id="passport" label="Pasaporte" icon={ScanLine} /> */}
             <TabButton id="profile" label="Perfil" icon={UserIcon} />
-            <TabButton id="stands" label="Stands" icon={Store} badge={getStandUnreadCount()} />
-            <TabButton id="cosplay" label="Cosplay" icon={Trophy} badge={getCosplayUnreadCount()} />
+            <TabButton id="stands" label="Stands" icon={Store} />
+            <TabButton id="cosplay" label="Cosplay" icon={Trophy} />
             <TabButton id="cosplayguest" label="Invitados" icon={Star} />
             <TabButton id="karaoke" label="Karaoke" icon={Mic} />
             <TabButton id="gallery" label="Fotos" icon={Image} />
@@ -669,24 +452,16 @@ export const UserDashboard = () => {
                           <div>
                               <div className="flex items-center gap-2 mb-1">
                                   <h3 className="font-bold text-lg">{stand.brandName}</h3>
-                                  <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'red' : 'purple'}>
+                                  <Badge color={stand.status === 'Pendiente' ? 'blue' : stand.status === 'Aprobada' ? 'green' : 'red'}>
                                       {stand.status}
                                   </Badge>
                               </div>
                               <p className="text-sm text-gray-600">Tipo: {stand.type}</p>
                               <p className="text-xs text-gray-400 mt-1">ID: {stand.id}</p>
                           </div>
-                          <div className="flex items-center gap-4">
-                              <div className="text-right hidden md:block">
-                                  <p className="text-xs font-bold uppercase text-gray-400">Mensajes</p>
-                                  <p className="font-bold">{stand.messages.length}</p>
-                              </div>
-                              <Button onClick={() => {
-                                 setActiveChatStand(stand);
-                              }} variant="outline" className="flex items-center gap-2">
-                                 <MessageCircle size={18} /> Chat / Estado
-                              </Button>
-                          </div>
+                          <Button onClick={() => setViewingStand(stand)} variant="outline" className="flex items-center gap-2">
+                             <Eye size={18} /> Ver Detalle
+                          </Button>
                       </MangaCard>
                   ))}
               </div>
@@ -724,10 +499,8 @@ export const UserDashboard = () => {
                                   <p className="text-sm text-gray-600">{cos.seriesName} <span className="text-gray-400">•</span> {cos.category}</p>
                               </div>
                            </div>
-                           <Button onClick={() => {
-                               setActiveChatCosplay(cos);
-                           }} variant="outline" className="flex items-center gap-2">
-                               <MessageCircle size={18} /> Chat / Estado
+                           <Button onClick={() => setViewingCosplay(cos)} variant="outline" className="flex items-center gap-2">
+                               <Eye size={18} /> Ver Detalle
                            </Button>
                       </MangaCard>
                   ))}
@@ -782,11 +555,12 @@ export const UserDashboard = () => {
                               {/* Button Row - Full width on mobile */}
                               <div className="w-full pt-2 border-t border-purple-200 flex gap-2">
                                 <Button
-                                  onClick={() => setActiveChatCosplay(guest as any)}
-                                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 border-blue-800"
+                                  onClick={() => setViewingCosplayGuest(guest)}
+                                  variant="outline"
+                                  className="flex-1 flex items-center justify-center gap-2"
                                 >
-                                  <MessageCircle size={16} className="flex-shrink-0" />
-                                  <span className="text-sm font-bold">CHAT</span>
+                                  <Eye size={16} className="flex-shrink-0" />
+                                  <span className="text-sm font-bold">VER DETALLE</span>
                                 </Button>
                                 <Button
                                   onClick={() => {
@@ -972,98 +746,191 @@ export const UserDashboard = () => {
           )}
       </div>
 
-      {/* CHAT MODAL FOR USER (Stands/Cosplay) */}
-      {(activeChatStand || activeChatCosplay) && (
-          <Modal
-            title={activeChatStand ? `Chat Stand: ${activeChatStand.brandName}` : `Chat Cosplay: ${activeChatCosplay?.characterName}`}
-            onClose={() => {
-              chatClosedByUserRef.current = true;
-              setActiveChatStand(null);
-              setActiveChatCosplay(null);
-            }}
-          >
-              <div className="flex flex-col h-[50vh]">
-                  {/* WhatsApp Contact Banner */}
-                  <div className="bg-green-50 border-2 border-green-200 p-3 mb-3 rounded flex items-center justify-between">
-                      <div className="flex-grow">
-                          <p className="text-xs font-bold text-green-800 mb-1">Contacto Directo</p>
-                          <p className="text-xs text-green-700">¿Preferís hablar por WhatsApp?</p>
+      {/* STAND DETAIL MODAL */}
+      {viewingStand && (
+          <Modal title={`Detalle: ${viewingStand.brandName}`} onClose={() => setViewingStand(null)}>
+              <div className="space-y-4">
+                  {/* Status Banner */}
+                  <div className={`p-4 rounded-lg border-2 ${
+                      viewingStand.status === 'Rechazada' ? 'bg-red-50 border-red-300' :
+                      viewingStand.status === 'Aprobada' ? 'bg-green-50 border-green-300' :
+                      'bg-blue-50 border-blue-300'
+                  }`}>
+                      <div className="flex items-center gap-3">
+                          <StatusIcon status={viewingStand.status} />
+                          <div>
+                              <p className="font-bold text-lg uppercase">Estado: {viewingStand.status}</p>
+                              <p className="text-sm text-gray-600">
+                                  {viewingStand.status === 'Aprobada' && '¡Tu stand fue aprobado! Te contactaremos pronto.'}
+                                  {viewingStand.status === 'Pendiente' && 'Tu solicitud está siendo revisada.'}
+                                  {viewingStand.status === 'Rechazada' && 'Tu solicitud fue rechazada.'}
+                              </p>
+                          </div>
                       </div>
+                  </div>
+
+                  {/* Stand Info */}
+                  <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div><span className="font-bold text-gray-500">Marca:</span></div>
+                          <div>{viewingStand.brandName}</div>
+                          <div><span className="font-bold text-gray-500">Tipo:</span></div>
+                          <div>{viewingStand.type}</div>
+                          <div><span className="font-bold text-gray-500">Contacto:</span></div>
+                          <div>{viewingStand.contactName}</div>
+                          <div><span className="font-bold text-gray-500">Email:</span></div>
+                          <div className="break-all">{viewingStand.email}</div>
+                          <div><span className="font-bold text-gray-500">Teléfono:</span></div>
+                          <div>{viewingStand.phone}</div>
+                      </div>
+                      {viewingStand.description && (
+                          <div className="pt-2 border-t">
+                              <p className="font-bold text-gray-500 text-sm mb-1">Descripción:</p>
+                              <p className="text-sm">{viewingStand.description}</p>
+                          </div>
+                      )}
+                  </div>
+
+                  {/* WhatsApp Contact */}
+                  <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg">
+                      <p className="font-bold text-green-800 mb-2">¿Tenés dudas?</p>
                       <a
                           href="https://wa.me/5492975585027"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-full font-bold transition-colors text-xs whitespace-nowrap"
-                          title="Contactar por WhatsApp"
+                          className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full font-bold transition-colors"
                       >
-                          <Phone size={14} />
-                          WhatsApp
+                          <Phone size={18} /> Contactar por WhatsApp
                       </a>
+                  </div>
+              </div>
+          </Modal>
+      )}
+
+      {/* COSPLAY DETAIL MODAL */}
+      {viewingCosplay && (
+          <Modal title={`Detalle: ${viewingCosplay.characterName}`} onClose={() => setViewingCosplay(null)}>
+              <div className="space-y-4">
+                  {/* Status Banner */}
+                  <div className={`p-4 rounded-lg border-2 ${
+                      viewingCosplay.status === 'Rechazado' ? 'bg-red-50 border-red-300' :
+                      viewingCosplay.status === 'Confirmado' ? 'bg-green-50 border-green-300' :
+                      'bg-yellow-50 border-yellow-300'
+                  }`}>
+                      <div className="flex items-center gap-3">
+                          <StatusIcon status={viewingCosplay.status} />
+                          <div>
+                              <p className="font-bold text-lg uppercase">Estado: {viewingCosplay.status}</p>
+                              <p className="text-sm text-gray-600">
+                                  {viewingCosplay.status === 'Confirmado' && '¡Tu inscripción fue confirmada!'}
+                                  {viewingCosplay.status === 'Inscripto' && 'Tu inscripción está siendo revisada.'}
+                                  {viewingCosplay.status === 'Rechazado' && 'Tu inscripción fue rechazada.'}
+                              </p>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Reference Image */}
+                  {viewingCosplay.referenceImage && (
+                      <div className="border-2 border-black overflow-hidden">
+                          <img src={viewingCosplay.referenceImage} alt="Referencia" className="w-full h-48 object-cover" />
+                      </div>
+                  )}
+
+                  {/* Cosplay Info */}
+                  <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div><span className="font-bold text-gray-500">Personaje:</span></div>
+                          <div>{viewingCosplay.characterName}</div>
+                          <div><span className="font-bold text-gray-500">Serie:</span></div>
+                          <div>{viewingCosplay.seriesName}</div>
+                          <div><span className="font-bold text-gray-500">Categoría:</span></div>
+                          <div>{viewingCosplay.category}</div>
+                          <div><span className="font-bold text-gray-500">Nombre:</span></div>
+                          <div>{viewingCosplay.participantName}</div>
+                          <div><span className="font-bold text-gray-500">Apodo:</span></div>
+                          <div>{viewingCosplay.nickname}</div>
+                      </div>
+                  </div>
+
+                  {/* WhatsApp Contact */}
+                  <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg">
+                      <p className="font-bold text-green-800 mb-2">¿Tenés dudas?</p>
+                      <a
+                          href="https://wa.me/5492975585027"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full font-bold transition-colors"
+                      >
+                          <Phone size={18} /> Contactar por WhatsApp
+                      </a>
+                  </div>
+              </div>
+          </Modal>
+      )}
+
+      {/* COSPLAY GUEST DETAIL MODAL */}
+      {viewingCosplayGuest && (
+          <Modal title={`Detalle: ${viewingCosplayGuest.characterName}`} onClose={() => setViewingCosplayGuest(null)}>
+              <div className="space-y-4">
+                  {/* Assigned Number */}
+                  <div className="flex justify-center">
+                      <div className="flex flex-col items-center bg-yellow-400 border-4 border-black p-4 shadow-manga">
+                          <span className="text-xs font-bold text-gray-700 uppercase mb-1">Tu Número</span>
+                          <span className="font-display text-5xl font-bold">{viewingCosplayGuest.assignedNumber}</span>
+                      </div>
                   </div>
 
                   {/* Status Banner */}
-                  <div className={`p-3 mb-4 rounded border-2 ${
-                      (activeChatStand?.status || activeChatCosplay?.status)?.includes('Rechaza') ? 'bg-red-50 border-red-200' :
-                      (activeChatStand?.status === 'Aprobada' || activeChatCosplay?.status === 'Confirmado') ? 'bg-green-50 border-green-200' :
-                      'bg-blue-50 border-blue-200'
+                  <div className={`p-4 rounded-lg border-2 ${
+                      viewingCosplayGuest.status === 'Rechazado' ? 'bg-red-50 border-red-300' :
+                      viewingCosplayGuest.status === 'Confirmado' ? 'bg-green-50 border-green-300' :
+                      'bg-yellow-50 border-yellow-300'
                   }`}>
-                      <div className="flex items-center gap-2 font-bold mb-1">
-                          <StatusIcon status={activeChatStand?.status || activeChatCosplay?.status || ''} />
-                          <span className="uppercase">Estado: {activeChatStand?.status || activeChatCosplay?.status}</span>
+                      <div className="flex items-center gap-3">
+                          <StatusIcon status={viewingCosplayGuest.status} />
+                          <div>
+                              <p className="font-bold text-lg uppercase">Estado: {viewingCosplayGuest.status}</p>
+                              <p className="text-sm text-purple-600 font-bold">🌟 Cosplay Invitado Oficial</p>
+                          </div>
                       </div>
-                      <p className="text-xs text-gray-600">
-                          {(activeChatStand?.status || activeChatCosplay?.status)?.includes('Rechaza')
-                              ? 'Tu solicitud fue rechazada. Revisa los mensajes abajo para ver el motivo y responde si deseas corregirlo.'
-                              : 'Usa este chat para comunicarte directamente con los organizadores.'}
-                      </p>
                   </div>
 
-                  {/* Messages Area */}
-                  <div className="flex-grow overflow-y-auto space-y-4 p-2 mb-4" ref={chatScrollRef}>
-                      {(activeChatStand ? activeChatStand.messages : activeChatCosplay?.messages || []).length === 0 && (
-                          <div className="text-center text-gray-400 italic text-sm mt-10">
-                              No hay mensajes aún. Escribí tu consulta aquí.
-                          </div>
-                      )}
-                      
-                      {(activeChatStand ? activeChatStand.messages : activeChatCosplay?.messages || []).map(msg => (
-                          <div key={msg.id} className={`flex flex-col ${msg.sender === 'USER' ? 'items-end' : 'items-start'}`}>
-                              <div className={`max-w-[85%] p-3 border-2 border-black shadow-sm ${
-                                  msg.sender === 'USER' 
-                                  ? 'bg-white text-black rounded-tr-xl rounded-br-xl rounded-bl-xl' 
-                                  : 'bg-black text-white rounded-tl-xl rounded-br-xl rounded-bl-xl' // Admin msgs distinct
-                              }`}>
-                                  <p className="text-xs font-bold mb-1 opacity-70">{msg.sender === 'USER' ? 'Tú' : 'Organización Torami'}</p>
-                                  {msg.imageUrl && (
-                                    <div className="mb-2 cursor-pointer group relative" onClick={() => setViewImage(msg.imageUrl)}>
-                                        <img src={msg.imageUrl} alt="attachment" className="rounded border border-gray-500 max-h-40 object-cover transition-opacity group-hover:opacity-80" />
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all rounded flex items-center justify-center">
-                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100 bg-black bg-opacity-70 px-2 py-1 rounded">
-                                                Click para ver completa
-                                            </span>
-                                        </div>
-                                    </div>
-                                  )}
-                                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                              </div>
-                              <span className="text-[10px] text-gray-400 mt-1">{msg.timestamp}</span>
-                          </div>
-                      ))}
+                  {/* Reference Image */}
+                  {viewingCosplayGuest.referenceImage && (
+                      <div className="border-2 border-black overflow-hidden">
+                          <img src={viewingCosplayGuest.referenceImage} alt="Referencia" className="w-full h-48 object-cover" />
+                      </div>
+                  )}
+
+                  {/* Guest Info */}
+                  <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div><span className="font-bold text-gray-500">Personaje:</span></div>
+                          <div>{viewingCosplayGuest.characterName}</div>
+                          <div><span className="font-bold text-gray-500">Serie:</span></div>
+                          <div>{viewingCosplayGuest.seriesName}</div>
+                          <div><span className="font-bold text-gray-500">Categoría:</span></div>
+                          <div>{viewingCosplayGuest.category}</div>
+                          <div><span className="font-bold text-gray-500">Nombre:</span></div>
+                          <div>{viewingCosplayGuest.participantName}</div>
+                          <div><span className="font-bold text-gray-500">Apodo:</span></div>
+                          <div>{viewingCosplayGuest.nickname}</div>
+                      </div>
                   </div>
 
-                  {/* Input Area */}
-                  <form onSubmit={handleSendMessage} className="flex gap-2 border-t pt-4">
-                      <input 
-                        type="text" 
-                        className="flex-grow border-2 border-black p-2 focus:outline-none h-10" 
-                        placeholder="Escribir mensaje..." 
-                        value={chatMessage} 
-                        onChange={(e) => setChatMessage(e.target.value)} 
-                      />
-                      <Button type="submit" className="p-2 bg-black text-white hover:bg-gray-800 h-10 w-10 flex items-center justify-center">
-                          <Send size={18} />
-                      </Button>
-                  </form>
+                  {/* WhatsApp Contact */}
+                  <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg">
+                      <p className="font-bold text-green-800 mb-2">¿Tenés dudas?</p>
+                      <a
+                          href="https://wa.me/5492975585027"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full font-bold transition-colors"
+                      >
+                          <Phone size={18} /> Contactar por WhatsApp
+                      </a>
+                  </div>
               </div>
           </Modal>
       )}

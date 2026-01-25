@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { SectionTitle, MangaCard, Button, Badge } from '../components/UI';
-import { getEvents, addGalleryItem } from '../services/data';
+import { getEvents, addGalleryItem, getAuth } from '../services/data';
 import { Event, GalleryItem } from '../types';
 import { useAuth } from '../App';
-import { Image, Camera, X, Upload, Filter, Heart, ZoomIn, CheckCircle, Sparkles, ShieldCheck, User, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Image, Camera, X, Upload, Filter, Heart, ZoomIn, CheckCircle, Sparkles, ShieldCheck, User, Calendar, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { api } from '../services/api';
 
 export const Gallery = () => {
@@ -20,6 +20,7 @@ export const Gallery = () => {
   const [uploadData, setUploadData] = useState({ eventId: '', description: '', url: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Lightbox State
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
@@ -41,16 +42,29 @@ export const Gallery = () => {
     api.events.getAll(undefined, 1, 100).then(response => setEvents(response.data));
   }, [user, page, filterEvent]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUploadData(prev => ({ ...prev, url: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+
+      const { token } = getAuth();
+      if (!token) {
+        alert('❌ No estás autenticado');
+        return;
+      }
+
+      setIsUploadingImage(true);
+      try {
+        // Subir a Cloudinary via backend
+        const result = await api.uploads.uploadImage(token, file);
+        setUploadData(prev => ({ ...prev, url: result.secure_url }));
+      } catch (error) {
+        console.error('Error uploading to Cloudinary:', error);
+        alert('❌ Error subiendo la imagen. Intenta nuevamente.');
+        setSelectedFile(null);
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -252,14 +266,20 @@ export const Gallery = () => {
                               <div>
                                   <label className="block text-sm font-bold mb-1">Tu Foto</label>
                                   <div className="border-2 border-dashed border-gray-400 bg-gray-50 p-4 text-center cursor-pointer hover:bg-gray-100 transition-colors relative">
-                                      <input 
-                                        type="file" 
-                                        accept="image/*" 
+                                      <input
+                                        type="file"
+                                        accept="image/*"
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                         onChange={handleFileSelect}
-                                        required
+                                        disabled={isUploadingImage}
+                                        required={!uploadData.url}
                                       />
-                                      {uploadData.url ? (
+                                      {isUploadingImage ? (
+                                          <div className="text-gray-500 py-4">
+                                              <RefreshCw className="mx-auto mb-2 animate-spin" />
+                                              <span className="text-xs font-bold uppercase">Subiendo imagen...</span>
+                                          </div>
+                                      ) : uploadData.url ? (
                                           <img src={uploadData.url} alt="Preview" className="h-32 mx-auto object-contain shadow-sm" />
                                       ) : (
                                           <div className="text-gray-500 py-4">
@@ -282,7 +302,9 @@ export const Gallery = () => {
                                   ></textarea>
                               </div>
                               
-                              <Button type="submit" className="w-full">Enviar a Galería</Button>
+                              <Button type="submit" className="w-full" disabled={isUploadingImage || !uploadData.url}>
+                                  {isUploadingImage ? 'Subiendo...' : 'Enviar a Galería'}
+                              </Button>
                           </form>
                       </div>
                   )}
