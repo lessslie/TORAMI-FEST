@@ -40,4 +40,19 @@ export class UploadsController {
   uploadVideo(@UploadedFile() file: any) {
     return this.uploadsService.uploadBuffer(file, 'torami/videos', 'video');
   }
+
+  @Post('document')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  uploadDocument(@UploadedFile() file: any) {
+    return this.uploadsService.uploadBuffer(file, 'torami/documents', 'raw');
+  }
 }

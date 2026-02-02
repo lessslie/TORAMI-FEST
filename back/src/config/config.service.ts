@@ -29,6 +29,7 @@ export class ConfigService {
       cosplayGuestInscripcionesAbiertas: true,
       standsInscripcionesAbiertas: true,
       karaokeInscripcionesAbiertas: true,
+      standsInfoText: true,
     };
 
     // El AppConfig siempre tiene id=1 (singleton)

@@ -296,7 +296,7 @@ export const Admin = () => {
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [officialGallery, setOfficialGallery] = useState<GalleryItem[]>([]);
-  const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined, giveawaysInscripcionesAbiertas: true });
+  const [config, setConfig] = useState<AppConfig>({ donationsEnabled: false, paymentLink: '', aliasCbu: '', qrImage: '', homeGalleryImages: [], heroTitle: '', heroSubtitle: '', heroDateText: '', donationTitle: '', donationDescription: '', donationImage: '', donationGoal: undefined, giveawaysInscripcionesAbiertas: true, standsInfoText: '' });
   const [configNotice, setConfigNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isTogglingDonations, setIsTogglingDonations] = useState(false);
 
@@ -2225,6 +2225,32 @@ export const Admin = () => {
                     <p className="text-xs text-yellow-600 mt-3 font-medium">
                         Recordá hacer click en "Guardar Cambios Globales" para aplicar los cambios.
                     </p>
+                </MangaCard>
+
+                {/* Información para Stands */}
+                <MangaCard className="border-t-4 border-t-orange-500">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <Store size={20} className="text-orange-500" /> Información para Stands
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-4">
+                        Escribí las normativas, precios y detalles para los expositores.
+                        Los usuarios podrán ver esta información en la página de Stands.
+                    </p>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Normativas, Precios y Detalles
+                        </label>
+                        <textarea
+                            value={config.standsInfoText || ''}
+                            onChange={(e) => setConfig({ ...config, standsInfoText: e.target.value })}
+                            rows={10}
+                            className="w-full border-2 border-black p-3 bg-white focus:outline-none focus:shadow-manga text-sm"
+                            placeholder="Ej:&#10;&#10;PRECIOS:&#10;- Stand simple (1 mesa): $5000&#10;- Stand doble (2 mesas): $8000&#10;&#10;NORMATIVAS:&#10;- Horario de armado: 9:00 AM&#10;- No se permite venta de comida sin habilitación&#10;- Cada stand incluye 1 mesa y 2 sillas&#10;&#10;CONTACTO:&#10;Para consultas: stands@toramifest.com"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">
+                            Podés usar saltos de línea para organizar la información. Se mostrará tal como lo escribas.
+                        </p>
+                    </div>
                 </MangaCard>
             </div>
 

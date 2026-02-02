@@ -265,6 +265,8 @@ model AppConfig {
   standsInscripcionesAbiertas Boolean @default(true)
   karaokeInscripcionesAbiertas Boolean @default(true)
   giveawaysInscripcionesAbiertas Boolean @default(true)
+  // Información para stands (texto que se muestra en la página)
+  standsInfoText String?
 }
 
 model Donation {

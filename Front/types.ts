@@ -265,6 +265,7 @@ export interface AppConfig {
   standsInscripcionesAbiertas?: boolean;
   karaokeInscripcionesAbiertas?: boolean;
   giveawaysInscripcionesAbiertas?: boolean;
+  standsInfoText?: string;
 }
 
 export interface Donation {

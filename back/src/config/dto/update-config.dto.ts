@@ -103,4 +103,9 @@ export class UpdateConfigDto {
   @IsOptional()
   @IsBoolean()
   giveawaysInscripcionesAbiertas?: boolean;
+
+  @ApiProperty({ required: false, description: 'Texto con información para stands (normativas, precios, etc.)' })
+  @IsOptional()
+  @IsString()
+  standsInfoText?: string;
 }

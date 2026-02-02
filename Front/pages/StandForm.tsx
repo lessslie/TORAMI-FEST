@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
 import { addStandApplication, getUpcomingEvents, getConfig, getUserStands, uploadImageToCloudinary } from '../services/data';
 import { StandApplication, Event, AppConfig } from '../types';
-import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle, Calendar } from 'lucide-react';
+import { Store, Coffee, CheckCircle, Send, ShoppingBag, Upload, X, Image, AlertCircle, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,6 +12,8 @@ export const StandForm = () => {
 
   // Estado de configuración (inscripciones abiertas/cerradas)
   const [inscripcionesAbiertas, setInscripcionesAbiertas] = useState<boolean | null>(null);
+  const [standsInfoText, setStandsInfoText] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [formData, setFormData] = useState({
@@ -41,9 +43,10 @@ export const StandForm = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load config para saber si inscripciones están abiertas
+        // Load config para saber si inscripciones están abiertas y texto de info
         const configData = await getConfig();
         setInscripcionesAbiertas(configData.standsInscripcionesAbiertas !== false);
+        setStandsInfoText(configData.standsInfoText || null);
 
         const upcomingEvents = await getUpcomingEvents();
         setEvents(upcomingEvents);
@@ -237,13 +240,31 @@ export const StandForm = () => {
             <div className="hidden sm:block p-2 bg-white rounded-full border-2 border-black">
                <Coffee className="text-torami-red" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold text-lg mb-2">Información para Expositores</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-gray-800">
                 <li>Buscamos propuestas originales de anime, gaming y cultura pop.</li>
-                <li>El espacio incluye 1 mesa y 1 silla.</li>
                 <li>Fecha límite para aplicar: 15 días antes del evento.</li>
+                <li>El equipo de Torami revisará cada solicitud y se comunicará por email o WhatsApp.</li>
+                <li>Los stands deben cumplir con las normativas del evento.</li>
               </ul>
+              {standsInfoText && (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowInfo(!showInfo)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-torami-red text-white font-bold border-2 border-black shadow-manga hover:bg-red-700 transition-colors"
+                  >
+                    {showInfo ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    {showInfo ? 'Ocultar' : 'Ver'} Normativas, Precios y Detalles
+                  </button>
+                  {showInfo && (
+                    <div className="mt-4 p-4 bg-white border-2 border-black text-sm whitespace-pre-wrap">
+                      {standsInfoText}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </MangaCard>
