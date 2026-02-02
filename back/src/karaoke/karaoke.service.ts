@@ -10,9 +10,15 @@ import { KaraokeStatus } from '@prisma/client';
 
 @Injectable()
 export class KaraokeService {
-  private readonly KARAOKE_LIMIT = 12;
-
   constructor(private readonly prisma: PrismaService) {}
+
+  // Obtener el límite de karaoke desde AppConfig
+  private async getKaraokeLimit(): Promise<number> {
+    const config = await this.prisma.appConfig.findFirst({
+      select: { karaokeLimit: true },
+    });
+    return config?.karaokeLimit ?? 12;
+  }
 
   async findAll(eventId?: string) {
     return this.prisma.karaoke.findMany({
@@ -83,6 +89,8 @@ export class KaraokeService {
   }
 
   async getAvailableSlots(eventId: string) {
+    const limit = await this.getKaraokeLimit();
+
     // Contar PENDIENTE + APROBADO (los rechazados no ocupan cupo)
     const occupiedCount = await this.prisma.karaoke.count({
       where: {
@@ -94,8 +102,8 @@ export class KaraokeService {
     });
 
     return {
-      available: Math.max(0, this.KARAOKE_LIMIT - occupiedCount),
-      limit: this.KARAOKE_LIMIT,
+      available: Math.max(0, limit - occupiedCount),
+      limit: limit,
       occupied: occupiedCount,
     };
   }
@@ -221,6 +229,8 @@ export class KaraokeService {
   }
 
   private async findNextAvailableNumber(eventId: string): Promise<number> {
+    const limit = await this.getKaraokeLimit();
+
     const approvedKaraokes = await this.prisma.karaoke.findMany({
       where: {
         eventId,
@@ -238,7 +248,7 @@ export class KaraokeService {
       .map((k) => k.assignedNumber)
       .filter((n): n is number => n !== null);
 
-    for (let i = 1; i <= this.KARAOKE_LIMIT; i++) {
+    for (let i = 1; i <= limit; i++) {
       if (!assignedNumbers.includes(i)) {
         return i;
       }
@@ -263,6 +273,24 @@ export class KaraokeService {
 
     return this.prisma.karaoke.delete({
       where: { id },
+    });
+  }
+
+  // Obtener todos los registros sin paginación para exportación
+  async findAllForExport() {
+    return this.prisma.karaoke.findMany({
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: [
+        { assignedNumber: 'asc' },
+        { createdAt: 'desc' },
+      ],
     });
   }
 }

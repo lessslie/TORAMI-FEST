@@ -326,4 +326,19 @@ export class CosplayGuestService {
 
     return { messages: Array.isArray(guest.messages) ? guest.messages : [] };
   }
+
+  // Obtener todos los registros sin paginación para exportación
+  async findAllForExport() {
+    return this.prisma.cosplayGuest.findMany({
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { assignedNumber: 'asc' },
+    });
+  }
 }

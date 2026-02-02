@@ -304,4 +304,19 @@ export class CosplayService {
 
     return result;
   }
+
+  // Obtener todos los registros sin paginación para exportación
+  async findAllForExport() {
+    return this.prisma.cosplayRegistration.findMany({
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

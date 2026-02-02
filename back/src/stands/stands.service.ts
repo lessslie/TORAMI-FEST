@@ -178,4 +178,19 @@ export class StandsService {
       where: { id },
     });
   }
+
+  // Obtener todos los stands sin paginación para exportación
+  async findAllForExport() {
+    return this.prisma.standApplication.findMany({
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

@@ -1172,6 +1172,60 @@ export const Admin = () => {
       {/* --- STANDS LIST --- */}
       {activeTab === 'stands' && (
         <div className="animate-in fade-in">
+          {/* Header con botón de descarga */}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
+              <Store size={24} className="text-purple-600" />
+              Solicitudes de Stands
+            </h3>
+            <button
+              onClick={() => {
+                const { token } = getAuth();
+                if (token) {
+                  fetch(api.stands.getDownloadUrl(), {
+                    headers: { Authorization: `Bearer ${token}` }
+                  })
+                    .then(res => res.blob())
+                    .then(blob => {
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `stands-${new Date().toISOString().split('T')[0]}.pdf`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                    });
+                }
+              }}
+              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold border-2 border-black shadow-manga"
+            >
+              <Download size={16} /> Descargar PDF
+            </button>
+          </div>
+
+          {/* Stats de stands */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <MangaCard className="text-center bg-yellow-50">
+              <div className="text-2xl font-display text-yellow-600">
+                {stands.filter(s => s.status === 'PENDIENTE').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Pendientes</div>
+            </MangaCard>
+            <MangaCard className="text-center bg-green-50">
+              <div className="text-2xl font-display text-green-600">
+                {stands.filter(s => s.status === 'APROBADA').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Aprobados</div>
+            </MangaCard>
+            <MangaCard className="text-center bg-red-50">
+              <div className="text-2xl font-display text-red-600">
+                {stands.filter(s => s.status === 'RECHAZADA').length}
+              </div>
+              <div className="text-xs uppercase text-gray-500 font-bold">Rechazados</div>
+            </MangaCard>
+          </div>
+
           {/* Cards para móvil y desktop */}
           <div className="space-y-3">
             {stands.map(stand => (
@@ -1271,11 +1325,35 @@ export const Admin = () => {
       {/* --- COSPLAY LIST --- */}
       {activeTab === 'cosplay' && (
         <div className="animate-in fade-in">
-           <div className="flex justify-between mb-4">
+           <div className="flex justify-between items-center mb-4">
                 <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
                   <Trophy size={24} className="text-purple-600" />
-                  Gestión de Cosplay
+                  Gestión de Cosplay Concurso
                 </h3>
+                <button
+                  onClick={() => {
+                    const { token } = getAuth();
+                    if (token) {
+                      fetch(api.cosplay.getDownloadUrl(), {
+                        headers: { Authorization: `Bearer ${token}` }
+                      })
+                        .then(res => res.blob())
+                        .then(blob => {
+                          const url = window.URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.setAttribute('download', `cosplay-concurso-${new Date().toISOString().split('T')[0]}.pdf`);
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          window.URL.revokeObjectURL(url);
+                        });
+                    }
+                  }}
+                  className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold border-2 border-black shadow-manga"
+                >
+                  <Download size={16} /> Descargar PDF
+                </button>
            </div>
 
            {/* Stats de cosplay */}
@@ -1389,11 +1467,35 @@ export const Admin = () => {
       {/* --- COSPLAY INVITADOS --- */}
       {activeTab === 'cosplayguest' && (
         <div className="animate-in fade-in">
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
               <Star size={24} className="text-yellow-500 fill-current" />
               Gestión de Cosplay Invitados
             </h3>
+            <button
+              onClick={() => {
+                const { token } = getAuth();
+                if (token) {
+                  fetch(api.cosplayGuest.getDownloadUrl(), {
+                    headers: { Authorization: `Bearer ${token}` }
+                  })
+                    .then(res => res.blob())
+                    .then(blob => {
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `cosplay-invitados-${new Date().toISOString().split('T')[0]}.pdf`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                    });
+                }
+              }}
+              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold border-2 border-black shadow-manga"
+            >
+              <Download size={16} /> Descargar PDF
+            </button>
           </div>
 
           {/* Stats de cosplay invitados */}
@@ -1506,11 +1608,35 @@ export const Admin = () => {
       {/* --- KARAOKE MANAGEMENT --- */}
       {activeTab === 'karaoke' && (
         <div className="animate-in fade-in">
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h3 className="font-display text-xl sm:text-2xl flex items-center gap-2">
               <Mic size={24} className="text-purple-600" />
               Gestión de Karaoke
             </h3>
+            <button
+              onClick={() => {
+                const { token } = getAuth();
+                if (token) {
+                  fetch(api.karaoke.getDownloadUrl(), {
+                    headers: { Authorization: `Bearer ${token}` }
+                  })
+                    .then(res => res.blob())
+                    .then(blob => {
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `karaoke-${new Date().toISOString().split('T')[0]}.pdf`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                    });
+                }
+              }}
+              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold border-2 border-black shadow-manga"
+            >
+              <Download size={16} /> Descargar PDF
+            </button>
           </div>
 
           {/* Stats de karaoke */}

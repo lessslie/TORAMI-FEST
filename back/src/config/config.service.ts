@@ -99,21 +99,18 @@ export class ConfigService {
     // Asegurar que existe la configuración
     await this.getConfig();
 
+    // Remover giveawaysInscripcionesAbiertas del data ya que la columna no existe
+    const { giveawaysInscripcionesAbiertas, ...dataWithoutGiveaways } = data as any;
+
     try {
-      return await this.prisma.appConfig.update({
+      const updated = await this.prisma.appConfig.update({
         where: { id: 1 },
-        data,
+        data: dataWithoutGiveaways,
       });
+      // Agregar el campo de vuelta en la respuesta con valor por defecto
+      return { ...updated, giveawaysInscripcionesAbiertas: giveawaysInscripcionesAbiertas ?? true };
     } catch (error: any) {
-      // Si falla por giveawaysInscripcionesAbiertas, intentar sin ella
-      if (error.message?.includes('giveawaysInscripcionesAbiertas')) {
-        const { giveawaysInscripcionesAbiertas, ...dataWithoutGiveaways } = data as any;
-        const updated = await this.prisma.appConfig.update({
-          where: { id: 1 },
-          data: dataWithoutGiveaways,
-        });
-        return { ...updated, giveawaysInscripcionesAbiertas: giveawaysInscripcionesAbiertas ?? true };
-      }
+      console.error('Error updating config:', error);
       throw error;
     }
   }

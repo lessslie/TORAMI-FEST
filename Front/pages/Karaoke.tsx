@@ -180,8 +180,8 @@ export const Karaoke = () => {
           <div className="text-center md:text-left">
             <h2 className="text-2xl font-bold mb-2">Karaoke en Torami Fest</h2>
             <p className="text-gray-600">
-              Subite al escenario y cantá tu canción favorita de anime, videojuegos o J-Pop.
-              Solo 12 cupos por evento.
+              Subite al escenario y cantá! , Karaoke libre, podés cantar lo que sea (anime, videojuegos, J-Pop o cualquier género).
+              {slots && ` Solo ${slots.limit} cupos por evento.`}
             </p>
           </div>
         </div>
@@ -397,11 +397,11 @@ export const Karaoke = () => {
             <MangaCard className="p-6 mt-4 bg-gray-50">
               <h4 className="font-bold mb-2">Información</h4>
               <ul className="text-sm text-gray-600 space-y-2">
-                <li>• Solo 12 cupos por evento</li>
+                <li>• Solo {slots?.limit || 12} cupos por evento</li>
                 <li>• Tu inscripción debe ser aprobada</li>
                 <li>• Te contactaremos por WhatsApp</li>
                 <li>• Podés proponer hasta 3 canciones (se elegirá 1)</li>
-                <li>• Podés cantar canciones de anime, videojuegos o J-Pop</li>
+                <li>• Animate a cantar lo que quieras: openings de anime, canciones de videojuegos, J-Pop y más. ¡Karaoke libre!</li>
               </ul>
             </MangaCard>
           </div>

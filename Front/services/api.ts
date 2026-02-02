@@ -166,6 +166,9 @@ export const api = {
         cacheManager.clear('/stands');
         return result;
       }),
+
+    getDownloadUrl: () =>
+      `${API_BASE}/stands/download/pdf`,
   },
 
   // ==================== COSPLAY ====================
@@ -220,6 +223,9 @@ export const api = {
         cacheManager.clear('/cosplay');
         return result;
       }),
+
+    getDownloadUrl: () =>
+      `${API_BASE}/cosplay/download/pdf`,
   },
 
   // ==================== COSPLAY GUEST ====================
@@ -266,6 +272,9 @@ export const api = {
 
     getMessages: (token: string, id: string) =>
       request<{ messages: any[] }>(`/cosplay-guest/${id}/messages`, { token, useCache: false }),
+
+    getDownloadUrl: () =>
+      `${API_BASE}/cosplay-guest/download/pdf`,
   },
 
   // ==================== KARAOKE ====================
@@ -292,6 +301,9 @@ export const api = {
 
     withdraw: (token: string, id: string) =>
       request<any>(`/karaoke/${id}/withdraw`, { method: 'DELETE', token }),
+
+    getDownloadUrl: () =>
+      `${API_BASE}/karaoke/download/pdf`,
   },
 
   // ==================== GALLERY ====================
