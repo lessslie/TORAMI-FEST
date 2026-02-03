@@ -73,7 +73,7 @@ export const CosplayGuest = () => {
 
   // Validar que el WhatsApp solo contenga números y caracteres permitidos
   const validateWhatsapp = (value: string): boolean => {
-    const whatsappRegex = /^[\d\s\-+()]*$/;
+    const whatsappRegex = /^[\d\s\-+()]+$/;
     return whatsappRegex.test(value);
   };
 

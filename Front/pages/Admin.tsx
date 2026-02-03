@@ -1568,6 +1568,30 @@ export const Admin = () => {
                          <Eye size={16} /> Ver Detalles
                        </button>
 
+                       {/* Mostrar botones Aprobar/Rechazar si está INSCRIPTO */}
+                       {guest.status.toUpperCase() === 'INSCRIPTO' && (
+                         <>
+                           <button
+                             onClick={async () => {
+                               await updateCosplayGuestStatus(guest.id, 'Confirmado');
+                               refreshCurrentTab();
+                             }}
+                             className="bg-green-100 text-green-700 px-4 py-2 rounded hover:bg-green-200 border border-green-300 flex items-center justify-center gap-2 text-sm font-bold"
+                           >
+                             <Check size={16} /> Aprobar
+                           </button>
+                           <button
+                             onClick={async () => {
+                               await updateCosplayGuestStatus(guest.id, 'Rechazado');
+                               refreshCurrentTab();
+                             }}
+                             className="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200 border border-red-300 flex items-center justify-center gap-2 text-sm font-bold"
+                           >
+                             <X size={16} /> Rechazar
+                           </button>
+                         </>
+                       )}
+
                        {/* Mostrar botón eliminar solo si está Confirmado o Rechazado (case-insensitive) */}
                        {(guest.status.toUpperCase() === 'CONFIRMADO' || guest.status.toUpperCase() === 'RECHAZADO') && (
                          <button
@@ -2443,12 +2467,29 @@ export const Admin = () => {
                         <h4 className="text-xs font-bold uppercase text-gray-500">Contacto</h4>
                         <p>{viewStand.contactName}</p>
                         <p className="text-sm text-gray-600">{viewStand.email}</p>
-                        <p className="text-sm font-mono">{viewStand.phone}</p>
+                        <a
+                          href={`https://wa.me/${viewStand.phone.replace(/[\s\-+()]/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-mono text-green-700 hover:text-green-900 hover:underline inline-flex items-center gap-1"
+                        >
+                          {viewStand.phone}
+                          <span className="text-xs bg-green-100 px-1.5 py-0.5 rounded">WhatsApp</span>
+                        </a>
                     </div>
                     <div>
                         <h4 className="text-xs font-bold uppercase text-gray-500">Info Stand</h4>
                         <p><span className="font-bold">Tipo:</span> {viewStand.type}</p>
-                        <p className="text-sm text-blue-600">{viewStand.socials}</p>
+                        {viewStand.socials && (
+                          <a
+                            href={viewStand.socials.startsWith('http') ? viewStand.socials : `https://instagram.com/${viewStand.socials.replace('@', '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm text-pink-600 hover:text-pink-800 hover:underline flex items-center gap-1"
+                          >
+                            @{viewStand.socials.replace('@', '').replace('https://instagram.com/', '').replace('https://www.instagram.com/', '')}
+                          </a>
+                        )}
                         <Badge color={viewStand.status === 'PENDIENTE' ? 'blue' : viewStand.status === 'APROBADA' ? 'red' : 'purple'}>
                             {viewStand.status}
                         </Badge>
@@ -2611,7 +2652,15 @@ export const Admin = () => {
 
                  <div className="bg-green-50 p-3 rounded border border-green-200">
                     <h4 className="text-xs font-bold uppercase text-green-800 mb-1 flex items-center gap-1"><Phone size={12}/> WhatsApp</h4>
-                    <p className="font-mono text-lg">{viewCosplay.whatsapp}</p>
+                    <a
+                      href={`https://wa.me/${viewCosplay.whatsapp.replace(/[\s\-+()]/g, '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-lg text-green-700 hover:text-green-900 hover:underline flex items-center gap-2"
+                    >
+                      {viewCosplay.whatsapp}
+                      <span className="text-xs bg-green-200 px-2 py-0.5 rounded">Abrir Chat</span>
+                    </a>
                  </div>
 
                  {/* Instagram y Website */}

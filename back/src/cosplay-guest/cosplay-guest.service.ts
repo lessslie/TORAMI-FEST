@@ -10,9 +10,15 @@ import { CosplayStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class CosplayGuestService {
-  private readonly GUEST_LIMIT = 30;
-
   constructor(private readonly prisma: PrismaService) {}
+
+  // Obtener límite desde la config de la DB
+  private async getGuestLimit(): Promise<number> {
+    const config = await this.prisma.appConfig.findFirst({
+      select: { cosplayGuestLimit: true },
+    });
+    return config?.cosplayGuestLimit ?? 30;
+  }
 
   async findAll(page: number = 1, limit: number = 20, includeMessages: boolean = false) {
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
@@ -139,6 +145,8 @@ export class CosplayGuestService {
   }
 
   async getAvailableSlots() {
+    const limit = await this.getGuestLimit();
+
     const activeCount = await this.prisma.cosplayGuest.count({
       where: {
         status: {
@@ -148,14 +156,16 @@ export class CosplayGuestService {
     });
 
     return {
-      available: Math.max(0, this.GUEST_LIMIT - activeCount),
-      limit: this.GUEST_LIMIT,
+      available: Math.max(0, limit - activeCount),
+      limit,
       occupied: activeCount,
     };
   }
 
-  // Find the next available number (1-30)
+  // Find the next available number (1 hasta el límite configurado)
   private async findNextAvailableNumber(): Promise<number> {
+    const limit = await this.getGuestLimit();
+
     // Get ALL assigned numbers (including RECHAZADO) since assignedNumber has @unique constraint
     // This prevents trying to assign a number that's already taken by a rejected guest
     const assignedGuests = await this.prisma.cosplayGuest.findMany({
@@ -169,8 +179,8 @@ export class CosplayGuestService {
 
     const assignedNumbers = assignedGuests.map((g) => g.assignedNumber);
 
-    // Find first available number from 1 to 30
-    for (let i = 1; i <= this.GUEST_LIMIT; i++) {
+    // Find first available number from 1 to limit
+    for (let i = 1; i <= limit; i++) {
       if (!assignedNumbers.includes(i)) {
         return i;
       }
@@ -207,6 +217,8 @@ export class CosplayGuestService {
     return this.prisma.cosplayGuest.create({
       data: {
         ...dto,
+        nickname: dto.nickname || '',
+        referenceImage: dto.referenceImage || '',
         userId,
         assignedNumber,
         status: CosplayStatus.INSCRIPTO,
