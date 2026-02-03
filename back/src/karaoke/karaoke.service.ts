@@ -5,19 +5,21 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '../config/config.service';
 import { CreateKaraokeDto } from './dto/create-karaoke.dto';
 import { KaraokeStatus } from '@prisma/client';
 
 @Injectable()
 export class KaraokeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  // Obtener el límite de karaoke desde AppConfig
+  // Obtener el límite de karaoke desde el caché de ConfigService
   private async getKaraokeLimit(): Promise<number> {
-    const config = await this.prisma.appConfig.findFirst({
-      select: { karaokeLimit: true },
-    });
-    return config?.karaokeLimit ?? 12;
+    const limits = await this.configService.getLimits();
+    return limits.karaokeLimit;
   }
 
   async findAll(eventId?: string) {
@@ -239,17 +241,18 @@ export class KaraokeService {
       select: {
         assignedNumber: true,
       },
-      orderBy: {
-        assignedNumber: 'asc',
-      },
+      // No necesitamos orderBy ya que usamos Set
     });
 
-    const assignedNumbers = approvedKaraokes
-      .map((k) => k.assignedNumber)
-      .filter((n): n is number => n !== null);
+    // Usar Set para búsqueda O(1) en lugar de includes() O(n)
+    const assignedNumbers = new Set(
+      approvedKaraokes
+        .map((k) => k.assignedNumber)
+        .filter((n): n is number => n !== null)
+    );
 
     for (let i = 1; i <= limit; i++) {
-      if (!assignedNumbers.includes(i)) {
+      if (!assignedNumbers.has(i)) {
         return i;
       }
     }

@@ -4,20 +4,22 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '../config/config.service';
 import { CreateCosplayGuestDto } from './dto/create-cosplay-guest.dto';
 import { WithdrawCosplayGuestDto } from './dto/withdraw-cosplay-guest.dto';
 import { CosplayStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class CosplayGuestService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  // Obtener límite desde la config de la DB
+  // Obtener límite desde el caché de ConfigService
   private async getGuestLimit(): Promise<number> {
-    const config = await this.prisma.appConfig.findFirst({
-      select: { cosplayGuestLimit: true },
-    });
-    return config?.cosplayGuestLimit ?? 30;
+    const limits = await this.configService.getLimits();
+    return limits.cosplayGuestLimit;
   }
 
   async findAll(page: number = 1, limit: number = 20, includeMessages: boolean = false) {
@@ -172,16 +174,15 @@ export class CosplayGuestService {
       select: {
         assignedNumber: true,
       },
-      orderBy: {
-        assignedNumber: 'asc',
-      },
+      // No necesitamos orderBy ya que usamos Set
     });
 
-    const assignedNumbers = assignedGuests.map((g) => g.assignedNumber);
+    // Usar Set para búsqueda O(1) en lugar de includes() O(n)
+    const assignedNumbers = new Set(assignedGuests.map((g) => g.assignedNumber));
 
     // Find first available number from 1 to limit
     for (let i = 1; i <= limit; i++) {
-      if (!assignedNumbers.includes(i)) {
+      if (!assignedNumbers.has(i)) {
         return i;
       }
     }
@@ -301,26 +302,25 @@ export class CosplayGuestService {
       });
     }
 
-    // If user sends message, notify all admins
+    // If user sends message, notify all admins (usando createMany para evitar N+1)
     if (message.sender === 'USER') {
       const admins = await this.prisma.user.findMany({
         where: { role: { in: [UserRole.ADMIN, UserRole.SUPER_ADMIN] } },
         select: { id: true },
       });
 
-      await Promise.all(
-        admins.map((admin) =>
-          this.prisma.notification.create({
-            data: {
-              userId: admin.id,
-              title: 'Nuevo mensaje de invitado cosplay',
-              message: `${guest.participantName} te envió un mensaje sobre "${guest.characterName}"`,
-              type: 'CHAT_COSPLAY_GUEST',
-              link: `/admin?tab=cosplayguest&chat=${id}`,
-            },
-          })
-        )
-      );
+      // Usar createMany en lugar de N creates individuales
+      if (admins.length > 0) {
+        await this.prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: 'Nuevo mensaje de invitado cosplay',
+            message: `${guest.participantName} te envió un mensaje sobre "${guest.characterName}"`,
+            type: 'CHAT_COSPLAY_GUEST',
+            link: `/admin?tab=cosplayguest&chat=${id}`,
+          })),
+        });
+      }
     }
 
     return updated;

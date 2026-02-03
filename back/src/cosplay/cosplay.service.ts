@@ -1,9 +1,10 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '../config/config.service';
 import { CreateCosplayDto } from './dto/create-cosplay.dto';
 import { UpdateCosplayStatusDto } from './dto/update-cosplay-status.dto';
 import { CosplayAddMessageDto } from './dto/add-message.dto';
-import { CosplayStatus } from '@prisma/client';
+import { CosplayStatus, UserRole } from '@prisma/client';
 import { EmailService } from '../email/email.service';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class CosplayService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly configService: ConfigService,
   ) {}
 
   async findAll(page: number = 1, limit: number = 20, status?: string, includeMessages: boolean = false) {
@@ -154,29 +156,27 @@ export class CosplayService {
       });
     }
 
-    // Create notification for ALL admins when user sends message
+    // Create notification for ALL admins when user sends message (usando createMany)
     if (dto.sender === 'USER') {
       const admins = await this.prisma.user.findMany({
         where: {
-          role: { in: ['ADMIN', 'SUPER_ADMIN'] },
+          role: { in: [UserRole.ADMIN, UserRole.SUPER_ADMIN] },
         },
         select: { id: true },
       });
 
-      // Create notification for each admin
-      await Promise.all(
-        admins.map((admin) =>
-          this.prisma.notification.create({
-            data: {
-              userId: admin.id,
-              title: 'Nuevo mensaje de participante',
-              message: `${item.participantName} te envió un mensaje sobre su cosplay "${item.characterName}"`,
-              type: 'CHAT_COSPLAY',
-              link: `/admin?tab=cosplay&chat=${id}`,
-            },
-          })
-        )
-      );
+      // Usar createMany en lugar de N creates individuales
+      if (admins.length > 0) {
+        await this.prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: 'Nuevo mensaje de participante',
+            message: `${item.participantName} te envió un mensaje sobre su cosplay "${item.characterName}"`,
+            type: 'CHAT_COSPLAY',
+            link: `/admin?tab=cosplay&chat=${id}`,
+          })),
+        });
+      }
     }
 
     return this.prisma.cosplayRegistration.update({
@@ -191,11 +191,9 @@ export class CosplayService {
    * Slots are NOT occupied by: RECHAZADO and WAITING_LIST statuses
    */
   async getAvailableSlots(): Promise<number> {
-    // Get the limit from config (only select the field we need)
-    const config = await this.prisma.appConfig.findFirst({
-      select: { cosplayLimit: true },
-    });
-    const limit = config?.cosplayLimit ?? 20;
+    // Get the limit from cached config
+    const limits = await this.configService.getLimits();
+    const limit = limits.cosplayLimit;
 
     // Count registrations that occupy slots (INSCRIPTO + CONFIRMADO)
     const occupiedSlots = await this.prisma.cosplayRegistration.count({
@@ -210,13 +208,11 @@ export class CosplayService {
   }
 
   /**
-   * Get cosplay limit from config
+   * Get cosplay limit from cached config
    */
   async getCosplayLimit(): Promise<number> {
-    const config = await this.prisma.appConfig.findFirst({
-      select: { cosplayLimit: true },
-    });
-    return config?.cosplayLimit ?? 20;
+    const limits = await this.configService.getLimits();
+    return limits.cosplayLimit;
   }
 
   /**
