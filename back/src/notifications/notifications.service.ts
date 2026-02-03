@@ -6,9 +6,10 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 export class NotificationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAllByUser(userId: string) {
+  async findAllByUser(userId: string, limit: number = 50) {
     return this.prisma.notification.findMany({
       where: { userId },
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }

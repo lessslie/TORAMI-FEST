@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateStandDto } from './dto/create-stand.dto';
 import { UpdateStandStatusDto } from './dto/update-stand-status.dto';
 import { AddMessageDto } from './dto/add-message.dto';
-import { StandStatus } from '@prisma/client';
+import { StandStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class StandsService {
@@ -142,29 +142,27 @@ export class StandsService {
       });
     }
 
-    // Create notification for ALL admins when user sends message
+    // Create notification for ALL admins when user sends message (usando createMany)
     if (dto.sender === 'USER') {
       const admins = await this.prisma.user.findMany({
         where: {
-          role: { in: ['ADMIN', 'SUPER_ADMIN'] },
+          role: { in: [UserRole.ADMIN, UserRole.SUPER_ADMIN] },
         },
         select: { id: true },
       });
 
-      // Create notification for each admin
-      await Promise.all(
-        admins.map((admin) =>
-          this.prisma.notification.create({
-            data: {
-              userId: admin.id,
-              title: 'Nuevo mensaje de usuario',
-              message: `${stand.contactName} te envió un mensaje sobre su stand "${stand.brandName}"`,
-              type: 'CHAT_STAND',
-              link: `/admin?tab=stands&chat=${id}`,
-            },
-          })
-        )
-      );
+      // Usar createMany en lugar de N creates individuales
+      if (admins.length > 0) {
+        await this.prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: 'Nuevo mensaje de usuario',
+            message: `${stand.contactName} te envió un mensaje sobre su stand "${stand.brandName}"`,
+            type: 'CHAT_STAND',
+            link: `/admin?tab=stands&chat=${id}`,
+          })),
+        });
+      }
     }
 
     return this.prisma.standApplication.update({
@@ -179,9 +177,10 @@ export class StandsService {
     });
   }
 
-  // Obtener todos los stands sin paginación para exportación
-  async findAllForExport() {
+  // Obtener todos los stands para exportación (con límite de seguridad)
+  async findAllForExport(limit: number = 1000) {
     return this.prisma.standApplication.findMany({
+      take: limit,
       include: {
         event: {
           select: {

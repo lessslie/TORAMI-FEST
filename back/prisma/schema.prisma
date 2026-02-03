@@ -57,6 +57,9 @@ model Event {
   giveaways   Giveaway[] @relation("EventGiveaways")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([isPast])
+  @@index([date])
 }
 
 model StandApplication {
@@ -78,6 +81,10 @@ model StandApplication {
   messages    Json[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model CosplayRegistration {
@@ -182,6 +189,9 @@ model Giveaway {
   eventId     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([isEnabled])
 }
 
 model GiveawayParticipant {
@@ -219,6 +229,11 @@ model GalleryItem {
   approvedAt  DateTime? // Fecha y hora de aprobación/rechazo
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([isOfficial])
+  @@index([createdAt])
 }
 
 model Notification {
@@ -231,6 +246,10 @@ model Notification {
   read      Boolean @default(false)
   link      String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
 }
 
 model Stamp {
