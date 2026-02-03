@@ -78,7 +78,6 @@ model StandApplication {
   status      StandStatus @default(PENDIENTE)
   event       Event?   @relation("EventStands", fields: [eventId], references: [id])
   eventId     String?
-  messages    Json[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -106,7 +105,6 @@ model CosplayRegistration {
   status         CosplayStatus @default(INSCRIPTO)
   event          Event?   @relation("EventCosplays", fields: [eventId], references: [id])
   eventId        String?
-  messages       Json[]
   notifyEmail    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -135,7 +133,6 @@ model CosplayGuest {
   withdrawalReason String?
   event           Event?   @relation("EventCosplayGuests", fields: [eventId], references: [id])
   eventId         String?
-  messages        Json[]
   notifyEmail     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
