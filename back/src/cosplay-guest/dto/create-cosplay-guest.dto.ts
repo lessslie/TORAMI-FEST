@@ -7,10 +7,10 @@ export class CreateCosplayGuestDto {
   @IsNotEmpty()
   participantName!: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @IsString()
-  @IsNotEmpty()
-  nickname!: string;
+  @IsOptional()
+  nickname?: string;
 
   @ApiProperty()
   @IsString()
@@ -43,25 +43,10 @@ export class CreateCosplayGuestDto {
   @IsNotEmpty()
   category!: string;
 
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  referenceImage!: string;
-
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  audioLink?: string;
-
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  audioStartTime?: string;
-
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  audioEndTime?: string;
+  referenceImage?: string;
 
   @ApiProperty()
   @IsString()
