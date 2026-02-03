@@ -177,9 +177,10 @@ export class StandsService {
     });
   }
 
-  // Obtener todos los stands sin paginación para exportación
-  async findAllForExport() {
+  // Obtener todos los stands para exportación (con límite de seguridad)
+  async findAllForExport(limit: number = 1000) {
     return this.prisma.standApplication.findMany({
+      take: limit,
       include: {
         event: {
           select: {

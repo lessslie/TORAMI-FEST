@@ -339,9 +339,10 @@ export class CosplayGuestService {
     return { messages: Array.isArray(guest.messages) ? guest.messages : [] };
   }
 
-  // Obtener todos los registros sin paginación para exportación
-  async findAllForExport() {
+  // Obtener todos los registros para exportación (con límite de seguridad)
+  async findAllForExport(limit: number = 1000) {
     return this.prisma.cosplayGuest.findMany({
+      take: limit,
       include: {
         event: {
           select: {

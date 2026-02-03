@@ -279,9 +279,10 @@ export class KaraokeService {
     });
   }
 
-  // Obtener todos los registros sin paginación para exportación
-  async findAllForExport() {
+  // Obtener todos los registros para exportación (con límite de seguridad)
+  async findAllForExport(limit: number = 1000) {
     return this.prisma.karaoke.findMany({
+      take: limit,
       include: {
         event: {
           select: {
