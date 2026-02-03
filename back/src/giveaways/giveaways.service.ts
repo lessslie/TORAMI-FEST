@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '../config/config.service';
 import { CreateGiveawayDto } from './dto/create-giveaway.dto';
 import { UpdateGiveawayDto } from './dto/update-giveaway.dto';
 import { CreateParticipantDto } from './dto/create-participant.dto';
@@ -7,12 +8,15 @@ import { GiveawayStatus } from '@prisma/client';
 
 @Injectable()
 export class GiveawaysService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async findAll() {
     return this.prisma.giveaway.findMany({
       include: {
-        participants: true,
+        // Solo traemos el conteo, no todos los participantes
         _count: {
           select: { participants: true },
         },
@@ -73,7 +77,6 @@ export class GiveawaysService {
         status: GiveawayStatus.ACTIVO,
       },
       include: {
-        participants: true,
         _count: {
           select: { participants: true },
         },
@@ -97,7 +100,6 @@ export class GiveawaysService {
       where: { id },
       data: updateData,
       include: {
-        participants: true,
         _count: {
           select: { participants: true },
         },
@@ -112,23 +114,9 @@ export class GiveawaysService {
 
   // Inscripción pública al sorteo (formulario)
   async participate(giveawayId: string, data: CreateParticipantDto, userId?: string) {
-    // Verificar config global (con manejo de columna faltante)
-    let giveawaysOpen = true;
-    try {
-      const config = await this.prisma.appConfig.findUnique({
-        where: { id: 1 },
-        select: { giveawaysInscripcionesAbiertas: true },
-      });
-      if (config && config.giveawaysInscripcionesAbiertas === false) {
-        giveawaysOpen = false;
-      }
-    } catch (error) {
-      // Si la columna no existe, asumir que está habilitado
-      console.warn('giveawaysInscripcionesAbiertas column may not exist, defaulting to open');
-      giveawaysOpen = true;
-    }
-
-    if (!giveawaysOpen) {
+    // Verificar config global (usando caché)
+    const flags = await this.configService.getInscripcionesFlags();
+    if (!flags.giveawaysInscripcionesAbiertas) {
       throw new BadRequestException('Las inscripciones de sorteos están cerradas');
     }
 
@@ -185,11 +173,12 @@ export class GiveawaysService {
   }
 
   // Obtener participantes de un sorteo (para admin)
-  async getParticipants(giveawayId: string) {
+  async getParticipants(giveawayId: string, limit: number = 500) {
     await this.findOne(giveawayId);
 
     return this.prisma.giveawayParticipant.findMany({
       where: { giveawayId },
+      take: limit,
       orderBy: { createdAt: 'desc' },
     });
   }
