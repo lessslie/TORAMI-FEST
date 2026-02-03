@@ -4,7 +4,6 @@ import PDFDocument from 'pdfkit';
 import { CosplayService } from './cosplay.service';
 import { CreateCosplayDto } from './dto/create-cosplay.dto';
 import { UpdateCosplayStatusDto } from './dto/update-cosplay-status.dto';
-import { CosplayAddMessageDto } from './dto/add-message.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/roles.guard';
 import { Roles } from '../common/roles.decorator';
@@ -23,13 +22,11 @@ export class CosplayController {
   findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('status') status?: string,
-    @Query('includeMessages') includeMessages?: string
+    @Query('status') status?: string
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 20;
-    const includeMessagesFlag = includeMessages === 'true';
-    return this.cosplayService.findAll(pageNum, limitNum, status, includeMessagesFlag);
+    return this.cosplayService.findAll(pageNum, limitNum, status);
   }
 
   /**
@@ -147,13 +144,6 @@ export class CosplayController {
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateCosplayStatusDto) {
     return this.cosplayService.updateStatus(id, dto);
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/messages')
-  addMessage(@Param('id') id: string, @Req() req: any, @Body() dto: CosplayAddMessageDto) {
-    return this.cosplayService.addMessage(id, dto, req.user.userId, req.user.role);
   }
 
   /**

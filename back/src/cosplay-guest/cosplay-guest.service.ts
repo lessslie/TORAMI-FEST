@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '../config/config.service';
 import { CreateCosplayGuestDto } from './dto/create-cosplay-guest.dto';
 import { WithdrawCosplayGuestDto } from './dto/withdraw-cosplay-guest.dto';
-import { CosplayStatus, UserRole } from '@prisma/client';
+import { CosplayStatus } from '@prisma/client';
 
 @Injectable()
 export class CosplayGuestService {
@@ -22,53 +22,47 @@ export class CosplayGuestService {
     return limits.cosplayGuestLimit;
   }
 
-  async findAll(page: number = 1, limit: number = 20, includeMessages: boolean = false) {
+  async findAll(page: number = 1, limit: number = 20) {
     const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const safeLimit = Number.isFinite(limit) && limit > 0 ? limit : 20;
     const skip = (safePage - 1) * safeLimit;
 
-    const baseSelect: any = {
-      id: true,
-      userId: true,
-      participantName: true,
-      nickname: true,
-      whatsapp: true,
-      instagram: true,
-      website: true,
-      characterName: true,
-      seriesName: true,
-      category: true,
-      status: true,
-      assignedNumber: true,
-      withdrawalReason: true,
-      eventId: true,
-      createdAt: true,
-      updatedAt: true,
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatar: true,
-        },
-      },
-      event: {
-        select: {
-          id: true,
-          title: true,
-          date: true,
-          location: true,
-        },
-      },
-    };
-
-    if (includeMessages) {
-      baseSelect.messages = true;
-    }
-
     const [items, total] = await Promise.all([
       this.prisma.cosplayGuest.findMany({
-        select: baseSelect,
+        select: {
+          id: true,
+          userId: true,
+          participantName: true,
+          nickname: true,
+          whatsapp: true,
+          instagram: true,
+          website: true,
+          characterName: true,
+          seriesName: true,
+          category: true,
+          status: true,
+          assignedNumber: true,
+          withdrawalReason: true,
+          eventId: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+              location: true,
+            },
+          },
+        },
         skip,
         take: safeLimit,
         orderBy: {
@@ -112,34 +106,28 @@ export class CosplayGuestService {
     return guest;
   }
 
-  async findByUser(userId: string, includeMessages: boolean = false) {
-    const baseSelect: any = {
-      id: true,
-      userId: true,
-      participantName: true,
-      nickname: true,
-      whatsapp: true,
-      instagram: true,
-      website: true,
-      characterName: true,
-      seriesName: true,
-      category: true,
-      status: true,
-      assignedNumber: true,
-      withdrawalReason: true,
-      eventId: true,
-      createdAt: true,
-      updatedAt: true,
-      event: true,
-    };
-
-    if (includeMessages) {
-      baseSelect.messages = true;
-    }
-
+  async findByUser(userId: string) {
     return this.prisma.cosplayGuest.findMany({
       where: { userId },
-      select: baseSelect,
+      select: {
+        id: true,
+        userId: true,
+        participantName: true,
+        nickname: true,
+        whatsapp: true,
+        instagram: true,
+        website: true,
+        characterName: true,
+        seriesName: true,
+        category: true,
+        status: true,
+        assignedNumber: true,
+        withdrawalReason: true,
+        eventId: true,
+        createdAt: true,
+        updatedAt: true,
+        event: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -272,71 +260,10 @@ export class CosplayGuestService {
   }
 
   async delete(id: string) {
-    const guest = await this.findOne(id);
+    await this.findOne(id);
     return this.prisma.cosplayGuest.delete({
       where: { id },
     });
-  }
-
-  async addMessage(id: string, message: any) {
-    const guest = await this.findOne(id);
-    const messages = Array.isArray(guest.messages) ? guest.messages : [];
-
-    const updated = await this.prisma.cosplayGuest.update({
-      where: { id },
-      data: {
-        messages: [...messages, message],
-      },
-    });
-
-    // Create notification when admin sends message to user
-    if (message.sender === 'ADMIN') {
-      await this.prisma.notification.create({
-        data: {
-          userId: guest.userId,
-          title: 'Nuevo mensaje sobre tu inscripción de invitado',
-          message: `Recibiste un mensaje sobre "${guest.characterName}"`,
-          type: 'CHAT_COSPLAY_GUEST',
-          link: `/dashboard?tab=cosplayguest&chat=${id}`,
-        },
-      });
-    }
-
-    // If user sends message, notify all admins (usando createMany para evitar N+1)
-    if (message.sender === 'USER') {
-      const admins = await this.prisma.user.findMany({
-        where: { role: { in: [UserRole.ADMIN, UserRole.SUPER_ADMIN] } },
-        select: { id: true },
-      });
-
-      // Usar createMany en lugar de N creates individuales
-      if (admins.length > 0) {
-        await this.prisma.notification.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            title: 'Nuevo mensaje de invitado cosplay',
-            message: `${guest.participantName} te envió un mensaje sobre "${guest.characterName}"`,
-            type: 'CHAT_COSPLAY_GUEST',
-            link: `/admin?tab=cosplayguest&chat=${id}`,
-          })),
-        });
-      }
-    }
-
-    return updated;
-  }
-
-  async getMessages(id: string) {
-    const guest = await this.prisma.cosplayGuest.findUnique({
-      where: { id },
-      select: { messages: true },
-    });
-
-    if (!guest) {
-      throw new NotFoundException('Cosplay guest not found');
-    }
-
-    return { messages: Array.isArray(guest.messages) ? guest.messages : [] };
   }
 
   // Obtener todos los registros para exportación (con límite de seguridad)

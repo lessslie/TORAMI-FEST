@@ -34,13 +34,11 @@ export class CosplayGuestController {
   @Get()
   findAll(
     @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('includeMessages') includeMessages?: string,
+    @Query('limit') limit?: string
   ) {
     const pageNumber = page ? Number(page) : 1;
     const limitNumber = limit ? Number(limit) : 20;
-    const include = includeMessages === 'true' || includeMessages === '1';
-    return this.cosplayGuestService.findAll(pageNumber, limitNumber, include);
+    return this.cosplayGuestService.findAll(pageNumber, limitNumber);
   }
 
   // PÚBLICO: Los slots disponibles son info pública necesaria para el form
@@ -52,9 +50,8 @@ export class CosplayGuestController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('user/me')
-  findByUser(@Request() req, @Query('includeMessages') includeMessages?: string) {
-    const include = includeMessages === 'true' || includeMessages === '1';
-    return this.cosplayGuestService.findByUser(req.user.userId, include);
+  findByUser(@Request() req) {
+    return this.cosplayGuestService.findByUser(req.user.userId);
   }
 
   // Admin: Descargar lista de cosplay invitados en PDF
@@ -166,19 +163,5 @@ export class CosplayGuestController {
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.cosplayGuestService.delete(id);
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/message')
-  addMessage(@Param('id') id: string, @Body() message: any) {
-    return this.cosplayGuestService.addMessage(id, message);
-  }
-
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Get(':id/messages')
-  getMessages(@Param('id') id: string) {
-    return this.cosplayGuestService.getMessages(id);
   }
 }

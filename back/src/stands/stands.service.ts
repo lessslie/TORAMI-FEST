@@ -1,47 +1,39 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStandDto } from './dto/create-stand.dto';
 import { UpdateStandStatusDto } from './dto/update-stand-status.dto';
-import { AddMessageDto } from './dto/add-message.dto';
-import { StandStatus, UserRole } from '@prisma/client';
+import { StandStatus } from '@prisma/client';
 
 @Injectable()
 export class StandsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(page: number = 1, limit: number = 20, status?: string, includeMessages: boolean = false) {
+  async findAll(page: number = 1, limit: number = 20, status?: string) {
     const skip = (page - 1) * limit;
     const where = status ? { status: status as StandStatus } : {};
-
-    const selectFields: any = {
-      id: true,
-      brandName: true,
-      type: true,
-      status: true,
-      contactName: true,
-      email: true,
-      phone: true,
-      socials: true,
-      description: true,
-      needs: true,
-      images: true,
-      userId: true,
-      createdAt: true,
-      eventId: true,
-      event: true, // Always include event information
-    };
-
-    // Include messages if requested (for admin chat)
-    if (includeMessages) {
-      selectFields.messages = true;
-    }
 
     const [stands, total] = await Promise.all([
       this.prisma.standApplication.findMany({
         take: limit,
         skip,
         where,
-        select: selectFields,
+        select: {
+          id: true,
+          brandName: true,
+          type: true,
+          status: true,
+          contactName: true,
+          email: true,
+          phone: true,
+          socials: true,
+          description: true,
+          needs: true,
+          images: true,
+          userId: true,
+          createdAt: true,
+          eventId: true,
+          event: true,
+        },
         orderBy: { createdAt: 'desc' }
       }),
       this.prisma.standApplication.count({ where })
@@ -67,7 +59,6 @@ export class StandsService {
     });
   }
 
-  // Método para obtener detalle completo de un stand
   findOne(id: string) {
     return this.prisma.standApplication.findUnique({
       where: { id },
@@ -85,13 +76,12 @@ export class StandsService {
   }
 
   async create(userId: string, dto: CreateStandDto) {
-    // Check if user already has a stand application for this event
     const existingApplication = await this.prisma.standApplication.findFirst({
       where: {
         userId,
         eventId: dto.eventId,
         status: {
-          not: StandStatus.RECHAZADA, // Allow re-application if previously rejected
+          not: StandStatus.RECHAZADA,
         },
       },
     });
@@ -106,7 +96,6 @@ export class StandsService {
         userId,
         images: dto.images || [],
         status: StandStatus.PENDIENTE,
-        messages: [],
       },
     });
   }
@@ -118,66 +107,12 @@ export class StandsService {
     });
   }
 
-  async addMessage(id: string, dto: AddMessageDto, requesterId: string, requesterRole: string) {
-    const stand = await this.prisma.standApplication.findUnique({ where: { id } });
-    if (!stand) throw new ForbiddenException('Stand not found');
-    if (dto.sender === 'USER' && stand.userId !== requesterId) {
-      throw new ForbiddenException('Cannot message on another user stand');
-    }
-    const updatedMessages = [
-      ...(stand.messages as any[]),
-      { id: Date.now().toString(), ...dto, timestamp: new Date().toISOString() },
-    ];
-
-    // Create notification when admin sends message to user
-    if (dto.sender === 'ADMIN') {
-      await this.prisma.notification.create({
-        data: {
-          userId: stand.userId,
-          title: 'Nuevo mensaje sobre tu stand',
-          message: `Recibiste un mensaje sobre "${stand.brandName}"`,
-          type: 'CHAT_STAND',
-          link: `/dashboard?tab=stands&chat=${id}`,
-        },
-      });
-    }
-
-    // Create notification for ALL admins when user sends message (usando createMany)
-    if (dto.sender === 'USER') {
-      const admins = await this.prisma.user.findMany({
-        where: {
-          role: { in: [UserRole.ADMIN, UserRole.SUPER_ADMIN] },
-        },
-        select: { id: true },
-      });
-
-      // Usar createMany en lugar de N creates individuales
-      if (admins.length > 0) {
-        await this.prisma.notification.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            title: 'Nuevo mensaje de usuario',
-            message: `${stand.contactName} te envió un mensaje sobre su stand "${stand.brandName}"`,
-            type: 'CHAT_STAND',
-            link: `/admin?tab=stands&chat=${id}`,
-          })),
-        });
-      }
-    }
-
-    return this.prisma.standApplication.update({
-      where: { id },
-      data: { messages: updatedMessages },
-    });
-  }
-
   async delete(id: string) {
     return this.prisma.standApplication.delete({
       where: { id },
     });
   }
 
-  // Obtener todos los stands para exportación (con límite de seguridad)
   async findAllForExport(limit: number = 1000) {
     return this.prisma.standApplication.findMany({
       take: limit,
