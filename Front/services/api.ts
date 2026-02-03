@@ -129,7 +129,7 @@ export const api = {
       const params = new URLSearchParams();
       params.append('page', String(page));
       params.append('limit', String(limit));
-      params.append('includeMessages', 'true'); // Include messages for admin chat
+      // NO incluir mensajes en listado - solo en detalle (getOne)
       if (status) params.append('status', status);
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/stands?${params.toString()}`,
@@ -177,7 +177,7 @@ export const api = {
       const params = new URLSearchParams();
       params.append('page', String(page));
       params.append('limit', String(limit));
-      params.append('includeMessages', 'true'); // Include messages for admin chat
+      // NO incluir mensajes en listado - solo en detalle (getOne)
       if (status) params.append('status', status);
       return request<{ data: any[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
         `/cosplay?${params.toString()}`,

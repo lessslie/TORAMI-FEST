@@ -71,7 +71,7 @@ export class CosplayService {
     });
   }
 
-  // Método para obtener detalle completo
+  // Método para obtener detalle completo (incluye mensajes para el modal)
   findOne(id: string) {
     return this.prisma.cosplayRegistration.findUnique({
       where: { id },
@@ -86,6 +86,7 @@ export class CosplayService {
         }
       }
     });
+    // Nota: messages ya viene incluido por defecto en el modelo (es Json[])
   }
 
   async create(userId: string, dto: CreateCosplayDto) {
