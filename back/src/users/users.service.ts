@@ -128,4 +128,23 @@ export class UsersService {
       where: { id: userId },
     });
   }
+
+  // Obtener todos los usuarios para exportación PDF
+  async findAllForExport(limit: number = 1000) {
+    return this.prisma.user.findMany({
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        whatsapp: true,
+        phone: true,
+        entryAuthorized: true,
+        ticketType: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

@@ -564,6 +564,9 @@ export const api = {
 
     delete: (token: string, id: string) =>
       request<any>(`/users/${id}`, { method: 'DELETE', token }),
+
+    getDownloadUrl: () =>
+      `${API_BASE}/users/download/pdf`,
   },
 
   // ==================== CHAT ====================

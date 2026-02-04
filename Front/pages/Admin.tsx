@@ -1982,8 +1982,38 @@ export const Admin = () => {
       {/* --- USERS MANAGEMENT --- */}
       {activeTab === 'users' && (
           <div className="animate-in fade-in">
-            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 mb-4">
                 <h3 className="font-display text-xl sm:text-2xl">Gestión de Usuarios</h3>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold bg-gray-100 px-3 py-2 rounded border-2 border-black">
+                    <Users size={14} className="inline mr-1" />
+                    {pagination.users.total} usuarios
+                  </span>
+                  <button
+                    onClick={() => {
+                      const { token } = getAuth();
+                      if (token) {
+                        fetch(api.users.getDownloadUrl(), {
+                          headers: { Authorization: `Bearer ${token}` }
+                        })
+                          .then(res => res.blob())
+                          .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.setAttribute('download', `usuarios-${new Date().toISOString().split('T')[0]}.pdf`);
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                          });
+                      }
+                    }}
+                    className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-bold border-2 border-black shadow-manga"
+                  >
+                    <Download size={16} /> Descargar PDF
+                  </button>
+                </div>
             </div>
 
             {users.length === 0 && (
