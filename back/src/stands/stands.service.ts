@@ -26,13 +26,17 @@ export class StandsService {
           email: true,
           phone: true,
           socials: true,
-          description: true,
-          needs: true,
-          images: true,
+          // description y needs excluidos del listado - solo en detalle
           userId: true,
           createdAt: true,
           eventId: true,
-          event: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' }
       }),

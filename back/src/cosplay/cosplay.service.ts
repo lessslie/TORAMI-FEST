@@ -35,8 +35,14 @@ export class CosplayService {
           createdAt: true,
           eventId: true,
           userId: true,
-          event: true,
-          referenceImage: true,
+          event: {
+            select: {
+              id: true,
+              title: true,
+              date: true,
+            },
+          },
+          // referenceImage: excluido del listado - solo en detalle individual
         },
         orderBy: { createdAt: 'desc' }
       }),
