@@ -1,0 +1,37 @@
+#!/bin/sh
+# ===========================================
+# PRE-COMMIT HOOK - TORAMI FEST
+# ===========================================
+#
+# Este script se ejecuta ANTES de cada commit.
+# Si algo falla, el commit se CANCELA.
+#
+# QUE HACE:
+# 1. Corre los tests del backend
+# 2. Si los tests fallan -> commit cancelado
+# 3. Si los tests pasan -> commit permitido
+#
+# PARA SALTARLO (NO RECOMENDADO):
+# git commit --no-verify -m "mensaje"
+#
+
+echo "🔍 Ejecutando pre-commit hooks..."
+echo ""
+
+# ============================
+# PASO 1: Tests del Backend
+# ============================
+echo "🧪 Corriendo tests del backend..."
+
+cd back && npm test
+
+# Si los tests fallan, cancelar commit
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Los tests fallaron. Commit cancelado."
+  echo "   Arregla los tests antes de hacer commit."
+  exit 1
+fi
+
+echo ""
+echo "✅ Todos los checks pasaron. Commit permitido!"
