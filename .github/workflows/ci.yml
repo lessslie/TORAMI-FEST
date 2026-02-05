@@ -1,0 +1,128 @@
+# ===========================================
+# GITHUB ACTIONS - CI (Continuous Integration)
+# ===========================================
+#
+# Este archivo se ejecuta AUTOMÁTICAMENTE cuando:
+# - Alguien abre un Pull Request
+# - Alguien hace push a main
+#
+# ¿QUÉ HACE?
+# 1. Descarga el código
+# 2. Instala dependencias
+# 3. Corre los tests
+# 4. Verifica que el build compile
+#
+# SI ALGO FALLA:
+# - El PR se marca con ❌
+# - No se puede mergear hasta arreglarlo
+# - Te llega notificación por email
+#
+# SI TODO PASA:
+# - El PR se marca con ✅
+# - Se puede mergear tranquilo
+
+name: CI
+
+# =====================
+# ¿CUÁNDO SE EJECUTA?
+# =====================
+on:
+  # Cuando alguien hace push a main
+  push:
+    branches: [main]
+
+  # Cuando alguien abre/actualiza un PR hacia main
+  pull_request:
+    branches: [main]
+
+# =====================
+# TRABAJOS A EJECUTAR
+# =====================
+jobs:
+  # -----------------------------------------
+  # JOB 1: BACKEND (NestJS)
+  # -----------------------------------------
+  backend:
+    name: Backend Tests & Build
+
+    # En qué sistema operativo corre
+    # ubuntu-latest = Linux (gratis en GitHub)
+    runs-on: ubuntu-latest
+
+    # Variables de entorno para este job
+    env:
+      # Base de datos en memoria para tests (no necesita PostgreSQL real)
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+
+    steps:
+      # PASO 1: Descargar el código del repo
+      # ------------------------------------
+      # "checkout" = descargar el código a la máquina de GitHub
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # PASO 2: Instalar Node.js
+      # ------------------------
+      # Necesitamos Node.js para correr NestJS
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # Versión de Node
+          cache: 'npm'        # Cachea node_modules para ser más rápido
+          cache-dependency-path: back/package-lock.json
+
+      # PASO 3: Instalar dependencias
+      # -----------------------------
+      # "npm ci" es como "npm install" pero más rápido y seguro para CI
+      - name: Instalar dependencias
+        working-directory: ./back
+        run: npm ci
+
+      # PASO 4: Generar Prisma Client
+      # -----------------------------
+      # Prisma necesita generar los tipos antes de compilar
+      - name: Generar Prisma Client
+        working-directory: ./back
+        run: npx prisma generate
+
+      # PASO 5: Correr los tests
+      # ------------------------
+      # Si algún test falla, el workflow se detiene aquí
+      - name: Correr tests
+        working-directory: ./back
+        run: npm test
+
+      # PASO 6: Verificar que compila
+      # -----------------------------
+      # Verifica que no hay errores de TypeScript
+      - name: Build
+        working-directory: ./back
+        run: npm run build
+
+  # -----------------------------------------
+  # JOB 2: FRONTEND (React + Vite)
+  # -----------------------------------------
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: front/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: ./front
+        run: npm ci
+
+      # El frontend no tiene tests (por ahora)
+      # Solo verificamos que compile correctamente
+      - name: Build
+        working-directory: ./front
+        run: npm run build
