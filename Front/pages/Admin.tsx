@@ -4,7 +4,7 @@ import { useAuth } from '../App';
 import { UserRole, StandApplication, Event, Sponsor, Giveaway, GiveawayParticipant, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User, Karaoke } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
 import {
-  getStats, getStandApplications, updateStandStatus, getConfig, updateConfig,
+  getStats, getStandApplications, getStandById, updateStandStatus, getConfig, updateConfig,
   getEvents, saveEvent, deleteEvent,
   getSponsors, saveSponsor, deleteSponsor,
   getGiveaways, saveGiveaway, deleteGiveaway, getGiveawayParticipants,
@@ -615,6 +615,12 @@ export const Admin = () => {
       setStandRejectionReason('');
       refreshCurrentTab();
       setViewStand(null);
+  };
+
+  // Stand - Load full details (includes description, images, etc.)
+  const handleViewStandDetails = async (stand: StandApplication) => {
+    const fullDetails = await getStandById(stand.id);
+    setViewStand(fullDetails);
   };
 
   // Cosplay - Load full details
@@ -1266,7 +1272,7 @@ export const Admin = () => {
                   {/* Acciones */}
                   <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
                     <button
-                      onClick={() => setViewStand(stand)}
+                      onClick={() => handleViewStandDetails(stand)}
                       className="flex-1 sm:flex-none bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 border border-gray-300 flex items-center justify-center gap-2 text-sm font-bold"
                     >
                       <Eye size={16} /> Ver Detalle
@@ -1280,7 +1286,7 @@ export const Admin = () => {
                           <Check size={16}/> Aprobar
                         </button>
                         <button
-                          onClick={() => { setViewStand(stand); setIsRejectingStand(true); }}
+                          onClick={() => { handleViewStandDetails(stand); setIsRejectingStand(true); }}
                           className="text-red-600 bg-red-50 px-3 py-2 rounded hover:bg-red-100 border border-red-200 flex items-center gap-1 text-sm font-bold"
                         >
                           <X size={16}/> Rechazar

@@ -107,6 +107,12 @@ export const getStandApplications = async (page: number = 1, limit: number = 10)
   const response = await api.stands.getAll(token || '', page, limit);
   return response;
 };
+
+export const getStandById = async (id: string) => {
+  const { token } = getAuth();
+  return api.stands.getOne(token || '', id);
+};
+
 export const updateStandStatus = (id: string, status: 'Aprobada' | 'Rechazada') => {
   const { token } = getAuth();
   // Convert to uppercase for backend enum
