@@ -210,7 +210,7 @@ export class GalleryService {
 
     // Verify the user owns this photo
     if (item.userId !== userId) {
-      throw new NotFoundException('Gallery item not found');
+      throw new ForbiddenException('No tenés permiso para editar esta foto');
     }
 
     return this.prisma.galleryItem.update({

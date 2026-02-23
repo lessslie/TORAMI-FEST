@@ -72,8 +72,7 @@ export class MailService {
 
       // Si es error de autenticación, dar más detalles
       if (message.includes('Authentication') || message.includes('auth') || message.includes('535')) {
-        this.logger.error('🔑 Error de autenticación SMTP. Verifica que el API key de SendGrid sea válido.');
-        this.logger.error('💡 Genera un nuevo API key en: https://app.sendgrid.com/settings/api_keys');
+        this.logger.error('🔑 Error de autenticación SMTP. Verifica SMTP_HOST, SMTP_USER y SMTP_PASSWORD en las variables de entorno.');
       }
     }
   }
