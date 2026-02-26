@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
 import { useAuth } from '../App';
-import { LogIn, Sparkles, Ghost, ArrowRight } from 'lucide-react';
+import { LogIn, Sparkles, Ghost, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -72,6 +72,21 @@ export const Login = () => {
                       ¿Olvidaste tu contraseña?
                   </span>
               </Link>
+
+              {formData.password.length > 0 && !(formData.password.length >= 6 && /[A-Z]/.test(formData.password) && /[^A-Za-z0-9]/.test(formData.password)) && (
+                <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded space-y-1">
+                  {[
+                    { ok: formData.password.length >= 6, label: 'Mínimo 6 caracteres' },
+                    { ok: /[A-Z]/.test(formData.password), label: '1 letra mayúscula' },
+                    { ok: /[^A-Za-z0-9]/.test(formData.password), label: '1 carácter especial' },
+                  ].map(({ ok, label }) => (
+                    <div key={label} className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600' : 'text-gray-400'}`}>
+                      {ok ? <CheckCircle size={11} /> : <XCircle size={11} />}
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {error && (
