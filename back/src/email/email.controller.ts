@@ -1,7 +1,8 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { EmailService } from './email.service';
-import { ApiTags, ApiProperty } from '@nestjs/swagger';
+import { ApiTags, ApiProperty, ApiBearerAuth } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty } from 'class-validator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 class SendTestEmailDto {
   @ApiProperty({ example: 'agata.morales92@gmail.com' })
@@ -11,6 +12,8 @@ class SendTestEmailDto {
 }
 
 @ApiTags('email-test')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('email-test')
 export class EmailController {
   constructor(private readonly emailService: EmailService) {}

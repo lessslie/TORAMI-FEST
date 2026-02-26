@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsUrl, IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreateGalleryItemDto {
   @ApiProperty({ required: false })
@@ -9,7 +9,7 @@ export class CreateGalleryItemDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
+  @IsUrl({ require_tld: true, protocols: ['https'] })
   url!: string;
 
   @ApiProperty()

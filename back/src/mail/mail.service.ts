@@ -10,6 +10,7 @@ export class MailService {
 
   async sendWelcomeEmail(to: string, name?: string) {
     const appName = this.config.get<string>('APP_NAME') || 'Torami Fest';
+    const frontendUrl = this.config.get<string>('FRONTEND_URL') || 'https://torami-fest.vercel.app';
     const subject = `Bienvenido a ${appName}`;
     const safeName = name || 'Hola!';
 
@@ -44,7 +45,7 @@ export class MailService {
           <div style="margin: 18px 0; padding: 14px 16px; background: linear-gradient(135deg, rgba(34,211,238,0.12), rgba(124,58,237,0.12)); border: 1px solid rgba(124,58,237,0.35); border-radius: 10px; color: #dbeafe;">
             <strong style="color: #7dd3fc;">Tip rápido:</strong> Guarda este correo y completa tu perfil para recibir avisos y recompensas.
           </div>
-          <a href="#" style="display: inline-block; margin: 4px 0 10px; padding: 12px 16px; background: linear-gradient(120deg, #ff4d6d, #f97316 45%, #22d3ee); color: #0b1327; font-weight: 700; text-decoration: none; border-radius: 10px; box-shadow: 0 10px 25px rgba(255,77,109,0.35);">
+          <a href="${frontendUrl}" style="display: inline-block; margin: 4px 0 10px; padding: 12px 16px; background: linear-gradient(120deg, #ff4d6d, #f97316 45%, #22d3ee); color: #0b1327; font-weight: 700; text-decoration: none; border-radius: 10px; box-shadow: 0 10px 25px rgba(255,77,109,0.35);">
             Explorar Torami Fest
           </a>
           <p style="margin: 16px 0 0; font-size: 14px; color: #9fb2ff;">Nos vemos muy pronto.</p>
@@ -72,8 +73,7 @@ export class MailService {
 
       // Si es error de autenticación, dar más detalles
       if (message.includes('Authentication') || message.includes('auth') || message.includes('535')) {
-        this.logger.error('🔑 Error de autenticación SMTP. Verifica que el API key de SendGrid sea válido.');
-        this.logger.error('💡 Genera un nuevo API key en: https://app.sendgrid.com/settings/api_keys');
+        this.logger.error('🔑 Error de autenticación SMTP. Verifica SMTP_HOST, SMTP_USER y SMTP_PASSWORD en las variables de entorno.');
       }
     }
   }

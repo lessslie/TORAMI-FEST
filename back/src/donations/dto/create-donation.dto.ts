@@ -1,4 +1,4 @@
-import { IsBoolean, IsDecimal, IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsDecimal, IsEmail, IsOptional, IsPositive, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDonationDto {
@@ -13,6 +13,7 @@ export class CreateDonationDto {
 
   @ApiProperty()
   @IsDecimal()
+  @IsPositive()
   amount!: number;
 
   @ApiProperty({ required: false, default: false })

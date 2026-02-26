@@ -4,9 +4,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
 import compression from 'compression';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // H1: Helmet — headers de seguridad HTTP (XSS, clickjacking, sniffing, etc.)
+  app.use(helmet());
 
   // Enable HTTP compression for all responses
   app.use(compression());
@@ -15,13 +19,12 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-  // Enable CORS for frontend
+  // H2: CORS — dominios exactos, sin regex *.vercel.app
   app.enableCors({
     origin: [
       'http://localhost:3000',
       'http://localhost:5173',
       'https://torami-fest.vercel.app',
-      /\.vercel\.app$/,
     ],
     credentials: true,
   });
@@ -35,14 +38,17 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('Torami Fest API')
-    .setDescription('API para Torami Fest (eventos, stands, cosplay, sorteos, galería, etc.)')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  // H3: Swagger solo en desarrollo
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Torami Fest API')
+      .setDescription('API para Torami Fest (eventos, stands, cosplay, sorteos, galería, etc.)')
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 3001;
   await app.listen(port);

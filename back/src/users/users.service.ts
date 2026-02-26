@@ -115,18 +115,27 @@ export class UsersService {
   }
 
   async deleteUser(userId: string) {
-    // Verificar que no se intente eliminar a un SUPER_ADMIN
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado');
-    }
+    if (!user) throw new NotFoundException('Usuario no encontrado');
     if (user.role === UserRole.SUPER_ADMIN) {
       throw new ForbiddenException('No se puede eliminar a un SUPER_ADMIN');
     }
 
-    return this.prisma.user.delete({
-      where: { id: userId },
-    });
+    // Borrar en transacción todos los registros relacionados antes de eliminar el usuario
+    return this.prisma.$transaction([
+      this.prisma.notification.deleteMany({ where: { userId } }),
+      this.prisma.stamp.deleteMany({ where: { userId } }),
+      this.prisma.standApplication.deleteMany({ where: { userId } }),
+      this.prisma.cosplayRegistration.deleteMany({ where: { userId } }),
+      this.prisma.cosplayGuest.deleteMany({ where: { userId } }),
+      this.prisma.karaoke.deleteMany({ where: { userId } }),
+      this.prisma.galleryItem.deleteMany({ where: { userId } }),
+      this.prisma.giveawayParticipant.updateMany({
+        where: { userId },
+        data: { userId: null },
+      }),
+      this.prisma.user.delete({ where: { id: userId } }),
+    ]);
   }
 
   // Obtener todos los usuarios para exportación PDF

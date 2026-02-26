@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { UserRole, StandApplication, Event, Sponsor, Giveaway, GiveawayParticipant, AppConfig, CosplayRegistration, CosplayGuest, GalleryItem, User, Karaoke } from '../types';
 import { SectionTitle, MangaCard, Badge, Button, Input } from '../components/UI';
@@ -591,7 +591,8 @@ export const Admin = () => {
     }
   }, [selectedPhoto, viewCosplay, viewStand]);
 
-  if (!user || (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN)) {
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN) {
     return <div className="p-10 text-center text-red-600 font-bold">Acceso Denegado</div>;
   }
 
