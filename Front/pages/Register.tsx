@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SectionTitle, MangaCard, Input, Button } from '../components/UI';
 import { useAuth } from '../App';
-import { UserPlus, Info, CheckCircle, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { UserPlus, Info, CheckCircle, XCircle, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -31,6 +31,9 @@ export const Register = () => {
     if (!formData.age) newErrors.age = 'La edad es obligatoria';
     if (parseInt(formData.age) < 5 || parseInt(formData.age) > 100) newErrors.age = 'Edad inválida';
     if (!formData.password) newErrors.password = 'La contraseña es obligatoria';
+    else if (!/[A-Z]/.test(formData.password) || !/[^A-Za-z0-9]/.test(formData.password)) {
+      newErrors.password = 'La contraseña debe tener al menos 1 mayúscula y 1 carácter especial';
+    }
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden';
     
     setErrors(newErrors);
@@ -149,25 +152,41 @@ export const Register = () => {
               <div className="border-t-2 border-dashed border-gray-300 my-6"></div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                <Input 
-                  label="Contraseña" 
-                  name="password" 
-                  type="password" 
-                  required 
+                <Input
+                  label="Contraseña"
+                  name="password"
+                  type="password"
+                  required
                   value={formData.password}
                   onChange={handleChange}
                   error={errors.password}
                 />
-                <Input 
-                  label="Verificar Contraseña" 
-                  name="confirmPassword" 
-                  type="password" 
-                  required 
+                <Input
+                  label="Verificar Contraseña"
+                  name="confirmPassword"
+                  type="password"
+                  required
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   error={errors.confirmPassword}
                 />
               </div>
+
+              {formData.password.length > 0 && (
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-1">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Requisitos de contraseña</p>
+                  {[
+                    { ok: formData.password.length >= 6, label: 'Mínimo 6 caracteres' },
+                    { ok: /[A-Z]/.test(formData.password), label: 'Al menos 1 letra mayúscula' },
+                    { ok: /[^A-Za-z0-9]/.test(formData.password), label: 'Al menos 1 carácter especial (!@#$%...)' },
+                  ].map(({ ok, label }) => (
+                    <div key={label} className={`flex items-center gap-2 text-xs font-medium ${ok ? 'text-green-600' : 'text-red-500'}`}>
+                      {ok ? <CheckCircle size={13} /> : <XCircle size={13} />}
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {errors.emailTaken && (
                 <div className="flex items-start gap-3 bg-red-50 border-2 border-red-400 text-red-900 p-4 rounded-lg">
