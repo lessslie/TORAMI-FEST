@@ -57,8 +57,19 @@ export const Register = () => {
       navigate('/dashboard');
     } catch (error) {
       setLoading(false);
-      console.error('Registration error:', error);
-      setErrors({ form: 'Error al registrar. Verifica los datos e intenta nuevamente.' });
+      let message = '';
+      try {
+        const parsed = JSON.parse((error as Error).message);
+        message = parsed.message || '';
+      } catch {
+        message = (error as Error).message || '';
+      }
+
+      if (message === 'Email already in use') {
+        setErrors({ emailTaken: true });
+      } else {
+        setErrors({ form: 'Error al registrar. Verifica los datos e intenta nuevamente.' });
+      }
     }
   };
 
@@ -158,8 +169,28 @@ export const Register = () => {
                 />
               </div>
 
-              <Button 
-                type="submit" 
+              {errors.emailTaken && (
+                <div className="flex items-start gap-3 bg-red-50 border-2 border-red-400 text-red-900 p-4 rounded-lg">
+                  <ShieldAlert size={20} className="mt-0.5 text-red-600 shrink-0" />
+                  <p className="text-sm">
+                    <span className="font-bold block">Este email ya está registrado.</span>
+                    ¿Ya tenés cuenta?{' '}
+                    <Link to="/login" className="font-bold underline text-red-700 hover:text-red-900">
+                      Iniciá sesión acá
+                    </Link>
+                  </p>
+                </div>
+              )}
+
+              {errors.form && (
+                <div className="flex items-start gap-3 bg-red-50 border-2 border-red-400 text-red-900 p-4 rounded-lg">
+                  <AlertTriangle size={20} className="mt-0.5 text-red-600 shrink-0" />
+                  <p className="text-sm">{errors.form}</p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
                 className="w-full py-4 text-lg bg-torami-red hover:bg-red-700 text-white shadow-lg flex items-center justify-center gap-2"
                 disabled={loading}
               >
