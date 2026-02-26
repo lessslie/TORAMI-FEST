@@ -1,28 +1,39 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useEffect, Suspense } from 'react';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
-import { Home } from './pages/Home';
-import { EventsList, EventDetail } from './pages/Events';
-import { StandForm } from './pages/StandForm';
-import { CosplayContest } from './pages/CosplayContest';
-import { CosplayGuest } from './pages/CosplayGuest';
-import { Karaoke } from './pages/Karaoke';
-import { Admin } from './pages/Admin';
-import { UserDashboard } from './pages/UserDashboard';
-import { Gallery } from './pages/Gallery';
-import { OfficialGallery } from './pages/OfficialGallery';
-import { Giveaways } from './pages/Giveaways';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { RecoverPassword } from './pages/RecoverPassword';
-import { ResetPassword } from './pages/ResetPassword';
-import { About } from './pages/About';
-import { Donations } from './pages/Donations';
-import { Contact } from './pages/Contact';
 import { User, UserRole } from './types';
 import { SectionTitle, MangaCard } from './components/UI';
 import { requestPasswordRecovery, resetPassword as apiResetPassword } from './services/data';
 import { api } from './services/api';
+
+// --- Lazy page imports (code splitting) ---
+// Cada página se carga solo cuando el usuario navega a ella
+const Home = React.lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
+const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const Register = React.lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
+const RecoverPassword = React.lazy(() => import('./pages/RecoverPassword').then(m => ({ default: m.RecoverPassword })));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const EventsList = React.lazy(() => import('./pages/Events').then(m => ({ default: m.EventsList })));
+const EventDetail = React.lazy(() => import('./pages/Events').then(m => ({ default: m.EventDetail })));
+const StandForm = React.lazy(() => import('./pages/StandForm').then(m => ({ default: m.StandForm })));
+const CosplayContest = React.lazy(() => import('./pages/CosplayContest').then(m => ({ default: m.CosplayContest })));
+const CosplayGuest = React.lazy(() => import('./pages/CosplayGuest').then(m => ({ default: m.CosplayGuest })));
+const Karaoke = React.lazy(() => import('./pages/Karaoke').then(m => ({ default: m.Karaoke })));
+const Admin = React.lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
+const UserDashboard = React.lazy(() => import('./pages/UserDashboard').then(m => ({ default: m.UserDashboard })));
+const Gallery = React.lazy(() => import('./pages/Gallery').then(m => ({ default: m.Gallery })));
+const OfficialGallery = React.lazy(() => import('./pages/OfficialGallery').then(m => ({ default: m.OfficialGallery })));
+const Giveaways = React.lazy(() => import('./pages/Giveaways').then(m => ({ default: m.Giveaways })));
+const About = React.lazy(() => import('./pages/About').then(m => ({ default: m.About })));
+const Donations = React.lazy(() => import('./pages/Donations').then(m => ({ default: m.Donations })));
+const Contact = React.lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
+
+// --- Spinner de carga entre navegaciones ---
+const PageLoader = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-torami-red border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 // --- Auth Context ---
 interface AuthContextType {
@@ -131,31 +142,33 @@ export default function App() {
     <AuthProvider>
       <Router>
         <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/registro" element={<Register />} />
-            <Route path="/recuperar-password" element={<RecoverPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            <Route path="/proximos-eventos" element={<EventsList />} />
-            <Route path="/eventos/:id" element={<EventDetail />} />
-            <Route path="/quiero-un-stand" element={<StandForm />} />
-            <Route path="/concursos-cosplay" element={<CosplayContest />} />
-            <Route path="/cosplay-invitados" element={<CosplayGuest />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/dashboard" element={<UserDashboard />} />
-            <Route path="/galeria" element={<Gallery />} />
-            <Route path="/galeria-oficial" element={<OfficialGallery />} />
-            <Route path="/sorteos" element={<Giveaways />} />
-            
-            <Route path="/karaoke" element={<Karaoke />} />
-            <Route path="/sponsors" element={<PlaceholderPage title="Nuestros Sponsors" />} />
-            <Route path="/donar" element={<Donations />} />
-            <Route path="/donaciones" element={<Donations />} />
-            <Route path="/contacto" element={<Contact />} />
-            <Route path="/sobre" element={<About />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/registro" element={<Register />} />
+              <Route path="/recuperar-password" element={<RecoverPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
+              <Route path="/proximos-eventos" element={<EventsList />} />
+              <Route path="/eventos/:id" element={<EventDetail />} />
+              <Route path="/quiero-un-stand" element={<StandForm />} />
+              <Route path="/concursos-cosplay" element={<CosplayContest />} />
+              <Route path="/cosplay-invitados" element={<CosplayGuest />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/dashboard" element={<UserDashboard />} />
+              <Route path="/galeria" element={<Gallery />} />
+              <Route path="/galeria-oficial" element={<OfficialGallery />} />
+              <Route path="/sorteos" element={<Giveaways />} />
+
+              <Route path="/karaoke" element={<Karaoke />} />
+              <Route path="/sponsors" element={<PlaceholderPage title="Nuestros Sponsors" />} />
+              <Route path="/donar" element={<Donations />} />
+              <Route path="/donaciones" element={<Donations />} />
+              <Route path="/contacto" element={<Contact />} />
+              <Route path="/sobre" element={<About />} />
+            </Routes>
+          </Suspense>
         </Layout>
       </Router>
     </AuthProvider>
