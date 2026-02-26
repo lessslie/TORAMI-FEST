@@ -5,16 +5,17 @@ import { Resend } from 'resend';
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private readonly resend: Resend;
+  private resend: Resend | null = null;
 
   constructor(private readonly config: ConfigService) {
-    const apiKey = config.get<string>('RESEND_API_KEY') || '';
-    this.resend = new Resend(apiKey);
+    const apiKey = config.get<string>('RESEND_API_KEY');
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+    }
   }
 
   async sendWelcomeEmail(to: string, name?: string) {
-    const apiKey = this.config.get<string>('RESEND_API_KEY');
-    if (!apiKey) {
+    if (!this.resend) {
       this.logger.error('❌ RESEND_API_KEY no configurada. Revisa las variables de entorno.');
       return;
     }
