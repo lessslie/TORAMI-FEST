@@ -210,7 +210,7 @@ export const UserDashboard = () => {
       </button>
   );
 
-  if (!user) return <div className="p-10 text-center">Inicia sesión para ver tu panel.</div>;
+  if (!user) return <Navigate to="/login" replace />;
 
   // Redirect admins to admin panel
   if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
