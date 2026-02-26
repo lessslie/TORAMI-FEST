@@ -1,31 +1,30 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
+  private readonly resend: Resend;
 
-  constructor(private readonly mailer: MailerService, private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigService) {
+    const apiKey = config.get<string>('RESEND_API_KEY') || '';
+    this.resend = new Resend(apiKey);
+  }
 
   async sendWelcomeEmail(to: string, name?: string) {
-    const appName = this.config.get<string>('APP_NAME') || 'Torami Fest';
-    const frontendUrl = this.config.get<string>('FRONTEND_URL') || 'https://torami-fest.vercel.app';
-    const subject = `Bienvenido a ${appName}`;
-    const safeName = name || 'Hola!';
-
-    // Verificar configuración SMTP
-    const smtpHost = this.config.get<string>('SMTP_HOST');
-    const smtpUser = this.config.get<string>('SMTP_USER');
-    const smtpPass = this.config.get<string>('SMTP_PASSWORD');
-
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      this.logger.error('❌ Configuración SMTP incompleta. Revisa las variables de entorno SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
+    const apiKey = this.config.get<string>('RESEND_API_KEY');
+    if (!apiKey) {
+      this.logger.error('❌ RESEND_API_KEY no configurada. Revisa las variables de entorno.');
       return;
     }
 
+    const appName = this.config.get<string>('APP_NAME') || 'Torami Fest';
+    const frontendUrl = this.config.get<string>('FRONTEND_URL') || 'https://torami-fest.vercel.app';
+    const mailFrom = this.config.get<string>('MAIL_FROM') || 'Torami Fest <onboarding@resend.dev>';
+    const safeName = name || 'Hola!';
+
     this.logger.log(`📧 Intentando enviar email de bienvenida a ${to}`);
-    this.logger.debug(`SMTP Config: Host=${smtpHost}, User=${smtpUser}`);
 
     const html = `
       <div style="font-family: 'Trebuchet MS', Arial, sans-serif; max-width: 620px; margin: 0 auto; padding: 0; background: #050914; color: #e9ecf5;">
@@ -54,27 +53,22 @@ export class MailService {
     `;
 
     try {
-      await this.mailer.sendMail({
-        to,
-        subject,
+      const { data, error } = await this.resend.emails.send({
+        from: mailFrom,
+        to: [to],
+        subject: `Bienvenido a ${appName}`,
         html,
       });
-      this.logger.log(`✅ Email de bienvenida enviado exitosamente a ${to}`);
+
+      if (error) {
+        this.logger.error(`❌ Error enviando email de bienvenida a ${to}: ${error.message}`);
+        return;
+      }
+
+      this.logger.log(`✅ Email de bienvenida enviado exitosamente a ${to} (ID: ${data?.id})`);
     } catch (error) {
-      // No bloqueamos el registro por fallos de email, solo lo registramos
       const message = error instanceof Error ? error.message : String(error);
-      const stack = error instanceof Error ? error.stack : '';
-
-      this.logger.error(`❌ Error enviando email de bienvenida a ${to}`);
-      this.logger.error(`Mensaje: ${message}`);
-      if (stack) {
-        this.logger.debug(`Stack: ${stack}`);
-      }
-
-      // Si es error de autenticación, dar más detalles
-      if (message.includes('Authentication') || message.includes('auth') || message.includes('535')) {
-        this.logger.error('🔑 Error de autenticación SMTP. Verifica SMTP_HOST, SMTP_USER y SMTP_PASSWORD en las variables de entorno.');
-      }
+      this.logger.error(`❌ Error enviando email de bienvenida a ${to}: ${message}`);
     }
   }
 }
