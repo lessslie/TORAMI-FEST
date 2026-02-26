@@ -1,43 +1,96 @@
-import { Injectable } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
-  constructor(private readonly mailerService: MailerService) {}
+  private readonly logger = new Logger(EmailService.name);
+  private resend: Resend | null = null;
+
+  constructor(private readonly config: ConfigService) {
+    const apiKey = config.get<string>('RESEND_API_KEY');
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+    }
+  }
+
+  private get mailFrom(): string {
+    return this.config.get<string>('MAIL_FROM') || 'Torami Fest <onboarding@resend.dev>';
+  }
+
+  private get frontendUrl(): string {
+    return this.config.get<string>('FRONTEND_URL') || 'https://torami-fest.vercel.app';
+  }
 
   /**
    * Send notification to waiting list when a cosplay slot becomes available
    */
   async sendSlotAvailableNotification(emails: string[], availableSlots: number, totalSlots: number) {
-    if (emails.length === 0) {
+    if (emails.length === 0 || !this.resend) {
+      if (!this.resend) this.logger.error('❌ RESEND_API_KEY no configurada.');
       return;
     }
 
-    const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const inscriptionUrl = `${appUrl}/cosplay-contest`;
+    const inscriptionUrl = `${this.frontendUrl}/cosplay-contest`;
+    const resend = this.resend;
 
-    try {
-      // Send individual emails to each person on the waiting list using SendGrid
-      const emailPromises = emails.map(email =>
-        this.mailerService.sendMail({
-          to: email,
-          from: process.env.MAIL_FROM || 'Torami Fest <leslie92.dev@gmail.com>',
-          subject: '🎉 ¡Se liberó un cupo para el Concurso de Cosplay!',
-          html: this.getSlotAvailableEmailTemplate(availableSlots, totalSlots, inscriptionUrl),
-        })
-      );
+    const emailPromises = emails.map(email =>
+      resend.emails.send({
+        from: this.mailFrom,
+        to: [email],
+        subject: '🎉 ¡Se liberó un cupo para el Concurso de Cosplay!',
+        html: this.getSlotAvailableEmailTemplate(availableSlots, totalSlots, inscriptionUrl),
+      })
+    );
 
-      const results = await Promise.allSettled(emailPromises);
+    const results = await Promise.allSettled(emailPromises);
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
 
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+    this.logger.log(`📧 Notificaciones cosplay: ${successful} enviadas, ${failed} fallidas`);
+    return { successful, failed };
+  }
 
+  /**
+   * Test email sending (for debugging)
+   */
+  async sendTestEmail(to: string) {
+    if (!this.resend) throw new Error('RESEND_API_KEY no configurada');
+    const { data, error } = await this.resend.emails.send({
+      from: this.mailFrom,
+      to: [to],
+      subject: 'Test Email - Torami Fest',
+      html: '<h1>Test Email</h1><p>If you received this, email service is working correctly!</p>',
+    });
 
-      return { successful, failed };
-    } catch (error) {
-      console.error('❌ Error sending slot available emails:', error);
-      throw error;
+    if (error) {
+      this.logger.error(`❌ Error sending test email: ${error.message}`);
+      throw new Error(error.message);
     }
+
+    return data;
+  }
+
+  /**
+   * Send a test slot available notification (for preview)
+   */
+  async sendTestSlotNotification(to: string) {
+    if (!this.resend) throw new Error('RESEND_API_KEY no configurada');
+    const inscriptionUrl = `${this.frontendUrl}/cosplay-contest`;
+
+    const { data, error } = await this.resend.emails.send({
+      from: this.mailFrom,
+      to: [to],
+      subject: '🎉 ¡Se liberó un cupo para el Concurso de Cosplay!',
+      html: this.getSlotAvailableEmailTemplate(5, 20, inscriptionUrl),
+    });
+
+    if (error) {
+      this.logger.error(`❌ Error sending test slot notification: ${error.message}`);
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 
   /**
@@ -127,46 +180,5 @@ export class EmailService {
       </body>
       </html>
     `;
-  }
-
-  /**
-   * Test email sending (for debugging)
-   */
-  async sendTestEmail(to: string) {
-    try {
-      const result = await this.mailerService.sendMail({
-        to,
-        from: process.env.MAIL_FROM || 'Torami Fest <leslie92.dev@gmail.com>',
-        subject: 'Test Email - Torami Fest',
-        html: '<h1>Test Email</h1><p>If you received this, email service is working correctly!</p>',
-      });
-
-      return result;
-    } catch (error) {
-      console.error('Error sending test email:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Send a test slot available notification (for preview)
-   */
-  async sendTestSlotNotification(to: string) {
-    const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const inscriptionUrl = `${appUrl}/cosplay-contest`;
-
-    try {
-      const result = await this.mailerService.sendMail({
-        to,
-        from: process.env.MAIL_FROM || 'Torami Fest <leslie92.dev@gmail.com>',
-        subject: '🎉 ¡Se liberó un cupo para el Concurso de Cosplay!',
-        html: this.getSlotAvailableEmailTemplate(5, 20, inscriptionUrl),
-      });
-
-      return result;
-    } catch (error) {
-      console.error('Error sending test slot notification:', error);
-      throw error;
-    }
   }
 }
